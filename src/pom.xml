@@ -1378,6 +1378,7 @@
  <modules>
   <module>platform</module>
   <module>main</module>
+  <module>security</module>
   <module>wcs</module>
   <module>wcs1_0</module>
   <module>wcs1_1</module>
