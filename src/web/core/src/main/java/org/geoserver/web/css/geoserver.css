@@ -146,6 +146,13 @@ margin-right: 0;
 list-style-type: none;
 }
 
+ul.horizontal li {
+display: inline;
+}
+
+.displayNone {
+display:none;
+}
 /*-----------------------
 Feedback Message Styles
 -----------------------*/
@@ -310,6 +317,10 @@ margin: 0 0 2em;
 border: 1px solid #c6e09b;
 border-width: 1px 0 0;
 position: relative;
+}
+
+fieldset.noTitle {
+border: 0;
 }
 
 legend {
