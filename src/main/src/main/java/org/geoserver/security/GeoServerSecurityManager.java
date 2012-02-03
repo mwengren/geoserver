@@ -19,6 +19,7 @@ import java.net.URLConnection;
 import java.rmi.server.UID;
 import java.security.InvalidKeyException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -148,7 +149,7 @@ public class GeoServerSecurityManager extends ProviderManager implements Applica
     public static final String MASTER_PASSWD_CONFIG_FILENAME = "masterpw.xml";
 
     /** default master password */
-    public static final String MASTER_PASSWD_DEFAULT="geoserver";
+    public static final char[] MASTER_PASSWD_DEFAULT= "geoserver".toCharArray();
 
     /** data directory file system access */
     GeoServerDataDirectory dataDir;
@@ -206,6 +207,9 @@ public class GeoServerSecurityManager extends ProviderManager implements Applica
     /** keystore provider, loaded lazily */
     KeyStoreProvider keyStoreProvider;
 
+    /** generator of random passwords */
+    RandomPasswordProvider randomPasswdProvider = new RandomPasswordProvider();
+    
     public GeoServerSecurityManager(GeoServerDataDirectory dataDir) throws Exception {
         this.dataDir = dataDir;
         configPasswordEncryptionHelper = new ConfigurationPasswordEncryptionHelper(this);
@@ -413,6 +417,10 @@ public class GeoServerSecurityManager extends ProviderManager implements Applica
 
         ksp.setSecurityManager(this);
         return new LockingKeyStoreProvider(ksp);
+    }
+
+    public RandomPasswordProvider getRandomPassworddProvider() {
+        return randomPasswdProvider;
     }
 
     /**
@@ -1060,7 +1068,7 @@ public class GeoServerSecurityManager extends ProviderManager implements Applica
      * @throws PasswordPolicyException If the new password violates the master password policy
      */
     public synchronized void saveMasterPasswordConfig(MasterPasswordConfig config, 
-        String currPasswd, String newPasswd, String newPasswdConfirm) throws Exception {
+        char[] currPasswd, char[] newPasswd, char[] newPasswdConfirm) throws Exception {
 
         //load the (possibly new) master password provider
         MasterPasswordProviderConfig mpProviderConfig = 
@@ -1137,7 +1145,17 @@ public class GeoServerSecurityManager extends ProviderManager implements Applica
      * Checks the specified password against the master password. 
      */
     public boolean checkMasterPassword(String passwd) {
-        return passwd != null && getMasterPassword().equals(passwd);
+        if (passwd == null) {
+            return false;
+        }
+
+        char[] masterPasswd = getMasterPassword();
+        try {
+            return Arrays.equals(masterPasswd, passwd.toCharArray());
+        }
+        finally {
+            disposePassword(masterPasswd);
+        }
     }
 
     /**
@@ -1145,14 +1163,52 @@ public class GeoServerSecurityManager extends ProviderManager implements Applica
      * <p>
      * This method is package protected and only allowed to be called by classes in this package.
      * </p>
+     * <p>
+     * The password is returned as a char array rather than string to allow for the scrambling of 
+     * the password after use. Since strings are immutable they can not be scrambled. All code that 
+     * calls this method should follow the following guidelines:
+     * <ol>
+     *   <li>Never turn the result into a String object</li>
+     *   <li>Always call {@link #disposeMasterPassword(char[])} (ideally in a finally block) 
+     *   when done with the password.</li>
+     * </ol>
+     * </p>
+     * <p>
+     * For example:
+     * <code>
+     * <pre>
+     *   char[] passwd = manager.getMasterPassword();
+     *   try {
+     *     //do something
+     *   }
+     *   finally {
+     *     manager.disposeMasterPassword(passwd);
+     *   }
+     * </pre>
+     * </code>
+     * </p>
      */
-    String getMasterPassword() {
+    char[] getMasterPassword() {
         try {
             MasterPasswordProvider mpp = loadMasterPasswordProvider(getMasterPasswordConfig().getProviderName());
             return mpp.getMasterPassword();
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+    }
+
+    /**
+     * Disposes the char array containing the plain text password.
+     */
+    public void disposePassword(char[] passwd) {
+        SecurityUtils.scramble(passwd);
+    }
+    
+    /**
+     * Disposes the byte array containing the plain text password.
+     */
+    public void disposePassword(byte[] passwd) {
+        SecurityUtils.scramble(passwd);
     }
 
     /**
@@ -1302,7 +1358,7 @@ public class GeoServerSecurityManager extends ProviderManager implements Applica
         KeyStoreProvider keyStoreProvider = getKeyStoreProvider();
         keyStoreProvider.reloadKeyStore();
         keyStoreProvider.setUserGroupKey(
-            XMLUserGroupService.DEFAULT_NAME, RandomPasswordProvider.get().getRandomPassword(32));
+            XMLUserGroupService.DEFAULT_NAME, randomPasswdProvider.getRandomPassword(32));
         keyStoreProvider.storeKeyStore();
         
         PasswordValidator validator = 

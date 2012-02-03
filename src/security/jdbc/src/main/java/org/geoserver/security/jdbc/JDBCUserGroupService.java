@@ -33,7 +33,6 @@ import org.geoserver.security.jdbc.config.JDBCSecurityServiceConfig;
 import org.geoserver.security.jdbc.config.JDBCUserGroupServiceConfig;
 import org.geoserver.security.password.GeoServerPasswordEncoder;
 import org.geoserver.security.password.PasswordEncodingType;
-import org.geoserver.security.password.RandomPasswordProvider;
 import org.springframework.dao.DataAccessException;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -114,7 +113,8 @@ public  class JDBCUserGroupService extends AbstractJDBCService implements GeoSer
                 KeyStoreProvider prov = getSecurityManager().getKeyStoreProvider();
                 String alias = prov.aliasForGroupService(name);
                 if (prov.containsAlias(alias)==false) {
-                    prov.setUserGroupKey(name, RandomPasswordProvider.get().getRandomPassword(32));
+                    prov.setUserGroupKey(name, 
+                        getSecurityManager().getRandomPassworddProvider().getRandomPassword(32));
                     prov.storeKeyStore();
                 }
             }

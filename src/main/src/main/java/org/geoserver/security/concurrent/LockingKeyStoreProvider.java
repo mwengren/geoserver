@@ -91,7 +91,7 @@ public class LockingKeyStoreProvider implements KeyStoreProvider {
         }        
     }
 
-    public String getConfigPasswordKey() throws IOException {
+    public byte[] getConfigPasswordKey() throws IOException {
         readLock();
         try {
             return provider.getConfigPasswordKey();
@@ -110,7 +110,7 @@ public class LockingKeyStoreProvider implements KeyStoreProvider {
         
     }
 
-    public String getUrlParamKey() throws IOException {
+    public byte[] getUrlParamKey() throws IOException {
         readLock();
         try {
             return provider.getUrlParamKey();
@@ -140,7 +140,7 @@ public class LockingKeyStoreProvider implements KeyStoreProvider {
         
     }
 
-    public String getUserGroupKey(String serviceName) throws IOException {
+    public byte[] getUserGroupKey(String serviceName) throws IOException {
         readLock();
         try {
             return provider.getUserGroupKey(serviceName);
@@ -191,7 +191,7 @@ public class LockingKeyStoreProvider implements KeyStoreProvider {
             return provider.aliasForGroupService(serviceName);        
     }
 
-    public boolean isKeyStorePassword(String password) throws IOException {
+    public boolean isKeyStorePassword(char[] password) throws IOException {
         readLock();
         try {
             return provider.isKeyStorePassword(password);
@@ -200,7 +200,7 @@ public class LockingKeyStoreProvider implements KeyStoreProvider {
         }        
     }
 
-    public void setSecretKey(String alias, String key) throws IOException {        
+    public void setSecretKey(String alias, char[] key) throws IOException {        
         writeLock();
         try {
             provider.setSecretKey(alias, key);
@@ -209,7 +209,7 @@ public class LockingKeyStoreProvider implements KeyStoreProvider {
         }
     }
 
-    public void setUserGroupKey(String serviceName, String password) throws IOException {
+    public void setUserGroupKey(String serviceName, char[] password) throws IOException {
         writeLock();
         try {
             provider.setUserGroupKey(serviceName, password);
@@ -237,7 +237,7 @@ public class LockingKeyStoreProvider implements KeyStoreProvider {
         }        
     }
 
-    public void prepareForMasterPasswordChange(String oldPassword, String newPassword)
+    public void prepareForMasterPasswordChange(char[] oldPassword , char[] newPassword)
             throws IOException {
         writeLock();
         try {

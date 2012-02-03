@@ -53,7 +53,7 @@ public interface KeyStoreProvider {
      * @return
      * @throws IOException
      */
-    String getConfigPasswordKey() throws IOException;
+    byte[] getConfigPasswordKey() throws IOException;
 
     /**
      * Checks if a such a key is available
@@ -71,7 +71,7 @@ public interface KeyStoreProvider {
      * @return
      * @throws IOException
      */
-    String getUrlParamKey() throws IOException;
+    byte[] getUrlParamKey() throws IOException;
 
     /**
      * Checks if a such a key is available
@@ -101,7 +101,7 @@ public interface KeyStoreProvider {
      * @return
      * @throws IOException
      */
-    String getUserGroupKey(String serviceName) throws IOException;
+    byte[] getUserGroupKey(String serviceName) throws IOException;
 
     /**
      * Checks if a such a key is available
@@ -157,7 +157,7 @@ public interface KeyStoreProvider {
      * @return
      * @throws IOException
      */
-    boolean isKeyStorePassword(String password) throws IOException;
+    boolean isKeyStorePassword(char[] password) throws IOException;
 
     /**
      * Adds/replaces a {@link SecretKey} with its alias
@@ -166,7 +166,7 @@ public interface KeyStoreProvider {
      * @param key
      * @throws Exception
      */
-    void setSecretKey(String alias, String key) throws IOException;
+    void setSecretKey(String alias, char[] key) throws IOException;
 
     /**
      * Sets  a secret for the name of a {@link GeoServerUserGroupService}
@@ -174,7 +174,7 @@ public interface KeyStoreProvider {
      * @param password
      * @throws IOException
      */
-    void setUserGroupKey(String serviceName, String password) throws IOException;
+    void setUserGroupKey(String serviceName, char[] password) throws IOException;
 
     /**
      * Remove a key belonging to the alias
@@ -206,7 +206,7 @@ public interface KeyStoreProvider {
      * @param newPassword
      * @throws IOException
      */
-    void prepareForMasterPasswordChange(String oldPassword, String newPassword)
+    void prepareForMasterPasswordChange(char[] oldPassword, char[] newPassword)
             throws IOException;
 
     /**

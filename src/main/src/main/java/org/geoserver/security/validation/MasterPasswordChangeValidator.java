@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
+import java.util.Arrays;
 import java.util.Properties;
 
 import org.geoserver.security.GeoServerSecurityManager;
@@ -59,14 +60,14 @@ public class MasterPasswordChangeValidator extends AbstractSecurityValidator{
         }
     }
 
-    protected void checkNewEqualsConfirmation(String newPassword, String confirmationPassword) 
+    protected void checkNewEqualsConfirmation(char[] newPassword, char[] confirmationPassword) 
             throws MasterPasswordChangeException{
-        if (newPassword.equals(confirmationPassword) == false) {            
-                throw createSecurityException(MasterPasswordChangeException.PASSWORD_AND_CONFIRMATION_NOT_EQUAL);
-            }            
+        if (!Arrays.equals(newPassword, confirmationPassword)) {
+            throw createSecurityException(MasterPasswordChangeException.PASSWORD_AND_CONFIRMATION_NOT_EQUAL);
+        }
     }
     
-    protected void checkNewEqualsCurrent(String newPassword, String currentPassword) 
+    protected void checkNewEqualsCurrent(char[] newPassword, char[] currentPassword) 
             throws MasterPasswordChangeException{
         if (newPassword.equals(currentPassword) ) {            
                 throw createSecurityException(MasterPasswordChangeException.NEW_EQUALS_CURRENT);
@@ -85,7 +86,7 @@ public class MasterPasswordChangeValidator extends AbstractSecurityValidator{
         checkCurrentPassword(request);
         checkConfirmationPassword(request);
         checkNewPassword(request);
-        checkNewEqualsConfirmation(request.getNewPassword(), request.getConfirmPassword());        
+        checkNewEqualsConfirmation(request.getNewPassword(), request.getConfirmPassword());
         validatePasswordAgainstPolicy(request.getNewPassword());
         checkNewEqualsCurrent(request.getNewPassword(), request.getCurrentPassword());
     }
@@ -98,7 +99,7 @@ public class MasterPasswordChangeValidator extends AbstractSecurityValidator{
         return new MasterPasswordChangeException(errorid,args);
     }
     
-    protected  void validatePasswordAgainstPolicy(String password) throws PasswordPolicyException{
+    protected  void validatePasswordAgainstPolicy(char[] password) throws PasswordPolicyException{
        PasswordValidator val=null;
        try {
            val = manager.loadPasswordValidator(PasswordValidatorImpl.MASTERPASSWORD_NAME);

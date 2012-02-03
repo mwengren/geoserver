@@ -34,6 +34,10 @@ public class MasterPasswordChangePage extends AbstractSecurityPage {
             throw new WicketRuntimeException(e);
         }
 
+        //TODO: this will cause the master password to stored as a string in plain text, without the 
+        // ability to scramble it... not much we can do because wicket works with strings... 
+        // potentially look into a way to store as char or byte array so string never gets 
+        // created
         form.add(new PasswordTextField("currentPassword", new Model()));
         form.add(new PasswordTextField("newPassword", new Model())
             .setEnabled(!providerConfig.isReadOnly()));
@@ -52,8 +56,9 @@ public class MasterPasswordChangePage extends AbstractSecurityPage {
 
                 MasterPasswordConfig mpConfig = (MasterPasswordConfig) getForm().getModelObject();
                 try {
-                    getSecurityManager()
-                        .saveMasterPasswordConfig(mpConfig, currPasswd, newPasswd, newPasswdConfirm);
+                    getSecurityManager().saveMasterPasswordConfig(mpConfig, currPasswd.toCharArray(), 
+                        newPasswd != null ? newPasswd.toCharArray() : null, 
+                        newPasswdConfirm.toCharArray());
                     doReturn();
                 } catch (Exception e) {
                     error(e);

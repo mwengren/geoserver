@@ -5,6 +5,9 @@
 package org.geoserver.security.password;
 
 import static org.geoserver.security.password.URLMasterPasswordProviderException.*;
+import static org.geoserver.security.SecurityUtils.toBytes;
+import static org.geoserver.security.SecurityUtils.toChars;
+import static org.geoserver.security.SecurityUtils.scramble;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -23,7 +26,7 @@ import org.geoserver.security.MasterPasswordProvider;
 import org.geoserver.security.config.SecurityNamedServiceConfig;
 import org.geoserver.security.validation.SecurityConfigException;
 import org.geoserver.security.validation.SecurityConfigValidator;
-import org.jasypt.encryption.pbe.StandardPBEStringEncryptor;
+import org.jasypt.encryption.pbe.StandardPBEByteEncryptor;
 
 /**
  * Master password provider that retrieves and optionally stores the master password from a url.
@@ -33,7 +36,9 @@ import org.jasypt.encryption.pbe.StandardPBEStringEncryptor;
 public final class URLMasterPasswordProvider extends MasterPasswordProvider {
 
     /** base encryption key */
-    static final String BASE = "af8dfssvjKL0IH(adf2s00ds9f2of(4]";
+    static final char[] BASE = new char[]{ 'a', 'f', '8', 'd', 'f', 's', 's', 'v', 'j', 'K', 'L', 
+        '0', 'I', 'H', '(', 'a', 'd', 'f', '2', 's', '0', '0', 'd', 's', '9', 'f', '2', 'o', 'f', 
+        '(', '4', ']' };
 
     /** permutation indicies */
     static final int[] PERM = new int[]{25, 10, 5, 21, 14, 27, 23, 4, 3, 31, 16, 29, 20, 11, 0, 26,
@@ -49,11 +54,11 @@ public final class URLMasterPasswordProvider extends MasterPasswordProvider {
     }
 
     @Override
-    protected String doGetMasterPassword() throws Exception {
+    protected char[] doGetMasterPassword() throws Exception {
         try {
             InputStream in = input(config.getURL(), getConfigDir());
             try {
-                return decode(IOUtils.toString(in));
+                return toChars(decode(IOUtils.toByteArray(in)));
             }
             finally {
                 in.close();
@@ -64,10 +69,10 @@ public final class URLMasterPasswordProvider extends MasterPasswordProvider {
     }
 
     @Override
-    protected void doSetMasterPassword(String passwd) throws Exception {
+    protected void doSetMasterPassword(char[] passwd) throws Exception {
         OutputStream out = output(config.getURL(), getConfigDir());
         try {
-            out.write(encode(passwd).getBytes());
+            out.write(encode(passwd));
         }
         finally {
             out.close();
@@ -78,42 +83,56 @@ public final class URLMasterPasswordProvider extends MasterPasswordProvider {
         return new File(getSecurityManager().getMasterPasswordProviderRoot(), getName());
     }
 
-    String encode(String passwd) {
+    byte[] encode(char[] passwd) {
+        
         if (!config.isEncrypting()) {
-            return passwd;
+            return toBytes(passwd);
         }
 
         //encrypt the password
-        StandardPBEStringEncryptor encryptor = new StandardPBEStringEncryptor();
-        encryptor.setPassword(key());
-        
-        return encryptor.encrypt(passwd);
+        StandardPBEByteEncryptor encryptor = new StandardPBEByteEncryptor();
+
+        char[] key = key();
+        try {
+            encryptor.setPasswordCharArray(key);
+            return encryptor.encrypt(toBytes(passwd));
+        }
+        finally {
+            scramble(key);
+        }
     }
 
-    String decode(String passwd) {
+    byte[] decode(byte[] passwd) {
         if (!config.isEncrypting()) {
             return passwd;
         }
 
         //decrypt the password
-        StandardPBEStringEncryptor encryptor = new StandardPBEStringEncryptor();
-        encryptor.setPassword(key());
-        
-        return encryptor.decrypt(passwd);
+        StandardPBEByteEncryptor encryptor = new StandardPBEByteEncryptor();
+        char[] key = key();
+        try {
+            encryptor.setPasswordCharArray(key);
+            return encryptor.decrypt(passwd);
+        }
+        finally {
+            scramble(key);
+        }
+
     }
 
-    String key() {
+    char[] key() {
         //generate the key
-        StringBuffer key = new StringBuffer(BASE);
+        char[] key = BASE.clone();
         for (int i = 0; i < 256; i++) {
-            int j = i % BASE.length();
+            int j = i % key.length;
 
             //swap char at j with char at PERM[j]
-            char c = key.charAt(j);
-            key.setCharAt(j, key.charAt(PERM[j]));
-            key.setCharAt(PERM[j], c);
+            char c = key[j];
+            key[j] = key[PERM[j]];
+            key[PERM[j]] = c;
         }
-        return key.toString();
+
+        return key;
     }
 
     static OutputStream output(URL url, File configDir) throws IOException {

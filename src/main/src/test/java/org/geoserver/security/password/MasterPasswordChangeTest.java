@@ -30,7 +30,7 @@ public class MasterPasswordChangeTest extends GeoServerSecurityTestSupport {
     public void testMasterPasswordChange() throws Exception {
         // keytool -storepasswd -new geoserver1 -storepass geoserver -storetype jceks -keystore geoserver.jks
         
-        assertEquals(MASTER_PASSWD_DEFAULT, getMasterPassword());
+        assertEquals(new String(MASTER_PASSWD_DEFAULT), getMasterPassword());
         MasterPasswordConfig config = getSecurityManager().getMasterPasswordConfig();
         
         URLMasterPasswordProviderConfig mpConfig = (URLMasterPasswordProviderConfig) 
@@ -57,7 +57,8 @@ public class MasterPasswordChangeTest extends GeoServerSecurityTestSupport {
         
         config = getSecurityManager().getMasterPasswordConfig();
         config.setProviderName(mpConfig.getName());
-        getSecurityManager().saveMasterPasswordConfig(config, MASTER_PASSWD_DEFAULT, "geoserver1", "geoserver1");
+        getSecurityManager().saveMasterPasswordConfig(
+            config, MASTER_PASSWD_DEFAULT, "geoserver1".toCharArray(), "geoserver1".toCharArray());
         assertEquals("geoserver1", getMasterPassword());
         
         getSecurityManager().getKeyStoreProvider().getConfigPasswordKey();
@@ -77,7 +78,8 @@ public class MasterPasswordChangeTest extends GeoServerSecurityTestSupport {
         config = getSecurityManager().getMasterPasswordConfig();
         config.setProviderName("ro");
         
-        getSecurityManager().saveMasterPasswordConfig(config, "geoserver1", null, "geoserver2");
+        getSecurityManager().saveMasterPasswordConfig(
+            config, "geoserver1".toCharArray(), null, "geoserver2".toCharArray());
         
         assertEquals("geoserver2",getMasterPassword());
         getSecurityManager().getKeyStoreProvider().getConfigPasswordKey();
@@ -90,7 +92,8 @@ public class MasterPasswordChangeTest extends GeoServerSecurityTestSupport {
         
         config =getSecurityManager().getMasterPasswordConfig();
         config.setProviderName("test");
-        getSecurityManager().saveMasterPasswordConfig(config, "geoserver2", "geoserver3", "geoserver3");
+        getSecurityManager().saveMasterPasswordConfig(
+            config, "geoserver2".toCharArray(), "geoserver3".toCharArray(), "geoserver3".toCharArray());
         
         // now, a geoserver restart should appear, simulate with
         getSecurityManager().getKeyStoreProvider().commitMasterPasswordChange();

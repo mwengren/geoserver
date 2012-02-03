@@ -176,7 +176,7 @@ public class GeoserverPasswordEncoderTest extends GeoServerSecurityTestSupport {
         
         String password = "testpassword";
         KeyStoreProvider keyStoreProvider = getSecurityManager().getKeyStoreProvider();
-        keyStoreProvider.setUserGroupKey(service.getName(), password);
+        keyStoreProvider.setUserGroupKey(service.getName(), password.toCharArray());
         
         for (GeoServerPBEPasswordEncoder encoder: getPBEEncoders()) {
             encoder.initializeFor(service);

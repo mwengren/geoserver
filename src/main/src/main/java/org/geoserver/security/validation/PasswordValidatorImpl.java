@@ -52,35 +52,41 @@ public class PasswordValidatorImpl extends AbstractSecurityValidator implements 
     }
 
     @Override
-    public void validatePassword(String password) throws PasswordPolicyException {
+    public void validatePassword(char[] password) throws PasswordPolicyException {
         if (password==null)
             throw createSecurityException(PW_IS_NULL); 
             
         
-        if (password.length() < config.getMinLength())
+        if (password.length < config.getMinLength())
             throw createSecurityException(PW_MIN_LENGTH, config.getMinLength());
         
-        if (config.getMaxLength() >=0 &&  password.length() >config.getMaxLength())
+        if (config.getMaxLength() >=0 &&  password.length >config.getMaxLength())
             throw createSecurityException(PW_MAX_LENGTH,config.getMaxLength());
 
-        char[] charArray = password.toCharArray();
-        
         if (config.isDigitRequired()) {
-            if (checkUsingMethod("isDigit", charArray)==false)
+            if (checkUsingMethod("isDigit", password)==false)
                 throw createSecurityException(PW_NO_DIGIT);
         }
         if (config.isUppercaseRequired()) {
-            if (checkUsingMethod("isUpperCase", charArray)==false)
+            if (checkUsingMethod("isUpperCase", password)==false)
                 throw createSecurityException(PW_NO_UPPERCASE);
         }
         if (config.isLowercaseRequired()) {
-            if (checkUsingMethod("isLowerCase", charArray)==false)
+            if (checkUsingMethod("isLowerCase", password)==false)
                 throw createSecurityException(PW_NO_LOWERCASE);
         }    
         
-        for (String prefix: notAllowedPrefixes) {
-            if (password.startsWith(prefix))
-                throw createSecurityException(PW_RESERVED_PREFIX,prefix);
+O:      for (String prefix: notAllowedPrefixes) {
+            if (prefix.length() > password.length) {
+                continue;
+            }
+            for (int i = 0; i < prefix.length(); i++) {
+                if (prefix.charAt(i) != password[i]) {
+                    continue O;
+                }
+            }
+
+            throw createSecurityException(PW_RESERVED_PREFIX,prefix);
         }
     }
     

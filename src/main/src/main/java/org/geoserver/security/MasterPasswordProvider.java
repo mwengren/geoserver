@@ -30,23 +30,26 @@ public abstract class MasterPasswordProvider extends AbstractGeoServerSecuritySe
      * password in plain text. 
      * </p>
      */
-    final String getMasterPassword() throws Exception {
+    final char[] getMasterPassword() throws Exception {
         return doGetMasterPassword();
     }
 
     /**
      * Internal getter for plain text master password. 
      */
-    protected abstract String doGetMasterPassword() throws Exception;
+    protected abstract char[] doGetMasterPassword() throws Exception;
 
-    final void setMasterPassword(String newPasswd) throws Exception {
+    /**
+     * Setter for the master password in plain text.
+     */
+    final void setMasterPassword(char[] newPasswd) throws Exception {
         doSetMasterPassword(newPasswd);
     }
 
     /**
      * Internal setter for plain text master password. 
      */
-    protected abstract void doSetMasterPassword(String passwd) throws Exception;
+    protected abstract void doSetMasterPassword(char[] passwd) throws Exception;
 
     public MasterPasswordChangeValidator createPasswordChangeValidator() {
         return new MasterPasswordChangeValidator(getSecurityManager());

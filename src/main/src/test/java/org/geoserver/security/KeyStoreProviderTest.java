@@ -20,37 +20,37 @@ public class KeyStoreProviderTest extends GeoServerTestSupport {
         assertFalse(ksp.hasUserGroupKey("default"));
         
                         
-        ksp.setSecretKey( KeyStoreProviderImpl.CONFIGPASSWORDKEY, "configKey");
+        ksp.setSecretKey( KeyStoreProviderImpl.CONFIGPASSWORDKEY, "configKey".toCharArray());
         ksp.storeKeyStore();
         
         assertTrue(ksp.hasConfigPasswordKey());
-        assertEquals("configKey",ksp.getConfigPasswordKey());
+        assertEquals("configKey",new String(ksp.getConfigPasswordKey()));
         assertFalse(ksp.hasUrlParamKey());
         assertFalse(ksp.hasUserGroupKey("default"));
         
-        String urlKey = RandomPasswordProvider.get().getRandomPassword(32);
-        System.out.printf("Random password with length %d : %s\n",urlKey.length(),urlKey);
-        String urlKey2 = RandomPasswordProvider.get().getRandomPassword(32);
-        System.out.printf("Random password with length %d : %s\n",urlKey2.length(),urlKey2);
+        RandomPasswordProvider rpp = getSecurityManager().getRandomPassworddProvider();
+        char[] urlKey = rpp.getRandomPassword(32);
+        System.out.printf("Random password with length %d : %s\n",urlKey.length,urlKey);
+        char[] urlKey2 = rpp.getRandomPassword(32);
+        System.out.printf("Random password with length %d : %s\n",urlKey2.length,urlKey2);
         assertFalse(urlKey.equals(urlKey2));
 
         ksp.setSecretKey( KeyStoreProviderImpl.URLPARAMKEY, urlKey);
         ksp.setSecretKey( KeyStoreProviderImpl.USERGROUP_PREFIX+"default"+
-                    KeyStoreProviderImpl.USERGROUP_POSTFIX, "defaultKey");
+                    KeyStoreProviderImpl.USERGROUP_POSTFIX, "defaultKey".toCharArray());
 
         ksp.storeKeyStore();
         
         assertTrue(ksp.hasConfigPasswordKey());
-        assertEquals("configKey",ksp.getConfigPasswordKey());
+        assertEquals("configKey",new String(ksp.getConfigPasswordKey()));
         assertTrue(ksp.hasUrlParamKey());
-        assertEquals(urlKey,ksp.getUrlParamKey());
+        assertEquals(new String(urlKey),new String(ksp.getUrlParamKey()));
         assertTrue(ksp.hasUserGroupKey("default"));
-        assertEquals("defaultKey",ksp.getUserGroupKey("default"));
+        assertEquals("defaultKey",new String(ksp.getUserGroupKey("default")));
         
         assertTrue(ksp.isKeyStorePassword(
             getSecurityManager().getMasterPassword()));
-        assertFalse(ksp.isKeyStorePassword(
-                "blabla"));
+        assertFalse(ksp.isKeyStorePassword( "blabla".toCharArray()));
     }
         
 }

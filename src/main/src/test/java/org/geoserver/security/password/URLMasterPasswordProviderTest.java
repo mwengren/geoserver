@@ -2,6 +2,7 @@ package org.geoserver.security.password;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.util.Arrays;
 
 import org.apache.commons.io.IOUtils;
 import org.geoserver.security.GeoServerSecurityTestSupport;
@@ -23,12 +24,12 @@ public class URLMasterPasswordProviderTest extends GeoServerSecurityTestSupport 
         mpp.setSecurityManager(getSecurityManager());
         mpp.initializeFromConfig(config);
         mpp.setName(config.getName());
-        mpp.doSetMasterPassword("geoserver");
+        mpp.doSetMasterPassword("geoserver".toCharArray());
 
         String encoded = IOUtils.toString(new FileInputStream(tmp));
         assertFalse("geoserver".equals(encoded));
 
-        String passwd = mpp.doGetMasterPassword();
-        assertEquals("geoserver", passwd);
+        char[] passwd = mpp.doGetMasterPassword();
+        assertTrue(Arrays.equals("geoserver".toCharArray(), passwd));
     }
 }

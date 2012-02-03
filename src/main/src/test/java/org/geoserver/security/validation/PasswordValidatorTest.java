@@ -23,44 +23,44 @@ public class PasswordValidatorTest extends AbstractSecurityServiceTest {
     public void testPasswords() throws PasswordPolicyException{
         checkForException(null, PW_IS_NULL);
         
-        validator.validatePassword("");
-        validator.validatePassword("a");
+        validator.validatePassword("".toCharArray());
+        validator.validatePassword("a".toCharArray());
         
         
         checkForException("plain:a", PW_RESERVED_PREFIX,"plain:");
         checkForException("crypt1:a", PW_RESERVED_PREFIX,"crypt1:");
         checkForException("digest1:a", PW_RESERVED_PREFIX,"digest1:");
         
-        validator.validatePassword("plain");
-        validator.validatePassword("plaina");
+        validator.validatePassword("plain".toCharArray());
+        validator.validatePassword("plaina".toCharArray());
         
         config.setMinLength(2);
         checkForException("a", PW_MIN_LENGTH,2);
-        validator.validatePassword("aa");
+        validator.validatePassword("aa".toCharArray());
         
         config.setMaxLength(10);
         checkForException("01234567890", PW_MAX_LENGTH,10);
-        validator.validatePassword("0123456789");
+        validator.validatePassword("0123456789".toCharArray());
         
         config.setDigitRequired(true);
         checkForException("abcdef", PW_NO_DIGIT);
 
-        validator.validatePassword("abcde4");
+        validator.validatePassword("abcde4".toCharArray());
         
         config.setUppercaseRequired(true);
         checkForException("abcdef4", PW_NO_UPPERCASE);
-        validator.validatePassword("abcde4F");
+        validator.validatePassword("abcde4F".toCharArray());
         
         config.setLowercaseRequired(true);
         checkForException("ABCDE4F", PW_NO_LOWERCASE);
-        validator.validatePassword("abcde4F");        
+        validator.validatePassword("abcde4F".toCharArray());        
     }
     
     
         
     protected void checkForException(String password, String id,Object... params) {
         try {
-            validator.validatePassword(password);
+            validator.validatePassword(password != null ? password.toCharArray() : null);
         } catch (PasswordPolicyException ex) {
             assertEquals(id,ex.getId());
             assertEquals(params.length, ex.getArgs().length);

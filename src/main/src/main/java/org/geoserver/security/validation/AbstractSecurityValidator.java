@@ -21,6 +21,10 @@ public abstract class AbstractSecurityValidator {
         return aString !=null && aString.length()> 0;
     }
 
+    protected boolean isNotEmpty(char[] aString) {
+        return aString !=null && aString.length> 0;
+    }
+
     /**
      * Gets the temp directory, null if not found or not
      * writable 

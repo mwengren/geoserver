@@ -23,8 +23,10 @@ import org.apache.wicket.util.crypt.ICrypt;
 import org.apache.wicket.util.crypt.ICryptFactory;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.geoserver.platform.GeoServerExtensions;
+import org.geoserver.security.GeoServerSecurityManager;
 import org.geoserver.security.KeyStoreProvider;
 import org.geoserver.security.KeyStoreProviderImpl;
+import org.geoserver.security.SecurityUtils;
 import org.geoserver.security.password.AbstractGeoserverPasswordEncoder;
 import org.geotools.util.logging.Logging;
 import org.jasypt.encryption.pbe.StandardPBEByteEncryptor;
@@ -62,9 +64,9 @@ public class GeoserverWicketEncrypterFactory implements ICryptFactory {
     class CryptImpl extends AbstractCrypt {
         protected StandardPBEByteEncryptor enc;
         
-        CryptImpl (String password) {            
-            enc = new StandardPBEByteEncryptor();            
-            enc.setPassword(password);
+        CryptImpl (byte[] password) {            
+            enc = new StandardPBEByteEncryptor();
+            enc.setPasswordCharArray(SecurityUtils.toChars(password));
             
             if (GeoServerApplication.get().getSecurityManager().isStrongEncryptionAvailable()) {
                 enc.setProvider(new BouncyCastleProvider());
@@ -104,21 +106,27 @@ public class GeoserverWicketEncrypterFactory implements ICryptFactory {
      * if no key is found, a message is written to the  log file and
      * and encryption is disabled  
      */
-    protected GeoserverWicketEncrypterFactory()  {        
-       KeyStoreProvider ksp = GeoServerApplication.get().getSecurityManager().getKeyStoreProvider();
-        String password=null;
-       try {
+    protected GeoserverWicketEncrypterFactory()  {
+        GeoServerSecurityManager secMgr = GeoServerApplication.get().getSecurityManager(); 
+        KeyStoreProvider ksp = secMgr.getKeyStoreProvider();
+        byte[] password = null;
+        try {
            password = ksp.getUrlParamKey();
            if (password != null) {
-               encryptor= new CryptImpl(password);
-               return;
+               try {
+                   encryptor= new CryptImpl(password);
+                   return;
+               }
+               finally {
+                   secMgr.disposePassword(password);
+               }
            }
-       } catch (IOException e) {
-       }
-       LOGGER.severe("No key with alias: " +  KeyStoreProviderImpl.URLPARAMKEY +
-           " found in: "+ksp.getFile().getAbsolutePath() + ". Falling back to no encryption for " +
-           "url parameters");
-       encryptor=new NoCrypt();
+        } catch (IOException e) {
+        }
+        LOGGER.severe("No key with alias: " +  KeyStoreProviderImpl.URLPARAMKEY +
+            " found in: "+ksp.getFile().getAbsolutePath() + ". Falling back to no encryption for " +
+           "    url parameters");
+        encryptor=new NoCrypt();
    }
 
     @Override

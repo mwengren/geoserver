@@ -32,7 +32,7 @@ public class MasterPasswordChangeValidatorTest extends AbstractSecurityServiceTe
         } catch (MasterPasswordChangeException ex) {
             assertSecurityException(ex, MasterPasswordChangeException.CURRENT_PASSWORD_REQUIRED);
         }
-        r.setCurrentPassword("blabalb");
+        r.setCurrentPassword("blabalb".toCharArray());
         try {
             validator.validateChangeRequest(r);
             fail();
@@ -121,13 +121,13 @@ public class MasterPasswordChangeValidatorTest extends AbstractSecurityServiceTe
         r.setCurrentPassword(GeoServerSecurityManager.MASTER_PASSWD_DEFAULT);
         
         checkConfirmationPassword(r);
-        r.setConfirmPassword("abc");
+        r.setConfirmPassword("abc".toCharArray());
         
         checkNewPassword(r);
-        r.setNewPassword("def");
+        r.setNewPassword("def".toCharArray());
         
         checkConfirmationEqualsNewPassword(r);
-        r.setNewPassword("abc");   
+        r.setNewPassword("abc".toCharArray());   
         
         validateAgainstPolicy(r);
         
@@ -135,8 +135,8 @@ public class MasterPasswordChangeValidatorTest extends AbstractSecurityServiceTe
         r.setNewPassword(r.getCurrentPassword());
         
         checkCurrentEqualsNewPassword(r);
-        r.setConfirmPassword(r.getCurrentPassword()+"1");
-        r.setNewPassword(r.getCurrentPassword()+"1");
+        r.setConfirmPassword((new String(r.getCurrentPassword())+"1").toCharArray());
+        r.setNewPassword((new String(r.getCurrentPassword())+"1").toCharArray());
 
         validator.validateChangeRequest(r);
     }

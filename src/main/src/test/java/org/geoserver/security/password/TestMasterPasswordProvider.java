@@ -8,12 +8,12 @@ import org.geoserver.security.MasterPasswordProvider;
 public final class TestMasterPasswordProvider extends MasterPasswordProvider {
 
     @Override
-    protected String doGetMasterPassword() throws Exception {
-        return "geoserver3";
+    protected char[] doGetMasterPassword() throws Exception {
+        return "geoserver3".toCharArray();
     }
 
     @Override
-    protected void doSetMasterPassword(String passwd) throws Exception {
+    protected void doSetMasterPassword(char[] passwd) throws Exception {
     }
 
     public static class Provider extends GeoServerSecurityProvider {

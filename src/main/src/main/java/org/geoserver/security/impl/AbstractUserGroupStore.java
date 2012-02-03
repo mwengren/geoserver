@@ -171,7 +171,7 @@ public abstract class AbstractUserGroupStore  implements GeoServerUserGroupStore
         // we have a plain text password
         // validate it
         getSecurityManager().loadPasswordValidator(getPasswordValidatorName()).
-        validatePassword(user.getPassword());    
+        validatePassword(user.getPassword().toCharArray());
 
         // validation ok, initializer encoder and set encoded password
         enc.initializeFor(this);

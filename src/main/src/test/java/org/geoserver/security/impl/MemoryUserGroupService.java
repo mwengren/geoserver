@@ -18,7 +18,6 @@ import org.geoserver.security.config.SecurityUserGroupServiceConfig;
 import org.geoserver.security.config.impl.MemoryUserGroupServiceConfigImpl;
 import org.geoserver.security.password.GeoServerPasswordEncoder;
 import org.geoserver.security.password.PasswordEncodingType;
-import org.geoserver.security.password.RandomPasswordProvider;
 
 
 /**
@@ -97,7 +96,8 @@ public class MemoryUserGroupService extends AbstractUserGroupService {
             KeyStoreProvider prov = getSecurityManager().getKeyStoreProvider();
             String alias = prov.aliasForGroupService(name);
             if (prov.containsAlias(alias)==false) {
-                prov.setUserGroupKey(name, RandomPasswordProvider.get().getRandomPassword(32));
+                prov.setUserGroupKey(name,
+                    getSecurityManager().getRandomPassworddProvider().getRandomPassword(32));
                 prov.storeKeyStore();
             }
         }

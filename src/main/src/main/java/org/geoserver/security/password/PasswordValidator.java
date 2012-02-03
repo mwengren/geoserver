@@ -39,25 +39,18 @@ public interface PasswordValidator {
     public final static String MASTERPASSWORD_NAME="master";
     
     /**
-     * setter for the config
-     * 
-     * @param config
+     * Setter for the config
      */
-    public void setConfig(PasswordPolicyConfig config);
+    void setConfig(PasswordPolicyConfig config);
     
     /**
      * Getter for the config
-     * @return
      */
-    public PasswordPolicyConfig getConfig();
+    PasswordPolicyConfig getConfig();
     
     /**
-     * Validates the password, throws an exception
-     * if the password is not valid
-     * 
-     * @param password
-     * @throws PasswordPolicyException
+     * Validates the password, throws an exception if the password is not valid
      */
-    public void validatePassword(String password) throws PasswordPolicyException;
+    void validatePassword(char[] password) throws PasswordPolicyException;
 
 }

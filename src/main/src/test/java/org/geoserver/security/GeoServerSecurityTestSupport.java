@@ -49,6 +49,6 @@ public class GeoServerSecurityTestSupport extends GeoServerTestSupport {
      * @return
      */
     protected String getMasterPassword() {
-        return getSecurityManager().getMasterPassword();
+        return new String(getSecurityManager().getMasterPassword());
     }
 }
