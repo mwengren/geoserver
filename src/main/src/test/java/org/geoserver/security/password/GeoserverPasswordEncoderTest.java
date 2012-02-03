@@ -115,6 +115,10 @@ public class GeoserverPasswordEncoderTest extends GeoServerSecurityTestSupport {
 
         enc = encoder.encodePassword("".toCharArray(), null);
         assertTrue(encoder.isPasswordValid(enc, "".toCharArray(), null));
+        
+        assertTrue(encoder.isPasswordValid(
+            "digest1:vimlmdmyH+VoUV1jkM+p8/uIyDY+h+WOtmSYUPT6r3SWtkg26oi5E08Yfo1v7jzz",
+            testPassword,null));
     }
 
     protected List<String> getConfigPBEEncoderNames() {

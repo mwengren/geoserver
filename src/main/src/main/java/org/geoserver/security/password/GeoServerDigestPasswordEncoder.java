@@ -4,6 +4,7 @@
  */
 package org.geoserver.security.password;
 
+import org.apache.commons.codec.binary.Base64;
 import org.jasypt.digest.ByteDigester;
 import org.jasypt.digest.StandardByteDigester;
 import org.jasypt.spring.security3.PasswordEncoder;
@@ -52,11 +53,11 @@ public class GeoServerDigestPasswordEncoder extends AbstractGeoserverPasswordEnc
             
             @Override
             public String encodePassword(char[] rawPass, Object salt) {
-                return new String(digester.digest(toBytes(rawPass)));
+                return new String(Base64.encodeBase64(digester.digest(toBytes(rawPass))));
             }
             @Override
             public boolean isPasswordValid(String encPass, char[] rawPass, Object salt) {
-                return digester.matches(toBytes(rawPass), encPass.getBytes()); 
+                return digester.matches(toBytes(rawPass), Base64.decodeBase64(encPass.getBytes())); 
             }
         };
     }
