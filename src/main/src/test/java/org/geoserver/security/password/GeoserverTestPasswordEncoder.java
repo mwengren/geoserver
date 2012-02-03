@@ -11,10 +11,26 @@ public class GeoserverTestPasswordEncoder extends  AbstractGeoserverPasswordEnco
     }
 
     @Override
-    protected PasswordEncoder getActualEncoder() {
+    protected PasswordEncoder createStringEncoder() {
         return new PlaintextPasswordEncoder();
     }
 
+    @Override
+    protected CharArrayPasswordEncoder createCharEncoder() {
+        return new CharArrayPasswordEncoder() {
+            
+            @Override
+            public boolean isPasswordValid(String encPass, char[] rawPass, Object salt) {
+                return encPass.equals(new String(rawPass));
+            }
+            
+            @Override
+            public String encodePassword(char[] rawPass, Object salt) {
+                return new String(rawPass);
+            }
+        };
+    }
+    
     @Override
     public PasswordEncodingType getEncodingType() {
         return PasswordEncodingType.PLAIN;

@@ -16,8 +16,25 @@ import org.springframework.security.authentication.encoding.PlaintextPasswordEnc
 public class GeoServerPlainTextPasswordEncoder extends AbstractGeoserverPasswordEncoder {
 
     @Override
-    protected PasswordEncoder getActualEncoder() {
+    protected PasswordEncoder createStringEncoder() {
         return new PlaintextPasswordEncoder();
+    }
+
+    @Override
+    protected CharArrayPasswordEncoder createCharEncoder() {
+        return new CharArrayPasswordEncoder() {
+            PlaintextPasswordEncoder encoder = new PlaintextPasswordEncoder();
+            
+            @Override
+            public boolean isPasswordValid(String encPass, char[] rawPass, Object salt) {
+                return encoder.isPasswordValid(encPass, new String(rawPass), salt);
+            }
+            
+            @Override
+            public String encodePassword(char[] rawPass, Object salt) {
+                return encoder.encodePassword(new String(rawPass), salt);
+            }
+        };
     }
 
     @Override
@@ -27,5 +44,10 @@ public class GeoServerPlainTextPasswordEncoder extends AbstractGeoserverPassword
     
     public String decode(String encPass) throws UnsupportedOperationException {
         return removePrefix(encPass);
+    }
+
+    @Override
+    public char[] decodeToCharArray(String encPass) throws UnsupportedOperationException {
+        return decode(encPass).toCharArray();
     }
 }

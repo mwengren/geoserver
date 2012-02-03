@@ -5,14 +5,19 @@
 package org.geoserver.security.password;
 
 import java.io.IOException;
+import java.util.Arrays;
 
 import org.geoserver.security.GeoServerSecurityManager;
 import org.geoserver.security.GeoServerUserGroupService;
 import org.geoserver.security.KeyStoreProviderImpl;
 import org.geoserver.security.KeyStoreProvider;
+import org.jasypt.encryption.pbe.StandardPBEByteEncryptor;
 import org.jasypt.encryption.pbe.StandardPBEStringEncryptor;
 import org.jasypt.spring.security3.PBEPasswordEncoder;
 import org.springframework.security.authentication.encoding.PasswordEncoder;
+import static org.geoserver.security.SecurityUtils.scramble;
+import static org.geoserver.security.SecurityUtils.toBytes;
+import static org.geoserver.security.SecurityUtils.toChars;
 
 /**
  * Password Encoder using symmetric encryption
@@ -28,7 +33,8 @@ import org.springframework.security.authentication.encoding.PasswordEncoder;
  */
 public class GeoServerPBEPasswordEncoder extends AbstractGeoserverPasswordEncoder {
 
-    StandardPBEStringEncryptor encrypter;
+    StandardPBEStringEncryptor stringEncrypter;
+    StandardPBEByteEncryptor byteEncrypter;
 
     private String providerName,algorithm;
     private String keyAliasInKeyStore = KeyStoreProviderImpl.CONFIGPASSWORDKEY;
@@ -73,28 +79,82 @@ public class GeoServerPBEPasswordEncoder extends AbstractGeoserverPasswordEncode
     }
 
     @Override
-    protected PasswordEncoder getActualEncoder() {
-        String password=null;
+    protected PasswordEncoder createStringEncoder() {
+        byte[] password = lookupPasswordFromKeyStore();
+
+        char[] chars = toChars(password);
+        try {
+            stringEncrypter = new StandardPBEStringEncryptor();
+            stringEncrypter.setPasswordCharArray(chars);
+    
+            if (getProviderName()!=null && !getProviderName().isEmpty()) {
+                stringEncrypter.setProviderName(getProviderName());
+            }
+            stringEncrypter.setAlgorithm(getAlgorithm());
+            
+            PBEPasswordEncoder encoder = new PBEPasswordEncoder();
+            encoder.setPbeStringEncryptor(stringEncrypter);
+
+            return encoder;
+        }
+        finally {
+            scramble(password);
+            scramble(chars);
+        }
+    }
+
+    @Override
+    protected CharArrayPasswordEncoder createCharEncoder() {
+        byte[] password = lookupPasswordFromKeyStore();
+        char[] chars = toChars(password);
+        
+        byteEncrypter = new StandardPBEByteEncryptor();
+        byteEncrypter.setPasswordCharArray(chars);
+        
+        if (getProviderName()!=null && !getProviderName().isEmpty()) {
+            byteEncrypter.setProviderName(getProviderName());
+        }
+        byteEncrypter.setAlgorithm(getAlgorithm());
+
+        return new CharArrayPasswordEncoder() {
+            @Override
+            public boolean isPasswordValid(String encPass, char[] rawPass, Object salt) {
+                byte[] decrypted = byteEncrypter.decrypt(encPass.getBytes());
+                char[] chars = toChars(decrypted);
+                try {
+                    return Arrays.equals(chars, rawPass);
+                }
+                finally {
+                    scramble(decrypted);
+                    scramble(chars);
+                }
+            }
+
+            @Override
+            public String encodePassword(char[] rawPass, Object salt) {
+                byte[] bytes = toBytes(rawPass);
+                try {
+                    return new String(byteEncrypter.encrypt(bytes));
+                }
+                finally {
+                    scramble(bytes);
+                }
+            }
+        };
+    }
+
+    
+    byte[] lookupPasswordFromKeyStore() {
         try {
             if (!keystoreProvider.containsAlias(getKeyAliasInKeyStore())) {
                 throw new RuntimeException("Keystore: " + keystoreProvider.getFile() + " does not" +
                     " contain alias: " + getKeyAliasInKeyStore());
             }
-            password = new String (keystoreProvider.getSecretKey(getKeyAliasInKeyStore()).getEncoded());
+            return keystoreProvider.getSecretKey(getKeyAliasInKeyStore()).getEncoded();
         } catch (IOException e) {
             throw new RuntimeException( "Cannot find alias: "+getKeyAliasInKeyStore() +
                 " in "+ keystoreProvider.getFile().getAbsolutePath());
         }
-
-        PBEPasswordEncoder encoder = new PBEPasswordEncoder();
-        encrypter = new StandardPBEStringEncryptor();
-        
-        encrypter.setPassword(password);
-        if (getProviderName()!=null && getProviderName().isEmpty()==false)
-            encrypter.setProviderName(getProviderName());
-        encrypter.setAlgorithm(getAlgorithm());
-        encoder.setPbeStringEncryptor(encrypter);
-        return encoder;
     }
 
     @Override
@@ -104,10 +164,29 @@ public class GeoServerPBEPasswordEncoder extends AbstractGeoserverPasswordEncode
     
 
     public String decode(String encPass) throws UnsupportedOperationException {
-        String encPass2= removePrefix(encPass);
-        if (encrypter==null) { // not initialized
-            getDelegate();
+        if (stringEncrypter == null) {
+            //not initialized
+            getStringEncoder();
         }
-        return encrypter.decrypt(encPass2);
+        
+        return stringEncrypter.decrypt(removePrefix(encPass));
     }
+
+    @Override
+    public char[] decodeToCharArray(String encPass)
+            throws UnsupportedOperationException {
+        if (byteEncrypter == null) {
+            //not initialized
+            getStringEncoder();
+        }
+
+        byte[] bytes = byteEncrypter.decrypt(removePrefix(encPass).getBytes());
+        try {
+            return toChars(bytes);
+        }
+        finally {
+            scramble(bytes);
+        }
+    }
+    
 }

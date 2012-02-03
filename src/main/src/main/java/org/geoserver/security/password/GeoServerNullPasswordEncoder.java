@@ -15,7 +15,7 @@ public class GeoServerNullPasswordEncoder extends AbstractGeoserverPasswordEncod
     }
 
     @Override
-    protected PasswordEncoder getActualEncoder() {
+    protected PasswordEncoder createStringEncoder() {
         return new PasswordEncoder() {
             @Override
             public boolean isPasswordValid(String encPass, String rawPass, Object salt)
@@ -31,9 +31,34 @@ public class GeoServerNullPasswordEncoder extends AbstractGeoserverPasswordEncod
     }
 
     @Override
+    protected CharArrayPasswordEncoder createCharEncoder() {
+        return new CharArrayPasswordEncoder() {
+            @Override
+            public boolean isPasswordValid(String encPass, char[] rawPass, Object salt) {
+                return true;
+            }
+            
+            @Override
+            public String encodePassword(char[] rawPass, Object salt) {
+                return new String(rawPass);
+            }
+        };
+    }
+
+    @Override
     public PasswordEncodingType getEncodingType() {
         return PasswordEncodingType.NULL;
     }
 
+    @Override
+    public String decode(String encPass) throws UnsupportedOperationException {
+        return encPass;
+    }
+
+    @Override
+    public char[] decodeToCharArray(String encPass)
+            throws UnsupportedOperationException {
+        return decode(encPass).toCharArray();
+    }
     
 }

@@ -4,8 +4,11 @@
  */
 package org.geoserver.security.password;
 
+import org.jasypt.digest.ByteDigester;
+import org.jasypt.digest.StandardByteDigester;
 import org.jasypt.spring.security3.PasswordEncoder;
 import org.jasypt.util.password.StrongPasswordEncryptor;
+import static org.geoserver.security.SecurityUtils.toBytes;
 
 /**
  * Password encoder which uses digest encoding
@@ -30,10 +33,32 @@ public class GeoServerDigestPasswordEncoder extends AbstractGeoserverPasswordEnc
     }
 
     @Override
-    protected PasswordEncoder getActualEncoder() {
+    protected PasswordEncoder createStringEncoder() {
         PasswordEncoder encoder = new PasswordEncoder();
         encoder.setPasswordEncryptor(new StrongPasswordEncryptor());
         return encoder;
+    }
+
+    @Override
+    protected CharArrayPasswordEncoder createCharEncoder() {
+        return new CharArrayPasswordEncoder() {
+            StandardByteDigester digester = new StandardByteDigester();
+            {
+                digester.setAlgorithm("SHA-256");
+                digester.setIterations(100000);
+                digester.setSaltSizeBytes(16);
+                digester.initialize();
+            }
+            
+            @Override
+            public String encodePassword(char[] rawPass, Object salt) {
+                return new String(digester.digest(toBytes(rawPass)));
+            }
+            @Override
+            public boolean isPasswordValid(String encPass, char[] rawPass, Object salt) {
+                return digester.matches(toBytes(rawPass), encPass.getBytes()); 
+            }
+        };
     }
 
     @Override

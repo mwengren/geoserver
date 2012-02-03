@@ -4,6 +4,7 @@
  */
 package org.geoserver.security.auth;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 
@@ -11,7 +12,9 @@ import javax.servlet.http.HttpServletRequest;
 
 import org.geoserver.security.GeoServerAuthenticationProvider;
 import org.geoserver.security.GeoServerUserGroupService;
+import org.geoserver.security.config.SecurityNamedServiceConfig;
 import org.geoserver.security.impl.GeoServerRole;
+import org.geoserver.security.password.GeoServerDigestPasswordEncoder;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -42,7 +45,6 @@ public class GeoServerRootAuthenticationProvider extends GeoServerAuthentication
         setName("root");
     }
 
-    
     @Override
     public boolean supports(Class<? extends Object> authentication, HttpServletRequest request) {
         return UsernamePasswordAuthenticationToken.class.isAssignableFrom(authentication);
@@ -58,14 +60,15 @@ public class GeoServerRootAuthenticationProvider extends GeoServerAuthentication
         if (ROOT_USERNAME.equals(token.getPrincipal())==false) return null;
 
         //check password
-        if (token.getCredentials() !=null && 
-            getSecurityManager().checkMasterPassword(token.getCredentials().toString())) {
-            Collection<GrantedAuthority> roles = new ArrayList<GrantedAuthority>();
-            roles.add(GeoServerRole.ADMIN_ROLE);
-            UsernamePasswordAuthenticationToken result = 
-                new UsernamePasswordAuthenticationToken(ROOT_USERNAME, null,roles);
-            result.setDetails(token.getDetails());
-            return result;
+        if (token.getCredentials() !=null) {
+            if (getSecurityManager().checkMasterPassword(token.getCredentials().toString())) {
+                Collection<GrantedAuthority> roles = new ArrayList<GrantedAuthority>();
+                roles.add(GeoServerRole.ADMIN_ROLE);
+                UsernamePasswordAuthenticationToken result = 
+                    new UsernamePasswordAuthenticationToken(ROOT_USERNAME, null,roles);
+                result.setDetails(token.getDetails());
+                return result;        
+            }
         }
             
         // not BadCredentialException is thrown, maybe there is another user with 

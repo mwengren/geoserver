@@ -1,5 +1,6 @@
 package org.geoserver.security.password;
 
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -81,26 +82,39 @@ public class GeoserverPasswordEncoderTest extends GeoServerSecurityTestSupport {
         String enc = encoder.encodePassword(testPassword, null);
         assertTrue(encoder.isPasswordValid(enc, testPassword, null));
         assertFalse(encoder.isPasswordValid(enc, "digest1:blabla", null));
-        
 
-        boolean fail = true;
         try {
             encoder.decode(enc);
+            fail("Must fail, digested passwords cannot be decoded");
         } catch (UnsupportedOperationException ex) {            
-            fail = false;
         }
-        assertFalse("Must fail, digested passwords cannot be decoded", fail);
 
         enc = encoder.encodePassword("", null);
         assertTrue(encoder.isPasswordValid(enc, "", null));
-        
 
-        
         // Test if encoding does not change between versions 
         assertTrue(encoder.isPasswordValid(
                 "digest1:CTBPxdfHvqy0K0M6uoYlb3+fPFrfMhpTm7+ey5rL/1xGI4s6g8n/OrkXdcyqzJ3D",
                 testPassword,null));
-                
+    }
+
+    public void testDigestEncoderBytes() {
+        GeoServerPasswordEncoder encoder = getDigestPasswordEncoder();
+        assertEquals(PasswordEncodingType.DIGEST,encoder.getEncodingType());
+        assertTrue(encoder.encodePassword(testPassword.toCharArray(), null).startsWith("digest1:"));
+
+        String enc = encoder.encodePassword(testPassword.toCharArray(), null);
+        assertTrue(encoder.isPasswordValid(enc, testPassword.toCharArray(), null));
+        assertFalse(encoder.isPasswordValid(enc, "digest1:blabla".toCharArray(), null));
+
+        try {
+            encoder.decode(enc);
+            fail("Must fail, digested passwords cannot be decoded");
+        } catch (UnsupportedOperationException ex) {
+        }
+
+        enc = encoder.encodePassword("".toCharArray(), null);
+        assertTrue(encoder.isPasswordValid(enc, "".toCharArray(), null));
     }
 
     protected List<String> getConfigPBEEncoderNames() {

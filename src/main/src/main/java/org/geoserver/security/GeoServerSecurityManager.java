@@ -40,6 +40,7 @@ import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
 import org.geoserver.catalog.Catalog;
 import org.geoserver.catalog.StoreInfo;
 import org.geoserver.config.GeoServerDataDirectory;
@@ -68,6 +69,7 @@ import org.geoserver.security.impl.GeoServerRole;
 import org.geoserver.security.impl.GeoServerUser;
 import org.geoserver.security.impl.Util;
 import org.geoserver.security.password.ConfigurationPasswordEncryptionHelper;
+import org.geoserver.security.password.GeoServerDigestPasswordEncoder;
 import org.geoserver.security.password.GeoServerPBEPasswordEncoder;
 import org.geoserver.security.password.GeoServerPasswordEncoder;
 import org.geoserver.security.password.MasterPasswordChangeRequest;
@@ -148,6 +150,9 @@ public class GeoServerSecurityManager extends ProviderManager implements Applica
     /** master password cpnfig file name */
     public static final String MASTER_PASSWD_CONFIG_FILENAME = "masterpw.xml";
 
+    /** master password digest file name */
+    public static final String MASTER_PASSWD_DIGEST_FILENAME = "masterpw.digest";
+    
     /** default master password */
     public static final char[] MASTER_PASSWD_DEFAULT= "geoserver".toCharArray();
 
@@ -169,6 +174,9 @@ public class GeoServerSecurityManager extends ProviderManager implements Applica
     /** current master password config */
     MasterPasswordConfig masterPasswordConfig = new MasterPasswordConfig();
 
+    /** digested master password */
+    volatile String masterPasswdDigest;
+
     /** cached user groups */
     ConcurrentHashMap<String, GeoServerUserGroupService> userGroupServices = 
         new ConcurrentHashMap<String, GeoServerUserGroupService>();
@@ -180,7 +188,6 @@ public class GeoServerSecurityManager extends ProviderManager implements Applica
     /** cached password validators services */
     ConcurrentHashMap<String, PasswordValidator> passwordValidators = 
         new ConcurrentHashMap<String, PasswordValidator>();
-
 
     /** some helper instances for storing/loading service config */ 
     RoleServiceHelper roleServiceHelper = new RoleServiceHelper();
@@ -357,6 +364,7 @@ public class GeoServerSecurityManager extends ProviderManager implements Applica
         GeoServerRootAuthenticationProvider rootAuthProvider 
             = new GeoServerRootAuthenticationProvider();
         rootAuthProvider.setSecurityManager(this);
+        rootAuthProvider.initializeFromConfig(null);
         this.authProviders.add(rootAuthProvider);
 
         //add the custom/configured ones
@@ -1145,17 +1153,55 @@ public class GeoServerSecurityManager extends ProviderManager implements Applica
      * Checks the specified password against the master password. 
      */
     public boolean checkMasterPassword(String passwd) {
-        if (passwd == null) {
-            return false;
-        }
+        return checkMasterPassword(passwd.toCharArray());
+    }
 
-        char[] masterPasswd = getMasterPassword();
-        try {
-            return Arrays.equals(masterPasswd, passwd.toCharArray());
+    /**
+     * Checks the specified password against the master password. 
+     */
+    public boolean checkMasterPassword(char[] passwd) {
+        GeoServerDigestPasswordEncoder pwEncoder = 
+                loadPasswordEncoder(GeoServerDigestPasswordEncoder.class);
+        if (masterPasswdDigest == null) {
+            synchronized (this) {
+                if (masterPasswdDigest == null) {
+                    try {
+                        //look for file
+                        File pwDigestFile = new File(getSecurityRoot(),MASTER_PASSWD_DIGEST_FILENAME);
+                        if (pwDigestFile.exists()) {
+                            FileInputStream fin = new FileInputStream(pwDigestFile);
+                            try {
+                                masterPasswdDigest = IOUtils.toString(fin);
+                            }
+                            finally {
+                                fin.close();
+                            }
+                        }
+                        else {
+                            //compute and store
+                            char[] masterPasswd = getMasterPassword();
+                            try {
+                                masterPasswdDigest = pwEncoder.encodePassword(masterPasswd, null);
+                            }
+                            finally {
+                                disposePassword(masterPasswd);
+                            }
+                            FileOutputStream fout = new FileOutputStream(pwDigestFile);
+                            try {
+                                IOUtils.write(masterPasswdDigest, fout);
+                            }
+                            finally {
+                                fout.close();
+                            }
+                        }
+                    }
+                    catch(IOException e) {
+                        throw new RuntimeException("Unable to create master password digest", e);
+                    }
+                }
+            }
         }
-        finally {
-            disposePassword(masterPasswd);
-        }
+        return pwEncoder.isPasswordValid(masterPasswdDigest, passwd, null);
     }
 
     /**
