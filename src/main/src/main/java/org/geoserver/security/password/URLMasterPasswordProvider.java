@@ -23,6 +23,7 @@ import org.geoserver.config.util.XStreamPersister;
 import org.geoserver.security.GeoServerSecurityManager;
 import org.geoserver.security.GeoServerSecurityProvider;
 import org.geoserver.security.MasterPasswordProvider;
+import org.geoserver.security.SecurityUtils;
 import org.geoserver.security.config.SecurityNamedServiceConfig;
 import org.geoserver.security.validation.SecurityConfigException;
 import org.geoserver.security.validation.SecurityConfigValidator;
@@ -122,17 +123,18 @@ public final class URLMasterPasswordProvider extends MasterPasswordProvider {
 
     char[] key() {
         //generate the key
-        char[] key = BASE.clone();
-        for (int i = 0; i < 256; i++) {
-            int j = i % key.length;
-
-            //swap char at j with char at PERM[j]
-            char c = key[j];
-            key[j] = key[PERM[j]];
-            key[PERM[j]] = c;
-        }
-
-        return key;
+        return SecurityUtils.permute(BASE, 32, PERM);
+//        char[] key = BASE.clone();
+//        for (int i = 0; i < 256; i++) {
+//            int j = i % key.length;
+//
+//            //swap char at j with char at PERM[j]
+//            char c = key[j];
+//            key[j] = key[PERM[j]];
+//            key[PERM[j]] = c;
+//        }
+//
+//        return key;
     }
 
     static OutputStream output(URL url, File configDir) throws IOException {

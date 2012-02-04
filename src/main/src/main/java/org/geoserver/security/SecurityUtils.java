@@ -7,6 +7,7 @@ package org.geoserver.security;
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 import java.nio.charset.Charset;
+import java.util.Arrays;
 
 import org.geoserver.security.password.RandomPasswordProvider;
 import org.geotools.data.Query;
@@ -120,4 +121,45 @@ public class SecurityUtils {
                     + "with unexpected AccessLimits class " + policy.getLimits().getClass());
         }
     }
+    
+    /**
+     * Creates the inverse permutation array
+     * 
+     * @param perm
+     * @return
+     */
+    public static int[] createInverse(int[] perm) {
+        int[] inverse = new int[perm.length];
+        for (int i = 0; i < perm.length;i++) {
+            inverse[perm[i]]=i;
+        }
+        return inverse;
+    }
+
+    /**
+     * Applies a permutation 
+     *  
+     * 
+     * @param base  source array
+     * @param times number of repetitions
+     * @param perm  the permutation 
+     * @return
+     */
+    public static char[] permute(char[] base,int times, int[] perm) {
+        
+        char[][] working = new char[2][base.length];
+        
+        System.arraycopy(base, 0, working[0], 0, base.length);
+        for (int j=0; j< times;j++) {
+            int source = j % 2;
+            int target = (j+1) % 2;
+            for (int i = 0; i< working[source].length;i++)
+                working[target][perm[i]]=working[source][i];
+        }
+        char [] result = working[1].clone();
+        Arrays.fill(working[0], '0');
+        Arrays.fill(working[1], '0');
+        return result;
+    }
+
 }
