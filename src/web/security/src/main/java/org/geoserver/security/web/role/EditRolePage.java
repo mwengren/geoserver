@@ -10,7 +10,6 @@ import java.util.Map.Entry;
 import org.geoserver.security.GeoServerRoleStore;
 import org.geoserver.security.impl.GeoServerRole;
 import org.geoserver.security.validation.RoleStoreValidationWrapper;
-import org.geoserver.security.web.AbstractSecurityPage;
 
 /**
  * Page for editing a  {@link GeoServerRole} object
@@ -20,11 +19,11 @@ import org.geoserver.security.web.AbstractSecurityPage;
  */
 public class EditRolePage extends AbstractRolePage {
 
-    public EditRolePage(String roleServiceName,GeoServerRole role,AbstractSecurityPage responsePage) {
+    public EditRolePage(String roleServiceName,GeoServerRole role) {
         // parent role name not known at this moment, parent
         // constructor will do the job 
         super(roleServiceName,new RoleUIModel(role.getAuthority(), null,role.getUserName()), 
-                role.getProperties(),responsePage);        
+                role.getProperties());        
         rolenameField.setEnabled(false);
         
         // do we have a personalized role

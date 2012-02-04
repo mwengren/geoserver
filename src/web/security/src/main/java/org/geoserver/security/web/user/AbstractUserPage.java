@@ -60,7 +60,7 @@ public abstract class AbstractUserPage extends AbstractSecurityPage {
     protected WebMarkupContainer calculatedrolesContainer;
     protected String userGroupServiceName;
 
-    protected AbstractUserPage(String userGroupServiceName,UserUIModel uiUser,Properties properties, AbstractSecurityPage responsePage) {
+    protected AbstractUserPage(String userGroupServiceName,UserUIModel uiUser,Properties properties) {
         this.userGroupServiceName=userGroupServiceName;
         this.uiUser=uiUser;
         // build the form
@@ -153,8 +153,8 @@ public abstract class AbstractUserPage extends AbstractSecurityPage {
         userRolesFormComponent.setEnabled(hasRoleStore(getSecurityManager().getActiveRoleService().getName()));
                                        
         // build the submit/cancel
-        form.add(getCancelLink(responsePage));
-        form.add(saveLink=saveLink(responsePage));
+        form.add(getCancelLink());
+        form.add(saveLink=saveLink());
         saveLink.setVisible(hasUserGroupStore || hasRoleStore(getSecurityManager().getActiveRoleService().getName()));
         
                                
@@ -173,33 +173,42 @@ public abstract class AbstractUserPage extends AbstractSecurityPage {
                 return "AbstractUserPage.passwordMismatch";
             }                        
         });
-        
     }
 
-    SubmitLink saveLink(final AbstractSecurityPage responsePage) {
-        return new SubmitLink("save") {
-            private static final long serialVersionUID = 1L;
+    void handleSubmitError(Exception e) {
+        LOGGER.log(Level.SEVERE, "Error occurred while saving user", e);
+        
+        if (e instanceof RuntimeException && e.getCause() instanceof Exception) {
+            e = (Exception) e.getCause();
+        }
+        
+        if (e instanceof IOException && e.getCause() instanceof AbstractSecurityException) {
+            e = (Exception) e.getCause();
+        }
 
+        if (e instanceof AbstractSecurityException) {
+            error(e);
+        }
+        else {
+            error(new ParamResourceModel("saveError", getPage(), e.getMessage()).getObject());
+        }
+    }
+
+    SubmitLink saveLink() {
+        return new SubmitLink("save") {
+            
             @Override
             public void onSubmit() {
                 try {
                     onFormSubmit();
-                    responsePage.setDirty(true);
-                    setResponsePage(responsePage);
-                } catch (PasswordPolicyException ex) {
-                    error(ex);
-                } catch (IOException e) {
-                    if (e.getCause() instanceof AbstractSecurityException) {
-                        error(e.getCause());
-                    } else {
-                        error(new ParamResourceModel("saveError", getPage(), e.getMessage()).getObject());
-                    }
-                    LOGGER.log(Level.SEVERE, "Error occurred while saving user", e);
+                    setReturnPageDirtyAndReturn(true);
+                }
+                catch(Exception e) {
+                    handleSubmitError(e);
                 }
             }
         };
     }
-    
     
     Component editRoleLink(String id, IModel<GeoServerRole> itemModel, Property<GeoServerRole> property) {
         return new SimpleAjaxLink(id, itemModel, property.getModel(itemModel)) {
@@ -209,8 +218,7 @@ public abstract class AbstractUserPage extends AbstractSecurityPage {
             protected void onClick(AjaxRequestTarget target) {                
                 setResponsePage(new EditRolePage(
                         getSecurityManager().getActiveRoleService().getName(),
-                        (GeoServerRole) getDefaultModelObject(), 
-                        (AbstractSecurityPage) this.getPage()));
+                        (GeoServerRole) getDefaultModelObject()).setReturnPage(this.getPage()));
             }
         };
     }
@@ -246,10 +254,9 @@ public abstract class AbstractUserPage extends AbstractSecurityPage {
         Collections.sort(resultList);
         return resultList;
     }
-    
-    
+
     /**
-     * Implements the actual save action
+     * Implements the actual save action.
      */
     protected abstract void onFormSubmit() throws IOException, PasswordPolicyException;
     

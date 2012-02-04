@@ -114,9 +114,8 @@ public class UserGroupFormComponent extends FormComponentPanel<Serializable> {
             private static final long serialVersionUID = 1L;
             @Override
             public void onSubmit() {
-                setResponsePage(new NewGroupPage(userGroupServiceName,
-                        (AbstractSecurityPage)this.getPage()));
-            }            
+                setResponsePage(new NewGroupPage(userGroupServiceName).setReturnPage(this.getPage()));
+            }
           };
         add(addGroup);
                 

@@ -91,10 +91,9 @@ public class RolePanel extends Panel {
         add(add = new Link("addNew") {
             @Override
             public void onClick() {
-                setResponsePage(new NewRolePage(roleServiceName,
-                        (AbstractSecurityPage)getPage()));
-            }            
-        });        
+                setResponsePage(new NewRolePage(roleServiceName).setReturnPage(getPage()));
+            }
+        });
         add.setVisible(canCreateStore);
 
         // the removal button
@@ -133,7 +132,7 @@ public class RolePanel extends Panel {
             @Override
             protected void onClick(AjaxRequestTarget target) {
                 setResponsePage(new EditRolePage(roleServiceName, 
-                        (GeoServerRole) getDefaultModelObject(),(AbstractSecurityPage) getPage()));
+                        (GeoServerRole) getDefaultModelObject()).setReturnPage(getPage()));
             }
 
         };
@@ -153,8 +152,7 @@ public class RolePanel extends Panel {
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
-                setResponsePage(new EditRolePage(roleServiceName, parentRole,
-                        (AbstractSecurityPage) getPage()));
+                setResponsePage(new EditRolePage(roleServiceName, parentRole).setReturnPage(getPage()));
             }
 
         };

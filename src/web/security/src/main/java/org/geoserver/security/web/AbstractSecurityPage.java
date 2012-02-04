@@ -54,14 +54,23 @@ public abstract class AbstractSecurityPage extends GeoServerSecuredPage {
         this.dirty = dirty;
     }
 
-    public void setReturnPage(Page returnPage) {
+    public AbstractSecurityPage setReturnPage(Page returnPage) {
         this.returnPage = returnPage;
+        return this;
     }
 
-    public void setReturnPage(Class<Page> returnPageClass) {
+    public AbstractSecurityPage setReturnPage(Class<Page> returnPageClass) {
         this.returnPageClass = returnPageClass;
+        return this;
     }
-    
+
+    protected void setReturnPageDirtyAndReturn(boolean dirty) {
+        if (returnPage instanceof AbstractSecurityPage) {
+            ((AbstractSecurityPage)returnPage).setDirty(dirty);
+        }
+        doReturn();
+    }
+
     protected void doReturn() {
         if (returnPage != null) {
             setResponsePage(returnPage);
@@ -73,14 +82,13 @@ public abstract class AbstractSecurityPage extends GeoServerSecuredPage {
         }
     }
 
-    public Link<Page> getCancelLink(final AbstractSecurityPage returnPage) {
+    public Link<Page> getCancelLink() {
         return new Link<Page>("cancel") {
             private static final long serialVersionUID = 1L;
             @Override
             public void onClick() {
-                returnPage.setDirty(false); 
-                setResponsePage(returnPage);
-            }            
+                setReturnPageDirtyAndReturn(false);
+            }
         }; 
     }
 

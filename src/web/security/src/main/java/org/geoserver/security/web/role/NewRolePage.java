@@ -11,7 +11,6 @@ import java.util.Properties;
 import org.geoserver.security.GeoServerRoleStore;
 import org.geoserver.security.impl.GeoServerRole;
 import org.geoserver.security.validation.RoleStoreValidationWrapper;
-import org.geoserver.security.web.AbstractSecurityPage;
 
 /**
  * Page for adding a new {@link GeoServerRole} object
@@ -22,8 +21,8 @@ import org.geoserver.security.web.AbstractSecurityPage;
 public class NewRolePage extends AbstractRolePage {
 
     
-    public NewRolePage(String roleServiceName,AbstractSecurityPage responsePage) {
-        super(roleServiceName,new RoleUIModel("", "",null),new Properties(),responsePage);        
+    public NewRolePage(String roleServiceName) {
+        super(roleServiceName,new RoleUIModel("", "",null),new Properties());
         if (hasRoleStore(roleServiceName)==false) {
             throw new RuntimeException("Workflow error, new role not possible for read only service");
         }

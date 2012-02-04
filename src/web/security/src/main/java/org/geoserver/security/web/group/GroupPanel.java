@@ -11,7 +11,6 @@ import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.behavior.AttributeAppender;
 import org.apache.wicket.markup.html.basic.Label;
-import org.apache.wicket.markup.html.link.BookmarkablePageLink;
 import org.apache.wicket.markup.html.link.Link;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
@@ -19,7 +18,6 @@ import org.apache.wicket.model.Model;
 import org.apache.wicket.model.StringResourceModel;
 import org.geoserver.security.GeoServerUserGroupService;
 import org.geoserver.security.impl.GeoServerUserGroup;
-import org.geoserver.security.web.AbstractSecurityPage;
 import org.geoserver.web.CatalogIconFactory;
 import org.geoserver.web.GeoServerApplication;
 import org.geoserver.web.wicket.GeoServerDataProvider.Property;
@@ -101,8 +99,7 @@ public class GroupPanel extends Panel {
         add(add = new Link("addNew") {
             @Override
             public void onClick() {
-                setResponsePage(new NewGroupPage(serviceName,
-                        (AbstractSecurityPage)getPage()));
+                setResponsePage(new NewGroupPage(serviceName).setReturnPage(getPage()));
             }            
         });
         add.setVisible(canCreateStore);
@@ -127,8 +124,8 @@ public class GroupPanel extends Panel {
         return new SimpleAjaxLink(id, itemModel, property.getModel(itemModel)) {
             @Override
             protected void onClick(AjaxRequestTarget target) {
-                setResponsePage(new EditGroupPage(serviceName,(GeoServerUserGroup) getDefaultModelObject(),
-                        (AbstractSecurityPage)getPage()));
+                setResponsePage(new EditGroupPage(serviceName,(GeoServerUserGroup) getDefaultModelObject())
+                    .setReturnPage(getPage()));
             }
         };
     }

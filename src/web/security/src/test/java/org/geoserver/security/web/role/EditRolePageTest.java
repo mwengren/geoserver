@@ -24,7 +24,8 @@ public class EditRolePageTest extends AbstractSecurityWicketTestSupport {
         insertValues();        
         
         AbstractSecurityPage returnPage = initializeForRoleServiceNamed(getRoleServiceName());
-        tester.startPage(page=new EditRolePage(getRoleServiceName(),gaService.getRoleByName("ROLE_WFS"),returnPage));        
+        tester.startPage(page=(EditRolePage) new EditRolePage(getRoleServiceName(),
+            gaService.getRoleByName("ROLE_WFS")).setReturnPage(returnPage));
         tester.assertRenderedPage(EditRolePage.class);
         
         assertFalse(tester.getComponentFromLastRenderedPage("roleForm:rolename").isEnabled());
@@ -70,7 +71,8 @@ public class EditRolePageTest extends AbstractSecurityWicketTestSupport {
         insertValues();        
         
         AbstractSecurityPage returnPage = initializeForRoleServiceNamed(getRoleServiceName());
-        tester.startPage(page=new EditRolePage(getRoleServiceName(),gaService.getRoleByName("ROLE_AUTHENTICATED"),returnPage));        
+        tester.startPage(page=(EditRolePage) new EditRolePage(getRoleServiceName(),
+            gaService.getRoleByName("ROLE_AUTHENTICATED")).setReturnPage(returnPage));
         tester.assertRenderedPage(EditRolePage.class);
         
         tester.assertModelValue("roleForm:rolename", "ROLE_AUTHENTICATED");
@@ -99,7 +101,8 @@ public class EditRolePageTest extends AbstractSecurityWicketTestSupport {
         activateRORoleService();
         
         AbstractSecurityPage returnPage = initializeForRoleServiceNamed(getRORoleServiceName());
-        tester.startPage(page=new EditRolePage(getRORoleServiceName(),GeoServerRole.ADMIN_ROLE,returnPage));
+        tester.startPage(page=(EditRolePage) new EditRolePage(getRORoleServiceName(),
+            GeoServerRole.ADMIN_ROLE).setReturnPage(returnPage));
         tester.assertRenderedPage(EditRolePage.class);
         assertFalse(tester.getComponentFromLastRenderedPage("roleForm:rolename").isEnabled());
         assertFalse(tester.getComponentFromLastRenderedPage("roleForm:roleparameditor").isEnabled());

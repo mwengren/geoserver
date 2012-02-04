@@ -17,15 +17,14 @@ import org.geoserver.security.impl.GeoServerUserGroup;
 import org.geoserver.security.validation.PasswordPolicyException;
 import org.geoserver.security.validation.RoleStoreValidationWrapper;
 import org.geoserver.security.validation.UserGroupStoreValidationWrapper;
-import org.geoserver.security.web.AbstractSecurityPage;
 
 /**
  * Allows editing an existing user
  */
 public class EditUserPage extends AbstractUserPage {
 
-    public EditUserPage(String userGroupServiceName, GeoServerUser user,AbstractSecurityPage responsePage) {
-        super(userGroupServiceName,new UserUIModel(user),user.getProperties(),responsePage);
+    public EditUserPage(String userGroupServiceName, GeoServerUser user) {
+        super(userGroupServiceName,new UserUIModel(user),user.getProperties());
         username.setEnabled(false);
     }
 
@@ -80,8 +79,6 @@ public class EditUserPage extends AbstractUserPage {
             try {gaStore.load(); } catch (IOException ex2) {};
             throw ex;
         }
-
-            
     }
 
 }

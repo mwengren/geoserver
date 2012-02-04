@@ -19,8 +19,8 @@ import org.geoserver.security.web.AbstractSecurityPage;
 public class EditGroupPage extends AbstractGroupPage {
 
     
-    public EditGroupPage(String userGroupServiceName,GeoServerUserGroup group,AbstractSecurityPage responsePage) {
-        super(userGroupServiceName,new GroupUIModel(group.getGroupname(), group.isEnabled()),responsePage);
+    public EditGroupPage(String userGroupServiceName,GeoServerUserGroup group) {
+        super(userGroupServiceName,new GroupUIModel(group.getGroupname(), group.isEnabled()));
         groupnameField.setEnabled(false);
     }
 

@@ -31,7 +31,7 @@ public abstract class AbstractGroupPage extends AbstractSecurityPage {
     protected Form<Serializable> form;
     protected String userGroupServiceName;
 
-    protected AbstractGroupPage(String userGroupServiceName,GroupUIModel uiGroup,AbstractSecurityPage responsePage) {
+    protected AbstractGroupPage(String userGroupServiceName,GroupUIModel uiGroup) {
         
         
         this.userGroupServiceName=userGroupServiceName;
@@ -65,22 +65,21 @@ public abstract class AbstractGroupPage extends AbstractSecurityPage {
         groupRolesFormComponent.setEnabled(hasRoleStore(getSecurityManager().getActiveRoleService().getName()));
         
         // build the submit/cancel
-        form.add(getCancelLink(responsePage));
-        saveLink = saveLink(responsePage);
+        form.add(getCancelLink());
+        saveLink = saveLink();
         form.add(saveLink);
         saveLink.setVisible(hasUserGroupStore || hasRoleStore(getSecurityManager().getActiveRoleService().getName()));
         
         
     }
 
-    SubmitLink saveLink(final AbstractSecurityPage responsePage) {
+    SubmitLink saveLink() {
         return new SubmitLink("save") {
             @Override
             public void onSubmit() {
                 try {
                     onFormSubmit();
-                    responsePage.setDirty(true);
-                    setResponsePage(responsePage);
+                    setReturnPageDirtyAndReturn(true);
                 } catch (IOException e) {
                     if (e.getCause() instanceof AbstractSecurityException) {
                         error(e.getCause());

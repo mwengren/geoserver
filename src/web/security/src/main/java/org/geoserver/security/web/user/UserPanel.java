@@ -17,7 +17,6 @@ import org.apache.wicket.model.Model;
 import org.apache.wicket.model.StringResourceModel;
 import org.geoserver.security.GeoServerUserGroupService;
 import org.geoserver.security.impl.GeoServerUser;
-import org.geoserver.security.web.AbstractSecurityPage;
 import org.geoserver.web.CatalogIconFactory;
 import org.geoserver.web.GeoServerApplication;
 import org.geoserver.web.wicket.GeoServerDataProvider.Property;
@@ -109,8 +108,7 @@ public class UserPanel extends Panel {
         add(add=new Link("addNew") {
             @Override
             public void onClick() {
-                setResponsePage(new NewUserPage(serviceName, 
-                        (AbstractSecurityPage) this.getPage()));
+                setResponsePage(new NewUserPage(serviceName).setReturnPage(this.getPage()));
             }
         });
         
@@ -150,8 +148,8 @@ public class UserPanel extends Panel {
 
             @Override
             protected void onClick(AjaxRequestTarget target) {
-                setResponsePage(new EditUserPage(serviceName,(GeoServerUser) getDefaultModelObject(),
-                        (AbstractSecurityPage) getPage()));
+                setResponsePage(new EditUserPage(serviceName,(GeoServerUser) getDefaultModelObject())
+                    .setReturnPage(getPage()));
             }
 
         };

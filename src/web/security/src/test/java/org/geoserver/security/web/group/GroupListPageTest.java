@@ -22,23 +22,23 @@ public class GroupListPageTest extends AbstractTabbedListPageTest<GeoServerUserG
     }
     protected AbstractSecurityPage newPage(AbstractSecurityPage page,Object...params) {
         if (params.length==0)
-            return new  NewGroupPage(getUserGroupServiceName(),page);
+            return new  NewGroupPage(getUserGroupServiceName()).setReturnPage(page);
         else
-            return new  NewGroupPage((String) params[0],page);
+            return new  NewGroupPage((String) params[0]).setReturnPage(page);
     }
     protected AbstractSecurityPage editPage(AbstractSecurityPage page,Object...params) {
         if (params.length==0) {
             return new  EditGroupPage(
                     getUserGroupServiceName(),
-                    new GeoServerUserGroup("dummygroup"),page);            
+                    new GeoServerUserGroup("dummygroup")).setReturnPage(page);
         }
         if (params.length==1)
             return new  EditGroupPage(
                     getUserGroupServiceName(),
-                    (GeoServerUserGroup) params[0],page);
+                    (GeoServerUserGroup) params[0]).setReturnPage(page);
         else
             return new  EditGroupPage( (String) params[0],
-                    (GeoServerUserGroup) params[1],page);                    
+                    (GeoServerUserGroup) params[1]).setReturnPage(page);
     }
 
 

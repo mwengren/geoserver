@@ -15,7 +15,8 @@ public class NewUserPageTest extends AbstractUserPageTest {
 
     protected void initializeTester() {
         AbstractSecurityPage returnPage = initializeForUGServiceNamed(getUserGroupServiceName());
-        tester.startPage(page=new NewUserPage(getUserGroupServiceName(),returnPage));
+        tester.startPage(page=(AbstractUserPage) 
+            new NewUserPage(getUserGroupServiceName()).setReturnPage(returnPage));
     }
     
     public void testFill() throws Exception{
@@ -205,7 +206,8 @@ public class NewUserPageTest extends AbstractUserPageTest {
         AbstractSecurityPage returnPage = initializeForUGServiceNamed(getROUserGroupServiceName());
         boolean fail = true;
         try {
-            tester.startPage(page=new NewUserPage(getROUserGroupServiceName(),returnPage));
+            tester.startPage(page=(AbstractUserPage) 
+                new NewUserPage(getROUserGroupServiceName()).setReturnPage(returnPage));
         } catch (RuntimeException ex) {
             fail = false;
         }

@@ -26,23 +26,23 @@ public class RoleListPageTest extends AbstractTabbedListPageTest<GeoServerRole> 
     }
     protected AbstractSecurityPage newPage(AbstractSecurityPage page,Object...params) {
         if (params.length==0)
-            return new  NewRolePage(getSecurityManager().getActiveRoleService().getName(),page);
+            return new  NewRolePage(getSecurityManager().getActiveRoleService().getName()).setReturnPage(page);
         else
-            return new  NewRolePage((String) params[0],page);
+            return new  NewRolePage((String) params[0]).setReturnPage(page);
     }
     protected AbstractSecurityPage editPage(AbstractSecurityPage page,Object...params) {
         if (params.length==0) {
             return new  EditRolePage(
                     getSecurityManager().getActiveRoleService().getName(),
-                    GeoServerRole.ADMIN_ROLE,page);            
+                    GeoServerRole.ADMIN_ROLE).setReturnPage(page);
         }
         if (params.length==1)
             return new  EditRolePage(
                     getSecurityManager().getActiveRoleService().getName(),
-                    (GeoServerRole) params[0],page);
+                    (GeoServerRole) params[0]).setReturnPage(page);
         else
             return new  EditRolePage((String) params[0],
-                    (GeoServerRole) params[1],page);
+                    (GeoServerRole) params[1]).setReturnPage(page);
     }
 
     protected String getTabbedPanelPath() {

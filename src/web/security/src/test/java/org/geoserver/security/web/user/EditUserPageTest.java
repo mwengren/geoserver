@@ -94,7 +94,8 @@ public class EditUserPageTest extends AbstractUserPageTest {
         activateROUGService();
         AbstractSecurityPage returnPage = initializeForUGServiceNamed(getROUserGroupServiceName());
         current = ugService.getUserByUsername("user1");
-        tester.startPage(page=new EditUserPage(getROUserGroupServiceName(),current,returnPage));
+        tester.startPage(page=(AbstractUserPage) 
+            new EditUserPage(getROUserGroupServiceName(),current).setReturnPage(returnPage));
         tester.assertRenderedPage(EditUserPage.class);
         
         assertFalse(tester.getComponentFromLastRenderedPage("userForm:username").isEnabled());
@@ -156,7 +157,8 @@ public class EditUserPageTest extends AbstractUserPageTest {
         activateRORoleService();
         AbstractSecurityPage returnPage = initializeForUGServiceNamed(getROUserGroupServiceName());
         current = ugService.getUserByUsername("user1");
-        tester.startPage(page=new EditUserPage(getROUserGroupServiceName(),current,returnPage));
+        tester.startPage(page=(AbstractUserPage) 
+            new EditUserPage(getROUserGroupServiceName(),current).setReturnPage(returnPage));
         tester.assertRenderedPage(EditUserPage.class);
         assertFalse(tester.getComponentFromLastRenderedPage("userForm:username").isEnabled());
         assertFalse(tester.getComponentFromLastRenderedPage("userForm:password").isEnabled());
@@ -171,7 +173,8 @@ public class EditUserPageTest extends AbstractUserPageTest {
     @Override
     protected void initializeTester() {
         AbstractSecurityPage returnPage = initializeForUGServiceNamed(getUserGroupServiceName());
-        tester.startPage(page=new EditUserPage(getUserGroupServiceName(),current,returnPage));
+        tester.startPage(page=(AbstractUserPage) 
+            new EditUserPage(getUserGroupServiceName(),current).setReturnPage(returnPage));
     }
 
     public void testPasswordsDontMatch() throws Exception {

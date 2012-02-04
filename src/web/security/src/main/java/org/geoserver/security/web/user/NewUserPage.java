@@ -17,21 +17,20 @@ import org.geoserver.security.impl.GeoServerUserGroup;
 import org.geoserver.security.validation.PasswordPolicyException;
 import org.geoserver.security.validation.RoleStoreValidationWrapper;
 import org.geoserver.security.validation.UserGroupStoreValidationWrapper;
-import org.geoserver.security.web.AbstractSecurityPage;
 
 /**
  * Allows creation of a new user in users.properties
  */
 public class NewUserPage extends AbstractUserPage {
 
-    public NewUserPage(String userGroupServiceName,AbstractSecurityPage responsePage) {
-       super(userGroupServiceName,new UserUIModel(),new Properties(),responsePage);       
+    public NewUserPage(String userGroupServiceName) {
+       super(userGroupServiceName,new UserUIModel(),new Properties());
        if (hasUserGroupStore(userGroupServiceName)==false) {
            throw new RuntimeException("Workflow error, new user not possible for read only service");
        }
 
     }
-    
+
     @Override
     protected void onFormSubmit() throws IOException,PasswordPolicyException {
         GeoServerUserGroupStore ugStore = new UserGroupStoreValidationWrapper(
@@ -72,7 +71,7 @@ public class NewUserPage extends AbstractUserPage {
         } catch (IOException ex) {
             try {gaStore.load(); } catch (IOException ex2) {};
             throw ex;
-        }                                        
-        
+        }                     
     }
+
 }

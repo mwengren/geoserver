@@ -25,7 +25,8 @@ public class NewGroupPageTest extends AbstractSecurityWicketTestSupport {
     protected void doTestFill() throws Exception {
         insertValues();        
         AbstractSecurityPage returnPage = initializeForUGServiceNamed(getUserGroupServiceName());
-        tester.startPage(page=new NewGroupPage(getUserGroupServiceName(),returnPage));        
+        tester.startPage(page=(NewGroupPage) 
+                new NewGroupPage(getUserGroupServiceName()).setReturnPage(returnPage));
         tester.assertRenderedPage(NewGroupPage.class);
         
         FormTester form = tester.newFormTester("groupForm");
@@ -78,7 +79,8 @@ public class NewGroupPageTest extends AbstractSecurityWicketTestSupport {
         initializeForXML();
         insertValues();
         AbstractSecurityPage returnPage = initializeForUGServiceNamed(getUserGroupServiceName());
-        tester.startPage(page=new NewGroupPage(getUserGroupServiceName(),returnPage));
+        tester.startPage(page=(NewGroupPage) 
+            new NewGroupPage(getUserGroupServiceName()).setReturnPage(returnPage));
         
         FormTester form = tester.newFormTester("groupForm");
         form.setValue("groupname", "group1");
@@ -95,7 +97,8 @@ public class NewGroupPageTest extends AbstractSecurityWicketTestSupport {
         AbstractSecurityPage returnPage = initializeForUGServiceNamed(getROUserGroupServiceName());
         boolean fail = true;
         try {
-            tester.startPage(page=new NewGroupPage(getROUserGroupServiceName(),returnPage));
+            tester.startPage(page=(NewGroupPage) 
+                new NewGroupPage(getROUserGroupServiceName()).setReturnPage(returnPage));
         } catch (RuntimeException ex) {
             fail = false;
         }
@@ -107,7 +110,8 @@ public class NewGroupPageTest extends AbstractSecurityWicketTestSupport {
         initializeForXML();
         activateRORoleService();
         AbstractSecurityPage returnPage = initializeForUGServiceNamed(getUserGroupServiceName());
-        tester.startPage(page=new NewGroupPage(getUserGroupServiceName(),returnPage));
+        tester.startPage(page=(NewGroupPage) 
+            new NewGroupPage(getUserGroupServiceName()).setReturnPage(returnPage));
         assertFalse(page.groupRolesFormComponent.isEnabled());
         
         FormTester form = tester.newFormTester("groupForm");

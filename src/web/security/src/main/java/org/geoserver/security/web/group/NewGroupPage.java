@@ -13,13 +13,12 @@ import org.geoserver.security.impl.GeoServerRole;
 import org.geoserver.security.impl.GeoServerUserGroup;
 import org.geoserver.security.validation.RoleStoreValidationWrapper;
 import org.geoserver.security.validation.UserGroupStoreValidationWrapper;
-import org.geoserver.security.web.AbstractSecurityPage;
 
 public class NewGroupPage extends AbstractGroupPage {
 
     
-    public NewGroupPage(String userGroupServiceName,AbstractSecurityPage responsePage) {
-        super(userGroupServiceName,new GroupUIModel("", true),responsePage);
+    public NewGroupPage(String userGroupServiceName) {
+        super(userGroupServiceName,new GroupUIModel("", true));
                 
         if (hasUserGroupStore(userGroupServiceName)==false) {
             throw new RuntimeException("Workflow error, new user not possible for read only service");

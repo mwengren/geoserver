@@ -25,8 +25,8 @@ public class EditGroupPageTest extends AbstractSecurityWicketTestSupport {
         insertValues();        
         
         AbstractSecurityPage returnPage = initializeForUGServiceNamed(getUserGroupServiceName());
-        tester.startPage(page=new EditGroupPage(getUserGroupServiceName(),
-                ugService.getGroupByGroupname("group1"),returnPage));        
+        tester.startPage(page=(EditGroupPage) new EditGroupPage(getUserGroupServiceName(),
+                ugService.getGroupByGroupname("group1")).setReturnPage(returnPage));        
         tester.assertRenderedPage(EditGroupPage.class);
         
         tester.assertRenderedPage(EditGroupPage.class);
@@ -86,8 +86,8 @@ public class EditGroupPageTest extends AbstractSecurityWicketTestSupport {
         insertValues();
         activateROUGService();
         AbstractSecurityPage returnPage = initializeForUGServiceNamed(getROUserGroupServiceName());        
-        tester.startPage(page=new EditGroupPage(getROUserGroupServiceName(),
-                ugService.getGroupByGroupname("group1"),returnPage));
+        tester.startPage(page=(EditGroupPage) new EditGroupPage(getROUserGroupServiceName(),
+                ugService.getGroupByGroupname("group1")).setReturnPage(returnPage));
         tester.assertRenderedPage(EditGroupPage.class);
         assertFalse(tester.getComponentFromLastRenderedPage("groupForm:groupname").isEnabled());
         assertFalse(tester.getComponentFromLastRenderedPage("groupForm:enabled").isEnabled());
@@ -115,7 +115,8 @@ public class EditGroupPageTest extends AbstractSecurityWicketTestSupport {
         
         activateRORoleService();
         AbstractSecurityPage returnPage = initializeForUGServiceNamed(getUserGroupServiceName());
-        tester.startPage(page=new EditGroupPage(getUserGroupServiceName(),ugService.getGroupByGroupname("group1"),returnPage));
+        tester.startPage(page=(EditGroupPage) new EditGroupPage(getUserGroupServiceName(),
+            ugService.getGroupByGroupname("group1")).setReturnPage(returnPage));
         tester.assertRenderedPage(EditGroupPage.class);
         assertFalse(tester.getComponentFromLastRenderedPage("groupForm:groupname").isEnabled());
         assertTrue(tester.getComponentFromLastRenderedPage("groupForm:enabled").isEnabled());
@@ -139,8 +140,8 @@ public class EditGroupPageTest extends AbstractSecurityWicketTestSupport {
         activateRORoleService();
         
         AbstractSecurityPage returnPage = initializeForUGServiceNamed(getROUserGroupServiceName());
-        tester.startPage(page=new EditGroupPage(getROUserGroupServiceName(),
-                ugService.getGroupByGroupname("group1"),returnPage));
+        tester.startPage(page=(EditGroupPage) new EditGroupPage(getROUserGroupServiceName(),
+                ugService.getGroupByGroupname("group1")).setReturnPage(returnPage));
         tester.assertRenderedPage(EditGroupPage.class);
         assertFalse(tester.getComponentFromLastRenderedPage("groupForm:groupname").isEnabled());
         assertFalse(tester.getComponentFromLastRenderedPage("groupForm:enabled").isEnabled());
