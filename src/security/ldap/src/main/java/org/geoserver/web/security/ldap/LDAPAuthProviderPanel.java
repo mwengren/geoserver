@@ -1,7 +1,10 @@
+/* Copyright (c) 2001 - 2012 TOPP - www.openplans.org. All rights reserved.
+ * This code is licensed under the GPL 2.0 license, available at the root
+ * application directory.
+ */
 package org.geoserver.web.security.ldap;
 
 import java.net.URI;
-import java.net.URL;
 import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Map;
@@ -13,7 +16,6 @@ import javax.naming.ldap.InitialLdapContext;
 import javax.naming.ldap.LdapContext;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
-import org.apache.wicket.ajax.markup.html.AjaxLink;
 import org.apache.wicket.ajax.markup.html.form.AjaxCheckBox;
 import org.apache.wicket.ajax.markup.html.form.AjaxSubmitLink;
 import org.apache.wicket.markup.html.WebMarkupContainer;
@@ -21,19 +23,23 @@ import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.FormComponent;
 import org.apache.wicket.markup.html.form.FormComponentPanel;
-import org.apache.wicket.markup.html.form.IFormSubmittingComponent;
 import org.apache.wicket.markup.html.form.PasswordTextField;
 import org.apache.wicket.markup.html.form.TextField;
-import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.model.StringResourceModel;
+import org.geoserver.security.ldap.LDAPAuthenticationProvider;
 import org.geoserver.security.ldap.LDAPSecurityServiceConfig;
 import org.geoserver.security.web.auth.AuthenticationProviderPanel;
 import org.geoserver.security.web.usergroup.UserGroupServiceChoice;
 import org.geoserver.web.GeoServerBasePage;
 import org.geoserver.web.util.MapModel;
 
+/**
+ * Configuration panel for {@link LDAPAuthenticationProvider}.
+ *  
+ * @author Justin Deoliveira, OpenGeo
+ */
 public class LDAPAuthProviderPanel extends AuthenticationProviderPanel<LDAPSecurityServiceConfig> {
 
     public LDAPAuthProviderPanel(String id, IModel<LDAPSecurityServiceConfig> model) {

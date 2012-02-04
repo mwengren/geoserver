@@ -5,7 +5,6 @@
 package org.geoserver.security.ldap;
 
 import java.io.IOException;
-import java.security.AuthProvider;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -13,7 +12,6 @@ import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLSession;
 
 import org.geoserver.config.util.XStreamPersister;
-import org.geoserver.security.DelegatingAuthenticationProvider;
 import org.geoserver.security.GeoServerAuthenticationProvider;
 import org.geoserver.security.GeoServerSecurityManager;
 import org.geoserver.security.GeoServerSecurityProvider;
@@ -21,7 +19,6 @@ import org.geoserver.security.GeoServerUserGroupService;
 import org.geoserver.security.config.SecurityNamedServiceConfig;
 import org.geotools.util.logging.Logging;
 import org.springframework.ldap.core.support.DefaultTlsDirContextAuthenticationStrategy;
-import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.ldap.DefaultSpringSecurityContextSource;
 import org.springframework.security.ldap.authentication.BindAuthenticator;
 import org.springframework.security.ldap.authentication.LdapAuthenticationProvider;
@@ -30,6 +27,11 @@ import org.springframework.security.ldap.authentication.UserDetailsServiceLdapAu
 import org.springframework.security.ldap.userdetails.DefaultLdapAuthoritiesPopulator;
 import org.springframework.security.ldap.userdetails.LdapAuthoritiesPopulator;
 
+/**
+ * LDAP security provider.
+ * 
+ * @author Justin Deoliveira, OpenGeo
+ */
 public class LDAPSecurityProvider extends GeoServerSecurityProvider {
 
     static final Logger LOGGER = Logging.getLogger("org.geoserver.security.ldap");
@@ -46,8 +48,8 @@ public class LDAPSecurityProvider extends GeoServerSecurityProvider {
     }
 
     @Override
-    public Class<? extends AuthenticationProvider> getAuthenticationProviderClass() {
-        return LdapAuthenticationProvider.class;
+    public Class<LDAPAuthenticationProvider> getAuthenticationProviderClass() {
+        return LDAPAuthenticationProvider.class;
     }
     
     @Override
@@ -101,6 +103,6 @@ public class LDAPSecurityProvider extends GeoServerSecurityProvider {
             }
         }
 
-        return new DelegatingAuthenticationProvider(new LdapAuthenticationProvider(authenticator, authPopulator));
+        return new LDAPAuthenticationProvider(new LdapAuthenticationProvider(authenticator, authPopulator));
     }
 }

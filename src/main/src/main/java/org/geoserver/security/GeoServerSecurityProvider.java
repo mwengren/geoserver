@@ -146,9 +146,10 @@ public abstract class GeoServerSecurityProvider {
      * <p>
      * If the extension does not provide an authentication provider this method should simply return
      * <code>null</code>.
-     * </p> 
+     * </p>
+     * TODO: change this interface to GeoServerAuthenticationProvider
      */
-    public Class<? extends AuthenticationProvider> getAuthenticationProviderClass() {
+    public Class<? extends GeoServerAuthenticationProvider> getAuthenticationProviderClass() {
         return null;
     }
 
