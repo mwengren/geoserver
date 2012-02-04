@@ -123,10 +123,7 @@ public class SecurityUtils {
     }
     
     /**
-     * Creates the inverse permutation array
-     * 
-     * @param perm
-     * @return
+     * Creates the inverse permutation array.
      */
     public static int[] createInverse(int[] perm) {
         int[] inverse = new int[perm.length];
@@ -137,15 +134,13 @@ public class SecurityUtils {
     }
 
     /**
-     * Applies a permutation 
-     *  
+     * Applies a permutation. 
      * 
-     * @param base  source array
+     * @param base source array
      * @param times number of repetitions
-     * @param perm  the permutation 
-     * @return
+     * @param perm the permutation 
      */
-    public static char[] permute(char[] base,int times, int[] perm) {
+    public static char[] permute(char[] base, int times, int[] perm) {
         
         char[][] working = new char[2][base.length];
         
@@ -161,5 +156,4 @@ public class SecurityUtils {
         Arrays.fill(working[1], '0');
         return result;
     }
-
 }

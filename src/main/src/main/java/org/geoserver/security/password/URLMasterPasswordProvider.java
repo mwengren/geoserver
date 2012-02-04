@@ -41,7 +41,7 @@ public final class URLMasterPasswordProvider extends MasterPasswordProvider {
         '0', 'I', 'H', '(', 'a', 'd', 'f', '2', 's', '0', '0', 'd', 's', '9', 'f', '2', 'o', 'f', 
         '(', '4', ']' };
 
-    /** permutation indicies */
+    /** permutation indices */
     static final int[] PERM = new int[]{25, 10, 5, 21, 14, 27, 23, 4, 3, 31, 16, 29, 20, 11, 0, 26,
         24, 22, 13, 12, 1, 8, 18, 19, 7, 2, 17, 6, 9, 28, 30, 15};
     
@@ -124,17 +124,6 @@ public final class URLMasterPasswordProvider extends MasterPasswordProvider {
     char[] key() {
         //generate the key
         return SecurityUtils.permute(BASE, 32, PERM);
-//        char[] key = BASE.clone();
-//        for (int i = 0; i < 256; i++) {
-//            int j = i % key.length;
-//
-//            //swap char at j with char at PERM[j]
-//            char c = key[j];
-//            key[j] = key[PERM[j]];
-//            key[PERM[j]] = c;
-//        }
-//
-//        return key;
     }
 
     static OutputStream output(URL url, File configDir) throws IOException {
