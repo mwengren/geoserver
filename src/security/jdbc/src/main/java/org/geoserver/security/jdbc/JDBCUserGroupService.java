@@ -303,7 +303,7 @@ public  class JDBCUserGroupService extends AbstractJDBCService implements GeoSer
     public GeoServerUser createUserObject(String username,String password, boolean isEnabled) throws IOException{
        GeoServerUser user = new GeoServerUser(username);
        user.setEnabled(isEnabled);
-       user.setPassword(password==null ? "" : password);
+       user.setPassword(password);
        return user;
     }
     

@@ -110,7 +110,9 @@ public class XMLUserGroupStore extends AbstractUserGroupStore {
             Element user = doc.createElement(E_USER_UR);
             users.appendChild(user);
             user.setAttribute( A_USER_NAME_UR, userObject.getUsername());
-            user.setAttribute( A_USER_PASSWORD_UR, userObject.getPassword());
+            if (userObject.getPassword() != null) {
+                user.setAttribute( A_USER_PASSWORD_UR, userObject.getPassword());
+            }
             user.setAttribute( A_USER_ENABLED_UR, userObject.isEnabled() ? "true" : "false");
             for (Object key: userObject.getProperties().keySet()) {
                 Element property = doc.createElement(E_PROPERTY_UR);

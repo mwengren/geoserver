@@ -53,9 +53,13 @@ public class PasswordValidatorImpl extends AbstractSecurityValidator implements 
 
     @Override
     public void validatePassword(char[] password) throws PasswordPolicyException {
-        if (password==null)
-            throw createSecurityException(PW_IS_NULL); 
-            
+        //if (password==null)
+        //    throw createSecurityException(PW_IS_NULL); 
+
+        if (password == null) {
+            //treat as "empty"
+            password = new char[]{};
+        }
         
         if (password.length < config.getMinLength())
             throw createSecurityException(PW_MIN_LENGTH, config.getMinLength());

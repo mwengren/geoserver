@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.sql.Types;
 
 import org.geoserver.security.GeoServerUserGroupService;
 import org.geoserver.security.GeoServerUserGroupStore;
@@ -153,7 +154,7 @@ public class JDBCUserGroupStore extends JDBCUserGroupService implements GeoServe
         // we have a plain text password
         // validate it
         getSecurityManager().loadPasswordValidator(getPasswordValidatorName()).
-        validatePassword(user.getPassword().toCharArray());
+        validatePassword(user.getPassword() != null ? user.getPassword().toCharArray() : null);
 
         // validation ok, initializer encoder and set encoded password
         enc.initializeFor(this);
@@ -173,7 +174,13 @@ public class JDBCUserGroupStore extends JDBCUserGroupService implements GeoServe
             con = getConnection();
             ps = getDMLStatement("users.insert", con);
             ps.setString(1,user.getUsername());
-            ps.setString(2,user.getPassword());
+            if (user.getPassword() != null) {
+                ps.setString(2,user.getPassword());
+            }
+            else {
+                ps.setNull(2, Types.VARCHAR);
+            }
+            
             ps.setString(3,convertToString(user.isEnabled()));
             ps.execute();
 

@@ -10,6 +10,7 @@ package org.geoserver.security.password;
  * <p>
  * <ul>
  * <li>{@link #NULL} - null, raw password maintained</li>
+ * <li>{@link #EMPTY} - empty, only for null or empty ("") passwords</li>
  * <li>{@link #PLAIN} -  plain text</li>
  * <li>{@link #ENCRYPT} - symmetric encryption</li>
  * <li>{@link #DIGEST} - password hashing (recommended)</li>
@@ -18,6 +19,6 @@ package org.geoserver.security.password;
  *
  */
 public enum PasswordEncodingType {
-    NULL,PLAIN,ENCRYPT,DIGEST;
+    NULL,EMPTY,PLAIN,ENCRYPT,DIGEST;
 
 }

@@ -310,6 +310,9 @@
   <bean id="nullPasswordEncoder"        
     class="org.geoserver.security.password.GeoServerNullPasswordEncoder">
   </bean>
+  <bean id="emptyPasswordEncoder"
+    class="org.geoserver.security.password.GeoServerEmptyPasswordEncoder">
+  </bean>
   <bean id="plainTextPasswordEncoder"        
     class="org.geoserver.security.password.GeoServerPlainTextPasswordEncoder">
     <property name="prefix" value="plain" />

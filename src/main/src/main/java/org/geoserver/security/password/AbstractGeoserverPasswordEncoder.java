@@ -104,16 +104,22 @@ public abstract class AbstractGeoserverPasswordEncoder implements GeoServerPassw
     
     @Override
     public String encodePassword(String rawPass, Object salt) throws DataAccessException {
-        StringBuffer buff = initPasswordBuffer();
-        buff.append(getStringEncoder().encodePassword(rawPass, salt));
-        return buff.toString();
+        return doEncodePassword(getStringEncoder().encodePassword(rawPass, salt));
     }
 
     @Override
     public String encodePassword(char[] rawPass, Object salt)
             throws DataAccessException {
+        return doEncodePassword(getCharEncoder().encodePassword(rawPass, salt));
+    }
+
+    String doEncodePassword(String encPass) {
+        if (encPass == null) {
+            return encPass;
+        }
+
         StringBuffer buff = initPasswordBuffer();
-        buff.append(getCharEncoder().encodePassword(rawPass, salt));
+        buff.append(encPass);
         return buff.toString();
     }
 

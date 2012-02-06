@@ -121,6 +121,28 @@ public class GeoserverPasswordEncoderTest extends GeoServerSecurityTestSupport {
             testPassword,null));
     }
 
+    public void testEmptyEncoder() {
+        GeoServerPasswordEncoder encoder = new GeoServerEmptyPasswordEncoder();
+        assertEquals(PasswordEncodingType.EMPTY, encoder.getEncodingType());
+
+        assertNull(encoder.encodePassword((String)null, null));
+        assertNull(encoder.encodePassword((char[])null, null));
+        assertNull(encoder.encodePassword("", null));
+        assertNull(encoder.encodePassword(new char[]{}, null));
+
+        try {
+            encoder.encodePassword(testPassword, null); 
+            fail("non null/empty password should fail");
+        }
+        catch(IllegalArgumentException e) {}
+
+        try {
+            encoder.encodePassword(testPassword.toCharArray(), null); 
+            fail("non null/empty password should fail");
+        }
+        catch(IllegalArgumentException e) {}
+    }
+
     protected List<String> getConfigPBEEncoderNames() {
         List<String> result = new ArrayList<String>();
         result.add(getPBEPasswordEncoder().getName());

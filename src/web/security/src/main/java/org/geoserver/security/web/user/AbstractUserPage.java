@@ -34,6 +34,7 @@ import org.geoserver.security.impl.GeoServerRole;
 import org.geoserver.security.impl.GeoServerUser;
 import org.geoserver.security.impl.GeoServerUserGroup;
 import org.geoserver.security.impl.RoleCalculator;
+import org.geoserver.security.password.GeoServerEmptyPasswordEncoder;
 import org.geoserver.security.validation.AbstractSecurityException;
 import org.geoserver.security.validation.PasswordPolicyException;
 import org.geoserver.security.web.AbstractSecurityPage;
@@ -63,6 +64,11 @@ public abstract class AbstractUserPage extends AbstractSecurityPage {
     protected AbstractUserPage(String userGroupServiceName,UserUIModel uiUser,Properties properties) {
         this.userGroupServiceName=userGroupServiceName;
         this.uiUser=uiUser;
+        
+        GeoServerUserGroupService ugService = getUserGroupService(userGroupServiceName);
+        boolean emptyPasswd = getSecurityManager().loadPasswordEncoder(ugService.getPasswordEncoderName()) 
+            instanceof GeoServerEmptyPasswordEncoder;
+
         // build the form
         form = new Form<Serializable>("userForm");                
         add(form);
@@ -100,7 +106,7 @@ public abstract class AbstractUserPage extends AbstractSecurityPage {
         };
         form.add(pw1);
         pw1.setResetPassword(false);        
-        pw1.setEnabled(hasUserGroupStore);
+        pw1.setEnabled(hasUserGroupStore && !emptyPasswd);
         
         PasswordTextField pw2 = new PasswordTextField("confirmPassword",
                 new PropertyModel<String>(uiUser, "confirmPassword")) {
@@ -113,7 +119,7 @@ public abstract class AbstractUserPage extends AbstractSecurityPage {
         };
         form.add(pw2);
         pw2.setResetPassword(false);                
-        pw2.setEnabled(hasUserGroupStore);
+        pw2.setEnabled(hasUserGroupStore && !emptyPasswd);
         
         
         LoadableDetachableModel<List<GeoServerRole>> caclulatedRolesModel = new 

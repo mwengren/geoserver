@@ -5,8 +5,6 @@
 
 package org.geoserver.security.impl;
 
-import java.io.IOException;
-
 import junit.framework.Assert;
 
 import org.geoserver.security.GeoServerUserGroupService;
@@ -194,6 +192,23 @@ public abstract class AbstractUserGroupServiceTest extends AbstractSecurityServi
         } catch ( Exception ex) {
             Assert.fail(ex.getMessage());
         }        
-    }            
+    }
+
+    public void testEmptyPassword() throws Exception {
+        // all is empty
+        checkEmpty(service);
+        checkEmpty(store);
+
+        GeoServerUser user = store.createUserObject("userNoPasswd", null, true);
+        store.addUser(user);
+        store.store();
+
+        assertEquals(1, service.getUserCount());
+        user = service.getUserByUsername("userNoPasswd");
+        assertNull(user.getPassword());
+
+        user = (GeoServerUser) service.loadUserByUsername("userNoPasswd");
+        assertNull(user.getPassword());
+    }
 
 }

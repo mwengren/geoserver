@@ -161,7 +161,14 @@ public class XMLUserGroupService extends AbstractUserGroupService {
             for ( int i=0 ; i <userNodes.getLength();i++) {
                 Node userNode = userNodes.item(i);
                 boolean userEnabled = Util.convertToBoolean(xmlXPath.getUserEnabledExpression().evaluate(userNode),true);
-                String userPassword = xmlXPath.getUserPasswordExpression().evaluate(userNode);
+                String userPassword = null; 
+
+                //there doesn't seem to be a way to check for existence of an attribute vs an 
+                // attribute being empty, so we check the attribute manually
+                if (userNode.getAttributes().getNamedItem(XMLConstants.A_USER_PASSWORD_UR) != null) {
+                    userPassword = xmlXPath.getUserPasswordExpression().evaluate(userNode);
+                }
+
                 String userName = xmlXPath.getUserNameExpression().evaluate(userNode);
                 NodeList propertyNodes = (NodeList) xmlXPath.getUserPropertiesExpression().evaluate(userNode,XPathConstants.NODESET);
                 Properties userProps = new Properties();
