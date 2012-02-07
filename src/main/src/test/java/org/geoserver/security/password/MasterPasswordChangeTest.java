@@ -9,7 +9,10 @@ import java.util.List;
 
 import org.apache.commons.io.FileUtils;
 import org.geoserver.security.GeoServerSecurityTestSupport;
+import org.geoserver.security.auth.GeoServerRootAuthenticationProvider;
 import org.geoserver.security.validation.MasterPasswordChangeException;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 
 public class MasterPasswordChangeTest extends GeoServerSecurityTestSupport {
 
@@ -101,5 +104,30 @@ public class MasterPasswordChangeTest extends GeoServerSecurityTestSupport {
         //////////
         assertEquals("geoserver3",getMasterPassword());
         getSecurityManager().getKeyStoreProvider().getConfigPasswordKey();
+    }
+
+    public void testRootLoginAfterMasterPasswdChange() throws Exception {
+        assertEquals(new String(MASTER_PASSWD_DEFAULT), getMasterPassword());
+
+        GeoServerRootAuthenticationProvider authProvider = new GeoServerRootAuthenticationProvider();
+        authProvider.setSecurityManager(getSecurityManager());
+
+        Authentication auth = new UsernamePasswordAuthenticationToken("root", "geoserver");
+        auth = authProvider.authenticate(auth);
+        assertTrue(auth.isAuthenticated());
+
+        MasterPasswordConfig config = getSecurityManager().getMasterPasswordConfig();
+
+        getSecurityManager().saveMasterPasswordConfig(config, MASTER_PASSWD_DEFAULT, 
+            "geoserver1".toCharArray(), "geoserver1".toCharArray());
+        assertEquals("geoserver1", getMasterPassword());
+
+        auth = new UsernamePasswordAuthenticationToken("root", "geoserver");
+        assertNull(authProvider.authenticate(auth));
+        assertFalse(auth.isAuthenticated());
+
+        auth = new UsernamePasswordAuthenticationToken("root", "geoserver1");
+        auth = authProvider.authenticate(auth);
+        assertTrue(auth.isAuthenticated());
     }
 }

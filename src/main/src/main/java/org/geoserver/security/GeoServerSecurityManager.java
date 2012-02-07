@@ -1103,6 +1103,7 @@ public class GeoServerSecurityManager extends ProviderManager implements Applica
 
         //save the current config to fall back to                
         MasterPasswordConfig oldConfig = new MasterPasswordConfig(this.masterPasswordConfig);
+        String oldMasterPasswdDigest = masterPasswdDigest;
 
         KeyStoreProvider ksProvider = getKeyStoreProvider();
         synchronized (ksProvider) {
@@ -1120,6 +1121,9 @@ public class GeoServerSecurityManager extends ProviderManager implements Applica
                 //save out the master password config
                 saveMasterPasswordConfig(config);
 
+                //redigest 
+                masterPasswdDigest = computeAndSaveMasterPasswordDigest(newPasswdConfirm);
+
                 //commit the password change to the keystore
                 ksProvider.commitMasterPasswordChange();
 
@@ -1134,6 +1138,7 @@ public class GeoServerSecurityManager extends ProviderManager implements Applica
 
                 //revert to old master password config
                 this.masterPasswordConfig = oldConfig;
+                this.masterPasswdDigest = oldMasterPasswdDigest;
 
                 throw e;
             }
@@ -1167,33 +1172,7 @@ public class GeoServerSecurityManager extends ProviderManager implements Applica
                 if (masterPasswdDigest == null) {
                     try {
                         //look for file
-                        File pwDigestFile = new File(getSecurityRoot(),MASTER_PASSWD_DIGEST_FILENAME);
-                        if (pwDigestFile.exists()) {
-                            FileInputStream fin = new FileInputStream(pwDigestFile);
-                            try {
-                                masterPasswdDigest = IOUtils.toString(fin);
-                            }
-                            finally {
-                                fin.close();
-                            }
-                        }
-                        else {
-                            //compute and store
-                            char[] masterPasswd = getMasterPassword();
-                            try {
-                                masterPasswdDigest = pwEncoder.encodePassword(masterPasswd, null);
-                            }
-                            finally {
-                                disposePassword(masterPasswd);
-                            }
-                            FileOutputStream fout = new FileOutputStream(pwDigestFile);
-                            try {
-                                IOUtils.write(masterPasswdDigest, fout);
-                            }
-                            finally {
-                                fout.close();
-                            }
-                        }
+                        masterPasswdDigest = loadMasterPasswordDigest();
                     }
                     catch(IOException e) {
                         throw new RuntimeException("Unable to create master password digest", e);
@@ -1202,6 +1181,49 @@ public class GeoServerSecurityManager extends ProviderManager implements Applica
             }
         }
         return pwEncoder.isPasswordValid(masterPasswdDigest, passwd, null);
+    }
+
+    String loadMasterPasswordDigest() throws IOException {
+        //look for file
+        File pwDigestFile = new File(getSecurityRoot(),MASTER_PASSWD_DIGEST_FILENAME);
+        if (pwDigestFile.exists()) {
+            FileInputStream fin = new FileInputStream(pwDigestFile);
+            try {
+                return IOUtils.toString(fin);
+            }
+            finally {
+                fin.close();
+            }
+        }
+        else {
+            //compute and store
+            char[] masterPasswd = getMasterPassword();
+            try {
+                return computeAndSaveMasterPasswordDigest(masterPasswd);
+            }
+            finally {
+                disposePassword(masterPasswd);
+            }
+        }
+    }
+
+    void saveMasterPasswordDigest(String masterPasswdDigest) throws IOException {
+        FileOutputStream fout = 
+            new FileOutputStream(new File(getSecurityRoot(),MASTER_PASSWD_DIGEST_FILENAME));
+        try {
+            IOUtils.write(masterPasswdDigest, fout);
+        }
+        finally {
+            fout.close();
+        }
+    }
+
+    String computeAndSaveMasterPasswordDigest(char[] passwd) throws IOException {
+        GeoServerDigestPasswordEncoder pwEncoder = 
+                loadPasswordEncoder(GeoServerDigestPasswordEncoder.class);
+        String masterPasswdDigest = pwEncoder.encodePassword(passwd, null);
+        saveMasterPasswordDigest(masterPasswdDigest);
+        return masterPasswdDigest;
     }
 
     /**
