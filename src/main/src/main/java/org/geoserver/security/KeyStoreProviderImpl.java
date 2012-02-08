@@ -15,6 +15,7 @@ import java.security.KeyStoreException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.util.Enumeration;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.crypto.SecretKey;
@@ -55,6 +56,8 @@ public class KeyStoreProviderImpl implements BeanNameAware, KeyStoreProvider{
     protected File keyStoreFile;
     protected KeyStore ks;
 
+    String keyStoreType = "JCEKS";
+     
     GeoServerSecurityManager securityManager;
 
     public KeyStoreProviderImpl()  {
@@ -250,7 +253,7 @@ public class KeyStoreProviderImpl implements BeanNameAware, KeyStoreProvider{
         
         char[] passwd = securityManager.getMasterPassword();
         try {
-            ks = KeyStore.getInstance("JCEKS");    
+            ks = KeyStore.getInstance(keyStoreType);
             if (getFile().exists()==false) { // create an empy one
                 ks.load(null, passwd);
                 addInitialKeys();
@@ -283,7 +286,7 @@ public class KeyStoreProviderImpl implements BeanNameAware, KeyStoreProvider{
         
         KeyStore testStore=null;
         try {
-            testStore = KeyStore.getInstance("JCEKS");
+            testStore = KeyStore.getInstance(keyStoreType);
         } catch (KeyStoreException e1) {
             // should not happen, see assertActivatedKeyStore
             throw new RuntimeException(e1);
@@ -398,14 +401,13 @@ public class KeyStoreProviderImpl implements BeanNameAware, KeyStoreProvider{
         if (newKSFile.exists())
             newKSFile.delete();
         
-        char[] passwd = securityManager.getMasterPassword();
         try {
-            KeyStore oldKS=KeyStore.getInstance("JCEKS");
+            KeyStore oldKS=KeyStore.getInstance(keyStoreType);
             FileInputStream fin = new FileInputStream(getFile());
             oldKS.load(fin, oldPassword);
             fin.close();
             
-            KeyStore newKS = KeyStore.getInstance("JCEKS");
+            KeyStore newKS = KeyStore.getInstance(keyStoreType);
             newKS.load(null, newPassword);
             KeyStore.PasswordProtection protectionparam = 
                     new KeyStore.PasswordProtection(newPassword);
@@ -413,7 +415,7 @@ public class KeyStoreProviderImpl implements BeanNameAware, KeyStoreProvider{
             Enumeration<String> enumeration = oldKS.aliases();
             while (enumeration.hasMoreElements()) {
                 String alias =enumeration.nextElement();
-                Key key = oldKS.getKey(alias, passwd);
+                Key key = oldKS.getKey(alias, oldPassword);
                 KeyStore.Entry entry =null;
                 if (key instanceof SecretKey) 
                     entry = new KeyStore.SecretKeyEntry((SecretKey)key);
@@ -428,16 +430,15 @@ public class KeyStoreProviderImpl implements BeanNameAware, KeyStoreProvider{
                 else
                     newKS.setEntry(alias, entry, protectionparam);
             }            
-           FileOutputStream fos = new FileOutputStream(newKSFile);                    
-           newKS.store(fos, newPassword);            
-           fos.close();
-            
+           
+            FileOutputStream fos = new FileOutputStream(newKSFile);                    
+            newKS.store(fos, newPassword);
+            fos.close();
+
         } catch (Exception ex) {
             throw new IOException(ex);
         }
-        finally {
-            securityManager.disposePassword(passwd);
-        }
+
     }
 
     /* (non-Javadoc)
@@ -447,8 +448,9 @@ public class KeyStoreProviderImpl implements BeanNameAware, KeyStoreProvider{
     public void abortMasterPasswordChange() {
         File dir = getFile().getParentFile();
         File newKSFile = new File(dir,PREPARED_FILE_NAME);
-        if (newKSFile.exists())
-            newKSFile.delete();
+        if (newKSFile.exists()) {
+            //newKSFile.delete();
+        }
         
     }
     
@@ -471,8 +473,9 @@ public class KeyStoreProviderImpl implements BeanNameAware, KeyStoreProvider{
         // Try to open with new password
         FileInputStream fin = new FileInputStream(newKSFile);
         char[] passwd = securityManager.getMasterPassword();
+        
         try {
-            KeyStore newKS = KeyStore.getInstance("JCEKS");
+            KeyStore newKS = KeyStore.getInstance(keyStoreType);
             newKS.load(fin, passwd);
             
             // to be sure, decrypt all keys
@@ -497,15 +500,12 @@ public class KeyStoreProviderImpl implements BeanNameAware, KeyStoreProvider{
             reloadKeyStore();
             LOGGER.info("Successfully changed master password");            
         } catch (IOException e) {
-            String msg = "cannot open new keystore: "+ newKSFile.getCanonicalPath();
-            msg+="\ncannot open new keystore: "+ newKSFile.getCanonicalPath();
-            msg+="\nIs the new master password activated ? ";
-            msg+="\nDetailed message: "+e.getMessage();
-            LOGGER.warning(msg);
+            String msg = "Error creating new keystore: " + newKSFile.getCanonicalPath();
+            LOGGER.log(Level.WARNING, msg, e);
             throw e;
         } catch (Exception ex) {
             throw new RuntimeException(ex);
-        }        
+        }
         finally {
             securityManager.disposePassword(passwd);
             if (fin != null) {
