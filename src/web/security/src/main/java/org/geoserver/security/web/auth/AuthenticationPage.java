@@ -4,6 +4,8 @@
  */
 package org.geoserver.security.web.auth;
 
+import java.util.logging.Level;
+
 import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.FormComponentPanel;
@@ -45,6 +47,7 @@ public class AuthenticationPage extends AbstractSecurityPage {
                         .saveSecurityConfig((SecurityManagerConfig) getForm().getModelObject());
                     doReturn();
                 } catch (Exception e) {
+                    LOGGER.log(Level.WARNING, "Error saving authentication config", e);
                     error(e);
                 }
             }
