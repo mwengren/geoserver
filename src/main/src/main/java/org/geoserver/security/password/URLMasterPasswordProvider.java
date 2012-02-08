@@ -7,6 +7,7 @@ package org.geoserver.security.password;
 import static org.geoserver.security.password.URLMasterPasswordProviderException.*;
 import static org.geoserver.security.SecurityUtils.toBytes;
 import static org.geoserver.security.SecurityUtils.toChars;
+import static org.geoserver.security.SecurityUtils.trimNullChars;
 import static org.geoserver.security.SecurityUtils.scramble;
 
 import java.io.File;
@@ -18,6 +19,7 @@ import java.io.OutputStream;
 import java.net.URL;
 import java.net.URLConnection;
 
+import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.io.IOUtils;
 import org.geoserver.config.util.XStreamPersister;
 import org.geoserver.security.GeoServerSecurityManager;
@@ -59,7 +61,9 @@ public final class URLMasterPasswordProvider extends MasterPasswordProvider {
         try {
             InputStream in = input(config.getURL(), getConfigDir());
             try {
-                return toChars(decode(IOUtils.toByteArray(in)));
+                //JD: for some reason the decrypted passwd comes back sometimes with null chars 
+                // tacked on
+                return trimNullChars(toChars(decode(IOUtils.toByteArray(in))));
             }
             finally {
                 in.close();
@@ -96,7 +100,7 @@ public final class URLMasterPasswordProvider extends MasterPasswordProvider {
         char[] key = key();
         try {
             encryptor.setPasswordCharArray(key);
-            return encryptor.encrypt(toBytes(passwd));
+            return Base64.encodeBase64(encryptor.encrypt(toBytes(passwd)));
         }
         finally {
             scramble(key);
@@ -113,7 +117,7 @@ public final class URLMasterPasswordProvider extends MasterPasswordProvider {
         char[] key = key();
         try {
             encryptor.setPasswordCharArray(key);
-            return encryptor.decrypt(passwd);
+            return encryptor.decrypt(Base64.decodeBase64(passwd));
         }
         finally {
             scramble(key);

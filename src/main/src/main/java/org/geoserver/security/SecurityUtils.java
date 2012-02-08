@@ -87,6 +87,17 @@ public class SecurityUtils {
     }
 
     /**
+     * Trims null characters off the end of the specified character array.
+     */
+    public static char[] trimNullChars(char[] ch) {
+        int i = ch.length-1;
+        while(i > -1 && ch[i] == 0) {
+            i--;
+        }
+        return i < ch.length-1 ? Arrays.copyOf(ch, i+1) : ch;
+    }
+
+    /**
      * Scrambles a char array overwriting all characters with random characters, used for 
      * scrambling plain text passwords after usage to avoid keeping them around in memory.
      */
