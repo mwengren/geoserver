@@ -1139,6 +1139,7 @@ public class GeoServerSecurityManager extends ProviderManager implements Applica
                 //revert to old master password config
                 this.masterPasswordConfig = oldConfig;
                 this.masterPasswdDigest = oldMasterPasswdDigest;
+                saveMasterPasswordDigest(oldMasterPasswdDigest);
 
                 throw e;
             }
@@ -1258,7 +1259,8 @@ public class GeoServerSecurityManager extends ProviderManager implements Applica
      */
     char[] getMasterPassword() {
         try {
-            MasterPasswordProvider mpp = loadMasterPasswordProvider(getMasterPasswordConfig().getProviderName());
+            MasterPasswordProvider mpp = 
+                loadMasterPasswordProvider(getMasterPasswordConfig().getProviderName());
             return mpp.getMasterPassword();
         } catch (Exception e) {
             throw new RuntimeException(e);
