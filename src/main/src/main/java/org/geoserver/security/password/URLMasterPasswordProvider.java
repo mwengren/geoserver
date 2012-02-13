@@ -39,13 +39,20 @@ import org.jasypt.encryption.pbe.StandardPBEByteEncryptor;
 public final class URLMasterPasswordProvider extends MasterPasswordProvider {
 
     /** base encryption key */
-    static final char[] BASE = new char[]{ 'a', 'f', '8', 'd', 'f', 's', 's', 'v', 'j', 'K', 'L', 
-        '0', 'I', 'H', '(', 'a', 'd', 'f', '2', 's', '0', '0', 'd', 's', '9', 'f', '2', 'o', 'f', 
-        '(', '4', ']' };
+//    static final char[] BASE = new char[]{ 'a', 'f', '8', 'd', 'f', 's', 's', 'v', 'j', 'K', 'L', 
+//        '0', 'I', 'H', '(', 'a', 'd', 'f', '2', 's', '0', '0', 'd', 's', '9', 'f', '2', 'o', 'f', 
+//        '(', '4', ']' };
 
-    /** permutation indices */
-    static final int[] PERM = new int[]{25, 10, 5, 21, 14, 27, 23, 4, 3, 31, 16, 29, 20, 11, 0, 26,
-        24, 22, 13, 12, 1, 8, 18, 19, 7, 2, 17, 6, 9, 28, 30, 15};
+    static final char[] BASE = new char[]{ 'U','n','6','d','I','l','X','T','Q','c','L',')','$','#','q','J',
+        'U','l','X','Q','U','!','n','n','p','%','U','r','5','U','u','3','5','H','`','x','P','F','r','X' };
+
+    
+    /** permutation indices, this permutation has a cycle of 169 --> more than 168 iterations have no effect */
+//    static final int[] PERM = new int[]{25, 10, 5, 21, 14, 27, 23, 4, 3, 31, 16, 29, 20, 11, 0, 26,
+//        24, 22, 13, 12, 1, 8, 18, 19, 7, 2, 17, 6, 9, 28, 30, 15};
+    static final int[] PERM = new int[]
+    {32,19,30,11,34,26,3,21,9,37,38,13,23,2,18,4,20,1,29,17,0,31,14,36,12,24,15,35,16,39,25,5,10,8,7,6,33,27,28,22 };
+
     
     URLMasterPasswordProviderConfig config;
 

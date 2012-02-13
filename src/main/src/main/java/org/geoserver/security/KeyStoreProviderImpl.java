@@ -382,10 +382,10 @@ public class KeyStoreProviderImpl implements BeanNameAware, KeyStoreProvider{
         //TODO:scramble
         RandomPasswordProvider randPasswdProvider = 
                 getSecurityManager().getRandomPassworddProvider(); 
-        char[] urlKey = randPasswdProvider.getRandomPassword(32);
+        char[] urlKey = randPasswdProvider.getRandomPasswordWithDefaultLength();
         setSecretKey( URLPARAMKEY, urlKey);
         
-        char[] configKey = randPasswdProvider.getRandomPassword(32);
+        char[] configKey = randPasswdProvider.getRandomPasswordWithDefaultLength();
         setSecretKey( CONFIGPASSWORDKEY, configKey);
     }
     

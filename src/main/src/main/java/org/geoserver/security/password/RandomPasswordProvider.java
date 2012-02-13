@@ -39,6 +39,15 @@ public class RandomPasswordProvider {
         '{','|','}','~',
     };
 
+    
+    
+    /**
+     * The default password length assures a key strength of 2 ^ 261
+     * {@link #PRINTABLE_ALPHABET} has 92 characters
+     * ln (92 * 40 ) / ln (2) = 260.942478242
+     */
+    public static int DefaultPasswordLength = 40;
+    
     /**
      * Creates a random password of the specified length, if length <=0, return <code>null</code>
      */
@@ -49,6 +58,13 @@ public class RandomPasswordProvider {
         getRandomPassword(buff);
         return buff;
     }
+    
+    public char[] getRandomPasswordWithDefaultLength () {
+        char[] buff = new char[DefaultPasswordLength];
+        getRandomPassword(buff);
+        return buff;
+    }
+
 
     /**
      * Creates a random password filling the specified character array.

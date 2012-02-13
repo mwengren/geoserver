@@ -78,7 +78,7 @@ public class XMLUserGroupService extends AbstractUserGroupService {
             String alias = prov.aliasForGroupService(name);
             if (prov.containsAlias(alias)==false) {
                 prov.setUserGroupKey(name, 
-                    getSecurityManager().getRandomPassworddProvider().getRandomPassword(32));
+                    getSecurityManager().getRandomPassworddProvider().getRandomPasswordWithDefaultLength());
                 prov.storeKeyStore();
             }
         }

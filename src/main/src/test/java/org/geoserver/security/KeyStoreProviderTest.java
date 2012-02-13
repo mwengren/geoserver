@@ -29,9 +29,9 @@ public class KeyStoreProviderTest extends GeoServerTestSupport {
         assertFalse(ksp.hasUserGroupKey("default"));
         
         RandomPasswordProvider rpp = getSecurityManager().getRandomPassworddProvider();
-        char[] urlKey = rpp.getRandomPassword(32);
+        char[] urlKey = rpp.getRandomPasswordWithDefaultLength();
         System.out.printf("Random password with length %d : %s\n",urlKey.length,urlKey);
-        char[] urlKey2 = rpp.getRandomPassword(32);
+        char[] urlKey2 = rpp.getRandomPasswordWithDefaultLength();
         System.out.printf("Random password with length %d : %s\n",urlKey2.length,urlKey2);
         assertFalse(urlKey.equals(urlKey2));
 
