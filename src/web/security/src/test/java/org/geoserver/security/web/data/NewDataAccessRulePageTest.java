@@ -14,8 +14,6 @@ import org.geoserver.security.web.role.NewRolePage;
 public class NewDataAccessRulePageTest extends AbstractSecurityWicketTestSupport {
 
     NewDataAccessRulePage page;
-
-    
     
     public void testFill() throws Exception {
         
@@ -24,39 +22,39 @@ public class NewDataAccessRulePageTest extends AbstractSecurityWicketTestSupport
         tester.startPage(page=new NewDataAccessRulePage());        
         tester.assertRenderedPage(NewDataAccessRulePage.class);
         
-        FormTester form = tester.newFormTester("ruleForm");
-        int index = indexOf(page.workspace.getChoices(),MockData.CITE_PREFIX);        
+        FormTester form = tester.newFormTester("form");
+        int index = indexOf(page.workspaceChoice.getChoices(),MockData.CITE_PREFIX);        
         form.select("workspace", index);
-        tester.executeAjaxEvent("ruleForm:workspace", "onchange");
-        form = tester.newFormTester("ruleForm");
-        index = indexOf(page.layer.getChoices(),MockData.STREAMS.getLocalPart());
+        tester.executeAjaxEvent("form:workspace", "onchange");
+        form = tester.newFormTester("form");
+        index = indexOf(page.layerChoice.getChoices(),MockData.STREAMS.getLocalPart());
         form.select("layer", index);
         
-        index = page.accessMode.getChoices().indexOf(AccessMode.READ);
+        index = page.accessModeChoice.getChoices().indexOf(AccessMode.READ);
         form.select("accessMode",index);
                 
-        tester.assertComponent("ruleForm:roles:roles:recorder", Recorder.class);
+        tester.assertComponent("form:roles:palette:recorder", Recorder.class);
         
         // add a role on the fly
         form.submit("roles:addRole");        
         tester.assertRenderedPage(NewRolePage.class);
-        form=tester.newFormTester("roleForm");                
-        form.setValue("rolename", "ROLE_NEW");
+        form=tester.newFormTester("form");                
+        form.setValue("name", "ROLE_NEW");
         form.submit("save");
         
         // assign the new role to the method
-        form=tester.newFormTester("ruleForm");
+        form=tester.newFormTester("form");
         tester.assertRenderedPage(NewDataAccessRulePage.class);
-        form.setValue("roles:roles:recorder", gaService.getRoleByName("ROLE_NEW").getAuthority());
+        form.setValue("roles:palette:recorder", gaService.getRoleByName("ROLE_NEW").getAuthority());
         
         // reopen new role dialog again to ensure that the current state is not lost
         form.submit("roles:addRole");
         tester.assertRenderedPage(NewRolePage.class);
-        tester.clickLink("roleForm:cancel");
+        tester.clickLink("form:cancel");
         tester.assertRenderedPage(NewDataAccessRulePage.class);
         
         // now save
-        form=tester.newFormTester("ruleForm");
+        form=tester.newFormTester("form");
         form.submit("save");
         
         tester.assertErrorMessages(new String[0]);
@@ -82,18 +80,18 @@ public class NewDataAccessRulePageTest extends AbstractSecurityWicketTestSupport
 
         tester.startPage(page=new NewDataAccessRulePage());
 
-        FormTester form = tester.newFormTester("ruleForm");
-        int index = indexOf(page.workspace.getChoices(),MockData.CITE_PREFIX);        
+        FormTester form = tester.newFormTester("form");
+        int index = indexOf(page.workspaceChoice.getChoices(),MockData.CITE_PREFIX);        
         form.select("workspace", index);
-        tester.executeAjaxEvent("ruleForm:workspace", "onchange");
-        form = tester.newFormTester("ruleForm");
-        index = indexOf(page.layer.getChoices(),MockData.BRIDGES.getLocalPart());
+        tester.executeAjaxEvent("form:workspace", "onchange");
+        form = tester.newFormTester("form");
+        index = indexOf(page.layerChoice.getChoices(),MockData.BRIDGES.getLocalPart());
         form.select("layer", index);
         
-        index = page.accessMode.getChoices().indexOf(AccessMode.WRITE);
+        index = page.accessModeChoice.getChoices().indexOf(AccessMode.WRITE);
         form.select("accessMode",index);
         
-        form.setValue("roles:roles:recorder", "ROLE_WMS");
+        form.setValue("roles:palette:recorder", "ROLE_WMS");
                         
         form.submit("save");                
         assertTrue(testErrorMessagesWithRegExp(".*"+MockData.CITE_PREFIX+"\\."+
@@ -106,20 +104,19 @@ public class NewDataAccessRulePageTest extends AbstractSecurityWicketTestSupport
         initializeServiceRules();
         tester.startPage(page=new NewDataAccessRulePage());
                 
-        FormTester form = tester.newFormTester("ruleForm");
-        int index = indexOf(page.workspace.getChoices(),MockData.CITE_PREFIX);        
+        FormTester form = tester.newFormTester("form");
+        int index = indexOf(page.workspaceChoice.getChoices(),MockData.CITE_PREFIX);        
         form.select("workspace", index);
-        tester.executeAjaxEvent("ruleForm:workspace", "onchange");
-        form = tester.newFormTester("ruleForm");
-        index = indexOf(page.layer.getChoices(),MockData.STREAMS.getLocalPart());
+        tester.executeAjaxEvent("form:workspace", "onchange");
+        form = tester.newFormTester("form");
+        index = indexOf(page.layerChoice.getChoices(),MockData.STREAMS.getLocalPart());
         form.select("layer", index);
         
-        index = page.accessMode.getChoices().indexOf(AccessMode.READ);
+        index = page.accessModeChoice.getChoices().indexOf(AccessMode.READ);
         form.select("accessMode",index);
                         
-        form.submit("save");                
-        assertTrue(testErrorMessagesWithRegExp(".*"+MockData.CITE_PREFIX+"\\."+
-                MockData.STREAMS.getLocalPart()+".*"));
+        form.submit("save");
+        assertTrue(testErrorMessagesWithRegExp(".*no role.*"));
         tester.assertRenderedPage(NewDataAccessRulePage.class);
     }
 
@@ -128,7 +125,7 @@ public class NewDataAccessRulePageTest extends AbstractSecurityWicketTestSupport
         initializeForXML();
         activateRORoleService();
         tester.startPage(page=new NewDataAccessRulePage());
-        tester.assertInvisible("ruleForm:roles:addRole");
+        tester.assertInvisible("form:roles:addRole");
     }
 
     protected int indexOf(List<? extends String> strings, String searchValue) {

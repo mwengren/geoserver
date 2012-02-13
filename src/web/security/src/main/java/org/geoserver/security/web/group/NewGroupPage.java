@@ -5,7 +5,6 @@
 package org.geoserver.security.web.group;
 
 import java.io.IOException;
-import java.util.Iterator;
 
 import org.geoserver.security.GeoServerRoleStore;
 import org.geoserver.security.GeoServerUserGroupStore;
@@ -16,29 +15,26 @@ import org.geoserver.security.validation.UserGroupStoreValidationWrapper;
 
 public class NewGroupPage extends AbstractGroupPage {
 
-    
     public NewGroupPage(String userGroupServiceName) {
-        super(userGroupServiceName,new GroupUIModel("", true));
+        super(userGroupServiceName,new GeoServerUserGroup(""));
                 
-        if (hasUserGroupStore(userGroupServiceName)==false) {
-            throw new RuntimeException("Workflow error, new user not possible for read only service");
+        if (!hasUserGroupStore(userGroupServiceName)) {
+            throw new IllegalStateException("New group not possible for read only service");
         }
-        
     }
-                
+
     @Override
-    protected void onFormSubmit() throws IOException {
+    protected void onFormSubmit(GeoServerUserGroup group) throws IOException {
         GeoServerUserGroupStore store=null;
-        GeoServerUserGroup group=null;
         try {
-            store = new UserGroupStoreValidationWrapper(
-                    getUserGroupStore(userGroupServiceName));
-            group = store.createGroupObject(
-                    uiGroup.getGroupname(),uiGroup.isEnabled());
+            store = new UserGroupStoreValidationWrapper(getUserGroupStore(userGroupServiceName));
+            group = store.createGroupObject(group.getGroupname(),group.isEnabled());
             store.addGroup(group);
             store.store();
         } catch (IOException ex) {
-            try {store.load(); } catch (IOException ex2) {};
+            try {
+                store.load(); 
+            } catch (IOException ex2) {};
             throw ex;
         }
 
@@ -47,10 +43,9 @@ public class NewGroupPage extends AbstractGroupPage {
             if (hasRoleStore(getSecurityManager().getActiveRoleService().getName())) {
                 gaStore = getRoleStore(getSecurityManager().getActiveRoleService().getName());
                 gaStore = new RoleStoreValidationWrapper(gaStore);
-                Iterator<GeoServerRole> roleIt =groupRolesFormComponent.
-                    getRolePalette().getSelectedChoices();
-                while (roleIt.hasNext()) {
-                    gaStore.associateRoleToGroup(roleIt.next(), group.getGroupname());
+
+                for (GeoServerRole role : rolePalette.getSelectedRoles()) {
+                    gaStore.associateRoleToGroup(role, group.getGroupname());
                 }
                 gaStore.store();
             }
@@ -58,8 +53,6 @@ public class NewGroupPage extends AbstractGroupPage {
             try {gaStore.load(); } catch (IOException ex2) {};
             throw ex;
         }
-
-                        
     }
 
 }

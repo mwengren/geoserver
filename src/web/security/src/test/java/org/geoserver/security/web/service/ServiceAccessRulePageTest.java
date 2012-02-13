@@ -36,9 +36,9 @@ public class ServiceAccessRulePageTest extends AbstractListPageTest<ServiceAcces
     protected boolean checkEditForm(String objectString) {
         String[] array=objectString.split("\\.");
         return  array[0].equals(
-                    tester.getComponentFromLastRenderedPage("ruleForm:service").getDefaultModelObject()) &&
+                    tester.getComponentFromLastRenderedPage("form:service").getDefaultModelObject()) &&
                 array[1].equals( 
-                        tester.getComponentFromLastRenderedPage("ruleForm:method").getDefaultModelObject());
+                        tester.getComponentFromLastRenderedPage("form:method").getDefaultModelObject());
     }
     
     @Override

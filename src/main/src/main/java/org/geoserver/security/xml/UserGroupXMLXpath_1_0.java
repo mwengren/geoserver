@@ -28,7 +28,7 @@ public class UserGroupXMLXpath_1_0  extends UserGroupXMLXpath {
     /**
      * XML name space context for user/group store
      */
-    protected XPathExpression userListExpression;        
+    protected XPathExpression userListExpression;
     protected XPathExpression userEnabledExpression;
     protected XPathExpression userNameExpression;
     protected XPathExpression userPasswordExpression;

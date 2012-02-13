@@ -14,33 +14,30 @@ import org.geoserver.security.impl.GeoServerRole;
 import org.geoserver.security.impl.GeoServerUserGroup;
 import org.geoserver.security.validation.RoleStoreValidationWrapper;
 import org.geoserver.security.validation.UserGroupStoreValidationWrapper;
-import org.geoserver.security.web.AbstractSecurityPage;
 
 public class EditGroupPage extends AbstractGroupPage {
 
-    
     public EditGroupPage(String userGroupServiceName,GeoServerUserGroup group) {
-        super(userGroupServiceName,new GroupUIModel(group.getGroupname(), group.isEnabled()));
-        groupnameField.setEnabled(false);
+        super(userGroupServiceName, group.copy()); //copy before passing into parent
+
+        //name not changable on edit 
+        get("form:groupname").setEnabled(false);
     }
 
     @Override
-    protected void onFormSubmit() throws IOException {
-        
-                    
-        GeoServerUserGroup group = getUserGroupService(userGroupServiceName).getGroupByGroupname(uiGroup.getGroupname());
-
+    protected void onFormSubmit(GeoServerUserGroup group) throws IOException {
         GeoServerUserGroupStore store = null;
         try {
             if (hasUserGroupStore(userGroupServiceName)) {
-                store = new UserGroupStoreValidationWrapper(                     
-                        getUserGroupStore(userGroupServiceName));            
-                group.setEnabled(uiGroup.isEnabled());
+                store = new UserGroupStoreValidationWrapper(getUserGroupStore(userGroupServiceName));
                 store.updateGroup(group);
                 store.store();
-            };   
+            };
         } catch (IOException ex) {
-            try {store.load(); } catch (IOException ex2) {};
+            try {
+                //try to reload the store
+                store.load(); 
+            } catch (IOException ex2) {};
             throw ex;
         }
 
@@ -48,13 +45,16 @@ public class EditGroupPage extends AbstractGroupPage {
         try {
             if (hasRoleStore(getSecurityManager().getActiveRoleService().getName())) {
                 gaStore = getRoleStore(getSecurityManager().getActiveRoleService().getName());
-                gaStore = new RoleStoreValidationWrapper(gaStore);                   
-                Set<GeoServerRole> addedRoles = new HashSet<GeoServerRole>();
-                Set<GeoServerRole> removedRoles = new HashSet<GeoServerRole>();
-                groupRolesFormComponent.calculateAddedRemovedCollections(addedRoles, removedRoles);
-                for (GeoServerRole role : addedRoles)
+                gaStore = new RoleStoreValidationWrapper(gaStore);
+
+                Set<GeoServerRole> orig = gaStore.getRolesForGroup(group.getGroupname());
+                Set<GeoServerRole> add = new HashSet<GeoServerRole>();
+                Set<GeoServerRole> remove = new HashSet<GeoServerRole>();
+                rolePalette.diff(orig, add, remove);
+
+                for (GeoServerRole role : add)
                     gaStore.associateRoleToGroup(role, group.getGroupname());
-                for (GeoServerRole role : removedRoles)
+                for (GeoServerRole role : remove)
                     gaStore.disAssociateRoleFromGroup(role, group.getGroupname());        
                 gaStore.store();
             }        

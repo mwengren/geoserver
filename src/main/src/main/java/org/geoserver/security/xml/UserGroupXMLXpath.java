@@ -29,8 +29,7 @@ public abstract class UserGroupXMLXpath  extends XMLXpath {
      * @return relative expression for user enabled attribute
      */
     abstract public XPathExpression getUserEnabledExpression();
-    
-    
+
     /**
      * @return relative expression for username attribute
      */

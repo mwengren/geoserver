@@ -20,4 +20,13 @@ public class MemoryGeoserverUser extends GeoServerUser {
     public MemoryGeoserverUser(String username, GeoServerUserGroupService service) {
         super(username);
     }
+
+    public MemoryGeoserverUser(MemoryGeoserverUser other) {
+        super(other);
+    }
+
+    @Override
+    public GeoServerUser copy() {
+        return new MemoryGeoserverUser(this);
+    }
 }

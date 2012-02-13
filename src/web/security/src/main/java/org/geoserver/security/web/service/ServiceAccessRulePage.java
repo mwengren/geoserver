@@ -70,17 +70,6 @@ public class ServiceAccessRulePage extends AbstractSecurityPage {
         return header;
     }
 
-//    AjaxLink addRuleLink() {
-//        return new AjaxLink("addRule", new Model()) {
-//
-//            @Override
-//            public void onClick(AjaxRequestTarget target) {
-//                setResponsePage(new NewServiceAccessRulePage());
-//            }
-//
-//        };
-//    }
-
     Component editRuleLink(String id, IModel itemModel, Property<ServiceAccessRule> property) {
         return new SimpleAjaxLink(id, itemModel, property.getModel(itemModel)) {
 

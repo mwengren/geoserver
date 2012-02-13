@@ -15,9 +15,9 @@ public abstract class AbstractUserPageTest extends AbstractSecurityWicketTestSup
         
     public void testReadOnlyRoleService() throws Exception{
         initializeForXML();
-        activateRORoleService();        
+        activateRORoleService();
         initializeTester();
-        assertFalse(page.userRolesFormComponent.isEnabled());
+        assertTrue(page.userGroupPalette.isEnabled());
     }
 
 
@@ -35,15 +35,16 @@ public abstract class AbstractUserPageTest extends AbstractSecurityWicketTestSup
     }
     
     protected void newFormTester() {
-        form = tester.newFormTester("userForm");
+        form = tester.newFormTester("form");
     }
 
     protected void addNewRole(String roleName) {
         // add a role on the fly
         form.submit("roles:addRole");
         tester.assertRenderedPage(NewRolePage.class);
-        FormTester roleform=tester.newFormTester("roleForm");                
-        roleform.setValue("rolename", "ROLE_NEW");
+        
+        FormTester roleform=tester.newFormTester("form");
+        roleform.setValue("name", "ROLE_NEW");
         roleform.submit("save");
         
         newFormTester();
@@ -53,7 +54,7 @@ public abstract class AbstractUserPageTest extends AbstractSecurityWicketTestSup
         // add a role on the fly
         form.submit("groups:addGroup");
         tester.assertRenderedPage(NewGroupPage.class);
-        FormTester groupform=tester.newFormTester("groupForm");                
+        FormTester groupform=tester.newFormTester("form");
         groupform.setValue("groupname", groupName);
         groupform.submit("save");        
         newFormTester();
@@ -61,14 +62,14 @@ public abstract class AbstractUserPageTest extends AbstractSecurityWicketTestSup
 
     
     protected void assignRole(String roleName) throws Exception {
-        form.setValue("roles:roles:recorder", gaService.getRoleByName(roleName).getAuthority());
-        tester.executeAjaxEvent("userForm:roles:roles:recorder", "onchange");
+        form.setValue("roles:palette:recorder", gaService.getRoleByName(roleName).getAuthority());
+        tester.executeAjaxEvent("form:roles:palette:recorder", "onchange");
         newFormTester();
     }
     
     protected void assignGroup(String groupName) throws Exception {
-        form.setValue("groups:groups:recorder", ugService.getGroupByGroupname(groupName).getGroupname());
-        tester.executeAjaxEvent("userForm:groups:groups:recorder", "onchange");
+        form.setValue("groups:palette:recorder", ugService.getGroupByGroupname(groupName).getGroupname());
+        tester.executeAjaxEvent("form:groups:palette:recorder", "onchange");
         newFormTester();
     }
 
@@ -76,7 +77,7 @@ public abstract class AbstractUserPageTest extends AbstractSecurityWicketTestSup
     protected void openCloseRolePanel(Class<? extends Page> responseClass ) {
         form.submit("roles:addRole");
         tester.assertRenderedPage(NewRolePage.class);
-        tester.clickLink("roleForm:cancel");
+        tester.clickLink("form:cancel");
         tester.assertRenderedPage(responseClass);                
         newFormTester();
     }
@@ -84,22 +85,22 @@ public abstract class AbstractUserPageTest extends AbstractSecurityWicketTestSup
     protected void openCloseGroupPanel(Class<? extends Page> responseClass) {
         form.submit("groups:addGroup");
         tester.assertRenderedPage(NewGroupPage.class);
-        tester.clickLink("groupForm:cancel");
+        tester.clickLink("form:cancel");
         tester.assertRenderedPage(responseClass);                
         newFormTester();
     }
     
     protected void addUserProperty(String key, String value) {
-        tester.executeAjaxEvent("userForm:userpropertyeditor:add", "onclick");
-        newFormTester();
-                
-        form.setValue("userpropertyeditor:editortable:editor:1:key", key);
-        form.setValue("userpropertyeditor:editortable:editor:1:value", value);                       
+        tester.executeAjaxEvent("form:properties:add", "onclick");
+        //newFormTester();
+       
+        form.setValue("properties:container:list:0:key", key);
+        form.setValue("properties:container:list:0:value", value);
     }
     
     protected void assertCalculatedRoles( String[] roles) throws Exception{
         for (int i = 0; i < roles.length;i++ )
-        tester.assertModelValue("userForm:calculatedrolesContainer:calculatedroles:"+i,
+        tester.assertModelValue("form:calculatedRolesContainer:calculatedRoles:"+i,
                 gaService.getRoleByName(roles[i]));
     }
 

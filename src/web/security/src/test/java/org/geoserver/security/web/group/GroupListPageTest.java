@@ -59,7 +59,7 @@ public class GroupListPageTest extends AbstractTabbedListPageTest<GeoServerUserG
     @Override
     protected boolean checkEditForm(String objectString) {
         return objectString.equals( 
-                tester.getComponentFromLastRenderedPage("groupForm:groupname").getDefaultModelObject());
+                tester.getComponentFromLastRenderedPage("form:groupname").getDefaultModelObject());
     }
     
     public void testReadOnlyService() throws Exception {

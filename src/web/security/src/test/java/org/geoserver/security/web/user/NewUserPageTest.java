@@ -33,42 +33,45 @@ public class NewUserPageTest extends AbstractUserPageTest {
         form.setValue("username", "testuser");
         form.setValue("password", "pwd");
         form.setValue("confirmPassword", "pwd");
-
         
-        assertTrue(page.uiUser.isEnabled());
+        assertTrue(((GeoServerUser)page.get("form").getDefaultModelObject()).isEnabled());
         form.setValue("enabled", false);
 
-        addUserProperty("coord", "10 10");
-        
-        assertTrue(page.userRolesFormComponent.isEnabled());
-        tester.assertComponent("userForm:roles:roles:recorder", Recorder.class);
-                                
-        addNewRole("ROLE_NEW");        
+        //addUserProperty("coord", "10 10");
+
+
+        assertTrue(page.userGroupPalette.isEnabled());
+        tester.assertComponent("form:roles:palette:recorder", Recorder.class);
+
+        addNewRole("ROLE_NEW");
         tester.assertRenderedPage(NewUserPage.class);
-        
+        tester.assertNoErrorMessage();
+
         assignRole("ROLE_NEW");
         
         // reopen new role dialog again to ensure that the current state is not lost
         openCloseRolePanel(NewUserPage.class);
-        
+        tester.assertNoErrorMessage();
         
         addNewGroup("testgroup");
         assignGroup("testgroup");
+        tester.assertNoErrorMessage();
         
         openCloseGroupPanel(NewUserPage.class);
-        
-        assertCalculatedRoles(new String[] { "ROLE_NEW" });        
+        tester.assertNoErrorMessage();
+
+        assertCalculatedRoles(new String[] { "ROLE_NEW" });
         form.submit("save");
-        
-        tester.assertErrorMessages(new String[0]);
+
+        tester.assertNoErrorMessage();
         tester.assertRenderedPage(SecurityNamedServiceEditPage.class);
         
         GeoServerUser user = ugService.getUserByUsername("testuser");
         assertNotNull(user);
         assertFalse(user.isEnabled());
         
-        assertEquals(1,user.getProperties().size());
-        assertEquals("10 10",user.getProperties().get("coord"));
+        //assertEquals(1,user.getProperties().size());
+        //assertEquals("10 10",user.getProperties().get("coord"));
         SortedSet<GeoServerUserGroup> groupList = ugService.getGroupsForUser(user);
         assertEquals(1,groupList.size());
         assertEquals("testgroup",groupList.iterator().next().getGroupname());

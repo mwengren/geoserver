@@ -21,35 +21,36 @@ public class NewServiceAccessRulePageTest extends AbstractSecurityWicketTestSupp
         tester.startPage(page=new NewServiceAccessRulePage());        
         tester.assertRenderedPage(NewServiceAccessRulePage.class);
         
-        FormTester form = tester.newFormTester("ruleForm");
-        int index = indexOf(page.service.getChoices(),"wms");        
+        FormTester form = tester.newFormTester("form");
+        int index = indexOf(page.serviceChoice.getChoices(),"wms");        
         form.select("service", index);
-        tester.executeAjaxEvent("ruleForm:service", "onchange");
-        form = tester.newFormTester("ruleForm");
-        index = indexOf(page.method.getChoices(),"GetStyles");
+        tester.executeAjaxEvent("form:service", "onchange");
+        form = tester.newFormTester("form");
+        index = indexOf(page.methodChoice.getChoices(),"GetStyles");
         form.select("method", index);
-                
-        tester.assertComponent("ruleForm:roles:roles:recorder", Recorder.class);
+        tester.assertComponent("form:roles:palette:recorder", Recorder.class);
+
         // add a role on the fly
-        form.submit("roles:addRole");        
+        form.submit("roles:addRole");
         tester.assertRenderedPage(NewRolePage.class);
-        form=tester.newFormTester("roleForm");                
-        form.setValue("rolename", "ROLE_NEW");
+        form=tester.newFormTester("form");                
+        form.setValue("name", "ROLE_NEW");
         form.submit("save");
         
         // assign the new role to the method
-        form=tester.newFormTester("ruleForm");
+        form=tester.newFormTester("form");
         tester.assertRenderedPage(NewServiceAccessRulePage.class);
-        form.setValue("roles:roles:recorder", gaService.getRoleByName("ROLE_NEW").getAuthority());
+        form.setValue("roles:palette:recorder", gaService.getRoleByName("ROLE_NEW").getAuthority());
         
         // reopen new role dialog again to ensure that the current state is not lost
         form.submit("roles:addRole");
         tester.assertRenderedPage(NewRolePage.class);
-        tester.clickLink("roleForm:cancel");
+
+        tester.clickLink("form:cancel");
         tester.assertRenderedPage(NewServiceAccessRulePage.class);
         
         // now save
-        form=tester.newFormTester("ruleForm");
+        form=tester.newFormTester("form");
         form.submit("save");
         
         tester.assertErrorMessages(new String[0]);
@@ -72,14 +73,14 @@ public class NewServiceAccessRulePageTest extends AbstractSecurityWicketTestSupp
         initializeServiceRules();
         tester.startPage(page=new NewServiceAccessRulePage());
                 
-        FormTester form = tester.newFormTester("ruleForm");
-        int index = indexOf(page.service.getChoices(),"wms");        
+        FormTester form = tester.newFormTester("form");
+        int index = indexOf(page.serviceChoice.getChoices(),"wms");        
         form.select("service", index);
-        tester.executeAjaxEvent("ruleForm:service", "onchange");
-        form = tester.newFormTester("ruleForm");
-        index = indexOf(page.method.getChoices(),"GetMap");
+        tester.executeAjaxEvent("form:service", "onchange");
+        form = tester.newFormTester("form");
+        index = indexOf(page.methodChoice.getChoices(),"GetMap");
         form.select("method", index);
-        form.setValue("roles:roles:recorder", "ROLE_WMS");
+        form.setValue("roles:palette:recorder", "ROLE_WMS");
                         
         form.submit("save");                
         assertTrue(testErrorMessagesWithRegExp(".*wms\\.GetMap.*"));
@@ -91,16 +92,16 @@ public class NewServiceAccessRulePageTest extends AbstractSecurityWicketTestSupp
         initializeServiceRules();
         tester.startPage(page=new NewServiceAccessRulePage());
                 
-        FormTester form = tester.newFormTester("ruleForm");
-        int index = indexOf(page.service.getChoices(),"wms");        
+        FormTester form = tester.newFormTester("form");
+        int index = indexOf(page.serviceChoice.getChoices(),"wms");        
         form.select("service", index);
-        tester.executeAjaxEvent("ruleForm:service", "onchange");
-        form = tester.newFormTester("ruleForm");
-        index = indexOf(page.method.getChoices(),"GetStyles");
+        tester.executeAjaxEvent("form:service", "onchange");
+        form = tester.newFormTester("form");
+        index = indexOf(page.methodChoice.getChoices(),"GetStyles");
         form.select("method", index);
                         
-        form.submit("save");                
-        assertTrue(testErrorMessagesWithRegExp(".*wms\\.GetStyles.*"));
+        form.submit("save");
+        assertTrue(testErrorMessagesWithRegExp(".*has no role.*"));
         tester.assertRenderedPage(NewServiceAccessRulePage.class);
     }
 
@@ -110,7 +111,7 @@ public class NewServiceAccessRulePageTest extends AbstractSecurityWicketTestSupp
         initializeForXML();
         activateRORoleService();
         tester.startPage(page=new NewServiceAccessRulePage());
-        tester.assertInvisible("ruleForm:roles:addRole");
+        tester.assertInvisible("form:roles:addRole");
     }
 
     protected int indexOf(List<? extends String> strings, String searchValue) {

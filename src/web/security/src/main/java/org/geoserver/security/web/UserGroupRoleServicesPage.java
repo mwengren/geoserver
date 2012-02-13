@@ -6,6 +6,7 @@ package org.geoserver.security.web;
 
 import org.geoserver.security.web.role.RoleServicesPanel;
 import org.geoserver.security.web.usergroup.UserGroupServicesPanel;
+import org.geoserver.web.ComponentAuthorizer;
 import org.geoserver.web.wicket.HelpLink;
 
 /**
@@ -21,5 +22,10 @@ public class UserGroupRoleServicesPage extends AbstractSecurityPage {
         
         add(new RoleServicesPanel("roleServices"));
         add(new HelpLink("roleServicesHelp").setDialog(dialog));
+    }
+
+    @Override
+    protected ComponentAuthorizer getPageAuthorizer() {
+        return new GroupAdminComponentAuthorizer();
     }
 }

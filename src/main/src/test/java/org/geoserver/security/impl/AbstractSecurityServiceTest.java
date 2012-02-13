@@ -287,13 +287,14 @@ public abstract class AbstractSecurityServiceTest extends GeoServerAbstractTestS
 
     }
     protected void checkValuesInserted(GeoServerUserGroupService userGroupService) throws IOException {
-        assertEquals(4, userGroupService.getUsers().size());
-        assertEquals(4, userGroupService.getUserCount());
+        assertEquals(5, userGroupService.getUsers().size());
+        assertEquals(5, userGroupService.getUserCount());
         
         GeoServerUser admin = (GeoServerUser) userGroupService.getUserByUsername(GeoServerUser.AdminName);
         GeoServerUser user1 = (GeoServerUser) userGroupService.getUserByUsername("user1");
         GeoServerUser user2 = (GeoServerUser) userGroupService.getUserByUsername("user2");
         GeoServerUser disableduser = (GeoServerUser) userGroupService.getUserByUsername("disableduser");
+        GeoServerUser groupAdminUser = (GeoServerUser) userGroupService.getUserByUsername("groupAdminUser");
         
         assertNull(userGroupService.getUserByUsername("xxx"));
     
@@ -301,6 +302,8 @@ public abstract class AbstractSecurityServiceTest extends GeoServerAbstractTestS
         assertTrue(userGroupService.getUsers().contains(user1));
         assertTrue(userGroupService.getUsers().contains(user2));
         assertTrue(userGroupService.getUsers().contains(disableduser));
+        assertTrue(userGroupService.getUsers().contains(groupAdminUser));
+
         // check if properties are loaded too
         for (GeoServerUser user : userGroupService.getUsers() ) {
             if (user2.getUsername().equals(user.getUsername())) {
@@ -314,9 +317,14 @@ public abstract class AbstractSecurityServiceTest extends GeoServerAbstractTestS
         
         assertTrue(admin.isEnabled());
         assertTrue(user1.isEnabled());
-        assertTrue(user1.isEnabled());
+        assertTrue(user2.isEnabled());
         assertFalse(disableduser.isEnabled());
-                
+        assertTrue(groupAdminUser.isEnabled());
+
+        /*assertFalse(user1.isGroupAdmin());
+        assertFalse(user2.isGroupAdmin());
+        assertTrue(groupAdminUser.isGroupAdmin());*/
+
         GeoServerPasswordEncoder encoder = getEncoder(userGroupService);
         assertTrue(encoder.isPasswordValid(admin.getPassword(), "geoserver", null));
         assertTrue(encoder.isPasswordValid(user1.getPassword(), "11111", null));
@@ -331,20 +339,23 @@ public abstract class AbstractSecurityServiceTest extends GeoServerAbstractTestS
         assertEquals(user2.getProperties().getProperty("mail"),"user2@gmx.com");
         assertEquals(user2.getProperties().getProperty("tel"),"12-34-38");
     
-        assertEquals(3, userGroupService.getUserGroups().size());
-        assertEquals(3, userGroupService.getGroupCount());
+        assertEquals(4, userGroupService.getUserGroups().size());
+        assertEquals(4, userGroupService.getGroupCount());
         GeoServerUserGroup admins = userGroupService.getGroupByGroupname("admins");
         GeoServerUserGroup group1 = userGroupService.getGroupByGroupname("group1");
+        GeoServerUserGroup group2 = userGroupService.getGroupByGroupname("group2");
         GeoServerUserGroup disabledgroup = userGroupService.getGroupByGroupname("disabledgroup");
         
         assertNull(userGroupService.getGroupByGroupname("yyy"));
         
         assertTrue(userGroupService.getUserGroups().contains(admins));
         assertTrue(userGroupService.getUserGroups().contains(group1));
+        assertTrue(userGroupService.getUserGroups().contains(group2));
         assertTrue(userGroupService.getUserGroups().contains(disabledgroup));
     
         assertTrue(admins.isEnabled());
         assertTrue(group1.isEnabled());
+        assertTrue(group2.isEnabled());
         assertFalse(disabledgroup.isEnabled());
         
         assertEquals(2,userGroupService.getUsersForGroup(group1).size());
@@ -378,8 +389,9 @@ public abstract class AbstractSecurityServiceTest extends GeoServerAbstractTestS
     
         assertEquals(1,userGroupService.getGroupsForUser(disableduser).size());
         assertTrue(userGroupService.getGroupsForUser(disableduser).contains(disabledgroup));
-    
-    
+
+        assertEquals(1,userGroupService.getGroupsForUser(groupAdminUser).size());
+        assertTrue(userGroupService.getGroupsForUser(groupAdminUser).contains(group2));
     }
     protected void checkValuesModified(GeoServerUserGroupService userGroupService) throws IOException {
         GeoServerUser disableduser = userGroupService.getUserByUsername("disableduser");
@@ -408,17 +420,19 @@ public abstract class AbstractSecurityServiceTest extends GeoServerAbstractTestS
         GeoServerUser admin = GeoServerUser.createDefaultAdmin();
         GeoServerUser user1 = (GeoServerUser) userGroupService.getUserByUsername("user1");
         GeoServerUser disableduser = (GeoServerUser) userGroupService.getUserByUsername("disableduser");
+        GeoServerUser groupAdminUser = (GeoServerUser) userGroupService.getUserByUsername("groupAdminUser");
     
-        assertEquals(3, userGroupService.getUsers().size());
-        assertEquals(3, userGroupService.getUserCount());
+        assertEquals(4, userGroupService.getUsers().size());
+        assertEquals(4, userGroupService.getUserCount());
         assertTrue(userGroupService.getUsers().contains(admin));
         assertTrue(userGroupService.getUsers().contains(user1));
         assertTrue(userGroupService.getUsers().contains(disableduser));
+        assertTrue(userGroupService.getUsers().contains(groupAdminUser));
         
         GeoServerUserGroup admins = userGroupService.getGroupByGroupname("admins");
         GeoServerUserGroup group1 = userGroupService.getGroupByGroupname("group1");
-        assertEquals(2, userGroupService.getUserGroups().size());
-        assertEquals(2, userGroupService.getGroupCount());
+        assertEquals(3, userGroupService.getUserGroups().size());
+        assertEquals(3, userGroupService.getGroupCount());
         assertTrue(userGroupService.getUserGroups().contains(admins));
         assertTrue(userGroupService.getUserGroups().contains(group1));
     
@@ -433,6 +447,8 @@ public abstract class AbstractSecurityServiceTest extends GeoServerAbstractTestS
         GeoServerUser user1 = userGroupStore.createUserObject("user1", "11111", true);
         GeoServerUser user2 = userGroupStore.createUserObject("user2", "22222", true);
         GeoServerUser disableduser = userGroupStore.createUserObject("disableduser", "", false);
+        GeoServerUser groupAdminUser = userGroupStore.createUserObject("groupAdminUser", "foo", true);
+        //groupAdminUser.setGroupAdmin(true);
         
         user2.getProperties().put("mail","user2@gmx.com");
         user2.getProperties().put("tel","12-34-38");
@@ -441,19 +457,24 @@ public abstract class AbstractSecurityServiceTest extends GeoServerAbstractTestS
         userGroupStore.addUser(user1);
         userGroupStore.addUser(user2);
         userGroupStore.addUser(disableduser);
+        userGroupStore.addUser(groupAdminUser);
         
         GeoServerUserGroup admins = userGroupStore.createGroupObject("admins", true);
         GeoServerUserGroup group1 = userGroupStore.createGroupObject("group1",true);
+        GeoServerUserGroup group2 = userGroupStore.createGroupObject("group2", true);
+        
         GeoServerUserGroup disabledgroup = userGroupStore.createGroupObject("disabledgroup",false);
         
         userGroupStore.addGroup(admins);
         userGroupStore.addGroup(group1);
         userGroupStore.addGroup(disabledgroup);
-        
+        userGroupStore.addGroup(group2);
+
         userGroupStore.associateUserToGroup(admin, admins);
         userGroupStore.associateUserToGroup(user1, group1);
         userGroupStore.associateUserToGroup(user2, group1);
         userGroupStore.associateUserToGroup(disableduser, disabledgroup);
+        userGroupStore.associateUserToGroup(groupAdminUser, group2);
     
     }
     public void modifyValues(GeoServerUserGroupStore userGroupStore) throws Exception {

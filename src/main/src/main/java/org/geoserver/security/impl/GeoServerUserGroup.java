@@ -12,7 +12,7 @@ import java.io.Serializable;
  * @author christian
  *
  */
-public class GeoServerUserGroup implements Comparable<GeoServerUserGroup>,Serializable{
+public class GeoServerUserGroup implements Comparable<GeoServerUserGroup>, Serializable {
 
     private static final long serialVersionUID = 1L;
 
@@ -20,8 +20,17 @@ public class GeoServerUserGroup implements Comparable<GeoServerUserGroup>,Serial
     private boolean enabled;
 
     public GeoServerUserGroup(String name) {
-        groupname=name;
-        enabled=true;
+        this.groupname=name;
+        this.enabled=true;
+    }
+
+    public GeoServerUserGroup(GeoServerUserGroup other) {
+        this.groupname = other.getGroupname();
+        this.enabled = other.isEnabled();
+    }
+
+    public String getGroupname() {
+        return groupname;
     }
 
     public boolean isEnabled() {
@@ -30,6 +39,10 @@ public class GeoServerUserGroup implements Comparable<GeoServerUserGroup>,Serial
 
     public void setEnabled(boolean enabled) {
         this.enabled = enabled;
+    }
+
+    public GeoServerUserGroup copy() {
+        return new GeoServerUserGroup(this);
     }
 
     @Override
@@ -57,23 +70,4 @@ public class GeoServerUserGroup implements Comparable<GeoServerUserGroup>,Serial
         sb.append(" Enabled: ").append(this.enabled);
         return sb.toString();
     }
-
-    public String getGroupname() {
-        return groupname;
-    }
-        
-    /**
-     * Generic mechanism to store 
-     * additinall information
-     * 
-     * To be filled by the backend store
-     * 
-     * @return 
-     */
-//    public Properties getProperties() {
-//        if (properties==null)
-//            properties = new Properties();
-//        return properties;    
-//    }
-
 }
