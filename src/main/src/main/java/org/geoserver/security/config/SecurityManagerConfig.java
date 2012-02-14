@@ -28,6 +28,8 @@ public class SecurityManagerConfig implements SecurityConfig {
     private Boolean anonymousAuth = Boolean.TRUE;
     private String configPasswordEncrypterName;
     private boolean encryptingUrlParams;
+    private boolean includingRolesInResponse;
+    private String httpResponseHeaderAttrForIncludedRoles;
 
     private GeoServerSecurityFilterChain filterChain = new GeoServerSecurityFilterChain();
     private RememberMeServicesConfig rememberMeService = new RememberMeServicesConfig();
@@ -45,6 +47,8 @@ public class SecurityManagerConfig implements SecurityConfig {
         this.rememberMeService = new RememberMeServicesConfig(config.getRememberMeService());
         this.encryptingUrlParams = config.isEncryptingUrlParams();
         this.configPasswordEncrypterName = config.getConfigPasswordEncrypterName();
+        this.includingRolesInResponse=config.includingRolesInResponse;
+        this.httpResponseHeaderAttrForIncludedRoles=config.httpResponseHeaderAttrForIncludedRoles;
         //this.masterPasswordURL=config.getMasterPasswordURL();
         //this.masterPasswordStrategy=config.getMasterPasswordStrategy();
     }
@@ -128,5 +132,33 @@ public class SecurityManagerConfig implements SecurityConfig {
     }
     public void setConfigPasswordEncrypterName(String configPasswordEncrypterName) {
         this.configPasswordEncrypterName = configPasswordEncrypterName;
+    }
+
+    /**
+     * should the roles of an authenticated user be included
+     * in the http response
+     * 
+     * @return
+     */
+    public boolean isIncludingRolesInResponse() {
+        return includingRolesInResponse;
+    }
+
+    public void setIncludingRolesInResponse(boolean includingRolesInResponse) {
+        this.includingRolesInResponse = includingRolesInResponse;
+    }
+
+    /**
+     * if {@link #isIncludingRolesInResponse()} is true, this
+     * methods returns the name of the http response header attribute
+     * used for transferring the roles of the authenticated user
+     * 
+     * @return
+     */
+    public String getHttpResponseHeaderAttrForIncludedRoles() {
+        return httpResponseHeaderAttrForIncludedRoles;
+    }
+    public void setHttpResponseHeaderAttrForIncludedRoles(String httpResponseHeaderAttrForIncludedRoles) {
+        this.httpResponseHeaderAttrForIncludedRoles = httpResponseHeaderAttrForIncludedRoles;
     }
 }

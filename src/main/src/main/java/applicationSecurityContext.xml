@@ -335,7 +335,16 @@
   </bean>
   
     
+  <!--
+  Extensions can inject another class implementing org.geoserver.security.KeyStoreProvider   
   <bean id="keyStoreProvider" class="org.geoserver.security.KeyStoreProviderImpl" />
+   -->
+   
+  <!--
+  Extensions can inject another class implementing org.geoserver.security.GeoServerRoleConverter   
+  <bean id="roleConverter" class="org.geoserver.security.impl.GeoServerRoleConverterImpl" />
+   -->
+   
 
   <bean id="xmlSecurityProvider" class="org.geoserver.security.xml.XMLSecurityProvider"/>  	
   <bean id="urlMasterPasswordProvider" 

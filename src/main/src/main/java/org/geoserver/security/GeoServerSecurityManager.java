@@ -20,6 +20,7 @@ import java.rmi.server.UID;
 import java.security.InvalidKeyException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -66,6 +67,7 @@ import org.geoserver.security.file.FileWatcher;
 import org.geoserver.security.file.RoleFileWatcher;
 import org.geoserver.security.file.UserGroupFileWatcher;
 import org.geoserver.security.impl.GeoServerRole;
+import org.geoserver.security.impl.GeoServerRoleConverterImpl;
 import org.geoserver.security.impl.GeoServerUser;
 import org.geoserver.security.impl.Util;
 import org.geoserver.security.password.ConfigurationPasswordEncryptionHelper;
@@ -214,6 +216,9 @@ public class GeoServerSecurityManager extends ProviderManager implements Applica
     /** keystore provider, loaded lazily */
     KeyStoreProvider keyStoreProvider;
 
+    /** role converter, loaded lazily */
+    GeoServerRoleConverter roleConverter;
+    
     /** generator of random passwords */
     RandomPasswordProvider randomPasswdProvider = new RandomPasswordProvider();
     
@@ -419,13 +424,35 @@ public class GeoServerSecurityManager extends ProviderManager implements Applica
     KeyStoreProvider lookupKeyStoreProvider() {
         KeyStoreProvider ksp = GeoServerExtensions.bean(KeyStoreProvider.class);
         if (ksp == null)  {
-            //TODO: fall back on KeystoreProviderImpl
-            throw new IllegalArgumentException("Keystore provider not found in application context");
+            // use default key store provider
+            ksp=new KeyStoreProviderImpl();            
         }
 
         ksp.setSecurityManager(this);
         return new LockingKeyStoreProvider(ksp);
     }
+    
+    public GeoServerRoleConverter getRoleConverter() {
+        if (roleConverter == null) {
+            synchronized (this) {
+                if (roleConverter == null) {
+                    roleConverter = lookupRoleConverter();
+                }
+            }
+        }
+        return roleConverter;
+    }
+    
+    GeoServerRoleConverter lookupRoleConverter() {
+        GeoServerRoleConverter rc = GeoServerExtensions.bean(GeoServerRoleConverter.class);
+        if (rc == null)  {
+            // use default key store provider
+            rc=new GeoServerRoleConverterImpl();
+        }
+        return rc;
+    }
+
+
 
     public RandomPasswordProvider getRandomPassworddProvider() {
         return randomPasswdProvider;

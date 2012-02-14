@@ -56,8 +56,11 @@ public class SecurityUtils {
     /**
      * Converts a char array to a byte array.
      */
-    public static byte[] toBytes(char[] ch, Charset charset) {
-        return charset.encode(CharBuffer.wrap(ch)).array();
+    public static byte[] toBytes(char[] ch, Charset charset) {                        
+        ByteBuffer buff = charset.encode(CharBuffer.wrap(ch));
+        byte[] tmp = new byte[buff.limit()];
+        buff.get(tmp);
+        return tmp;    
     }
 
     /**
@@ -83,19 +86,22 @@ public class SecurityUtils {
      * Converts byte array to char array.
      */
     public static char[] toChars(byte[] b, Charset charset) {
-        return charset.decode(ByteBuffer.wrap(b)).array();
+        CharBuffer buff =  charset.decode(ByteBuffer.wrap(b));
+        char [] tmp = new char[buff.limit()];
+        buff.get(tmp);
+        return tmp;
     }
 
     /**
      * Trims null characters off the end of the specified character array.
      */
-    public static char[] trimNullChars(char[] ch) {
-        int i = ch.length-1;
-        while(i > -1 && ch[i] == 0) {
-            i--;
-        }
-        return i < ch.length-1 ? Arrays.copyOf(ch, i+1) : ch;
-    }
+//    public static char[] trimNullChars(char[] ch) {
+//        int i = ch.length-1;
+//        while(i > -1 && ch[i] == 0) {
+//            i--;
+//        }
+//        return i < ch.length-1 ? Arrays.copyOf(ch, i+1) : ch;
+//    }
 
     /**
      * Scrambles a char array overwriting all characters with random characters, used for 

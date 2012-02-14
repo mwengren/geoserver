@@ -7,7 +7,6 @@ package org.geoserver.security.password;
 import static org.geoserver.security.password.URLMasterPasswordProviderException.*;
 import static org.geoserver.security.SecurityUtils.toBytes;
 import static org.geoserver.security.SecurityUtils.toChars;
-import static org.geoserver.security.SecurityUtils.trimNullChars;
 import static org.geoserver.security.SecurityUtils.scramble;
 
 import java.io.File;
@@ -70,7 +69,9 @@ public final class URLMasterPasswordProvider extends MasterPasswordProvider {
             try {
                 //JD: for some reason the decrypted passwd comes back sometimes with null chars 
                 // tacked on
-                return trimNullChars(toChars(decode(IOUtils.toByteArray(in))));
+                // MCR, was a problem with toBytes and toChar in SecurityUtils 
+                // return trimNullChars(toChars(decode(IOUtils.toByteArray(in))));
+                return toChars(decode(IOUtils.toByteArray(in)));
             }
             finally {
                 in.close();
