@@ -27,26 +27,26 @@ public class EditDataAccessRulePageTest extends AbstractSecurityWicketTestSuppor
         tester.startPage(page=new EditDataAccessRulePage(getRule(ruleName)));        
         tester.assertRenderedPage(EditDataAccessRulePage.class);
 
-        tester.assertModelValue("ruleForm:workspace", MockData.CITE_PREFIX);
-        tester.assertModelValue("ruleForm:layer", MockData.LAKES.getLocalPart());
-        tester.assertModelValue("ruleForm:accessMode", AccessMode.WRITE);
+        tester.assertModelValue("form:workspace", MockData.CITE_PREFIX);
+        tester.assertModelValue("form:layer", MockData.LAKES.getLocalPart());
+        tester.assertModelValue("form:accessMode", AccessMode.WRITE);
         
         // Does not work with Palette
-        //tester.assertModelValue("ruleForm:roles:roles:recorder", { ROLE_WMS,ROLE_WFS });
+        //tester.assertModelValue("form:roles:roles:recorder", { ROLE_WMS,ROLE_WFS });
         
-        tester.assertModelValue("ruleForm:roles:hasany",Boolean.FALSE);
-        tester.assertComponent("ruleForm:roles:roles:recorder", Recorder.class);
+        tester.assertModelValue("form:roles:anyRole",Boolean.FALSE);
+        tester.assertComponent("form:roles:palette:recorder", Recorder.class);
         
-        FormTester form = tester.newFormTester("ruleForm");
-        form.setValue("roles:hasany", true);
+        FormTester form = tester.newFormTester("form");
+        form.setValue("roles:anyRole", true);
                 
         // open new role dialog again to ensure that the current state is not lost
         form.submit("roles:addRole");
         tester.assertRenderedPage(NewRolePage.class);
-        tester.clickLink("roleForm:cancel");
+        tester.clickLink("form:cancel");
         tester.assertRenderedPage(EditDataAccessRulePage.class);
 
-        form=tester.newFormTester("ruleForm");        
+        form=tester.newFormTester("form");        
         form.submit("save");
         
         tester.assertErrorMessages(new String[0]);
@@ -55,7 +55,7 @@ public class EditDataAccessRulePageTest extends AbstractSecurityWicketTestSuppor
         DataAccessRule rule = getRule(ruleName);
         assertNotNull(rule);
         assertEquals(1,rule.getRoles().size());
-        assertEquals(GeoServerRole.HASANY_ROLE,rule.getRoles().iterator().next());        
+        assertEquals(GeoServerRole.ANY_ROLE,rule.getRoles().iterator().next());        
     }
     
     
@@ -64,13 +64,12 @@ public class EditDataAccessRulePageTest extends AbstractSecurityWicketTestSuppor
         initializeServiceRules();
         tester.startPage(page=new EditDataAccessRulePage(getRule(ruleName)));
                 
-        FormTester form = tester.newFormTester("ruleForm");
-        form.setValue("roles:roles:recorder", "");                
+        FormTester form = tester.newFormTester("form");
+        form.setValue("roles:palette:recorder", "");
                         
         form.submit("save");   
         //print(tester.getLastRenderedPage(),true,true);
-        assertTrue(testErrorMessagesWithRegExp(".*"+MockData.CITE_PREFIX+"\\."+
-                MockData.LAKES.getLocalPart()+".*"));
+        assertTrue(testErrorMessagesWithRegExp(".*no role.*"));
         tester.assertRenderedPage(EditDataAccessRulePage.class);
     }
 
@@ -80,7 +79,7 @@ public class EditDataAccessRulePageTest extends AbstractSecurityWicketTestSuppor
         initializeForXML();
         activateRORoleService();
         tester.startPage(page=new EditDataAccessRulePage(getRule(ruleName)));
-        tester.assertInvisible("ruleForm:roles:addRole");
+        tester.assertInvisible("form:roles:addRole");
     }
 
     protected int indexOf(List<? extends String> strings, String searchValue) {

@@ -6,10 +6,10 @@ package org.geoserver.security.web.user;
 
 import java.io.IOException;
 import java.util.HashSet;
-import java.util.Map.Entry;
 import java.util.Set;
 
 import org.geoserver.security.GeoServerRoleStore;
+import org.geoserver.security.GeoServerUserGroupService;
 import org.geoserver.security.GeoServerUserGroupStore;
 import org.geoserver.security.impl.GeoServerRole;
 import org.geoserver.security.impl.GeoServerUser;
@@ -24,59 +24,61 @@ import org.geoserver.security.validation.UserGroupStoreValidationWrapper;
 public class EditUserPage extends AbstractUserPage {
 
     public EditUserPage(String userGroupServiceName, GeoServerUser user) {
-        super(userGroupServiceName,new UserUIModel(user),user.getProperties());
-        username.setEnabled(false);
+        super(userGroupServiceName, user);
+        get("form:username").setEnabled(false);
     }
 
     @Override
-    protected void onFormSubmit() throws IOException,PasswordPolicyException {
-        GeoServerUser user = uiUser.toGeoserverUser(userGroupServiceName);
-        GeoServerUserGroupStore ugStore=null;
+    protected void onFormSubmit(GeoServerUser user) 
+        throws IOException,PasswordPolicyException {
+        
+        GeoServerUserGroupService ugService = getUserGroupService(ugServiceName);
+        GeoServerUserGroupStore ugStore = null;
         try {
-            if (hasUserGroupStore(userGroupServiceName)) {
-                ugStore = new UserGroupStoreValidationWrapper(
-                        getUserGroupStore(userGroupServiceName));
+            if (ugService.canCreateStore()) {
+                ugStore = new UserGroupStoreValidationWrapper(ugService.createStore());
     
-                user.getProperties().clear();
-                for (Entry<Object,Object> entry : userpropertyeditor.getProperties().entrySet())
-                    user.getProperties().put(entry.getKey(),entry.getValue());
-    
-            
+                Set<GeoServerUserGroup> orig = ugStore.getGroupsForUser(user);
+                Set<GeoServerUserGroup> add = new HashSet<GeoServerUserGroup>();
+                Set<GeoServerUserGroup> remove = new HashSet<GeoServerUserGroup>();
+                userGroupPalette.diff(orig, add, remove);
+
                 ugStore.updateUser(user);
-            
-                Set<GeoServerUserGroup> added = new HashSet<GeoServerUserGroup>();
-                Set<GeoServerUserGroup> removed = new HashSet<GeoServerUserGroup>();
-                userGroupFormComponent.calculateAddedRemovedCollections(added, removed);
-                for (GeoServerUserGroup g : added)
-                    ugStore.associateUserToGroup(user, g);
-                for (GeoServerUserGroup g : removed)
-                    ugStore.disAssociateUserFromGroup(user,g);
+
+                for (GeoServerUserGroup g : add) ugStore.associateUserToGroup(user, g);
+                for (GeoServerUserGroup g : remove) ugStore.disAssociateUserFromGroup(user,g);
+
                 ugStore.store();
             }
         } catch (IOException ex) {
-            try {ugStore.load(); } catch (IOException ex2) {};
+            try { ugStore.load(); } catch (IOException ex2) {};
             throw ex;
         } catch (PasswordPolicyException ex) {
-            try {ugStore.load(); } catch (IOException ex2) {};
+            try { ugStore.load(); } catch (IOException ex2) {};
             throw ex;
         }
 
-        GeoServerRoleStore gaStore=null;
+        GeoServerRoleStore roleStore=null;
         try {
-            if (hasRoleStore(getSecurityManager().getActiveRoleService().getName())) {                                
-                 gaStore = getRoleStore(getSecurityManager().getActiveRoleService().getName());
-                gaStore = new RoleStoreValidationWrapper(gaStore);
-                Set<GeoServerRole> addedRoles = new HashSet<GeoServerRole>();
-                Set<GeoServerRole> removedRoles = new HashSet<GeoServerRole>();
-                userRolesFormComponent.calculateAddedRemovedCollections(addedRoles, removedRoles);
-                for (GeoServerRole role : addedRoles)
-                    gaStore.associateRoleToUser(role, user.getUsername());
-                for (GeoServerRole role : removedRoles)
-                    gaStore.disAssociateRoleFromUser(role, user.getUsername());                                                                               
-                gaStore.store();
+            if (hasRoleStore(getSecurityManager().getActiveRoleService().getName())) {
+                roleStore = getRoleStore(getSecurityManager().getActiveRoleService().getName());
+                roleStore = new RoleStoreValidationWrapper(roleStore);
+                
+                Set<GeoServerRole> orig = roleStore.getRolesForUser(user.getUsername());
+                Set<GeoServerRole> add = new HashSet<GeoServerRole>();
+                Set<GeoServerRole> remove = new HashSet<GeoServerRole>();
+                rolePalette.diff(orig, add, remove);
+
+                for (GeoServerRole role : add) {
+                    roleStore.associateRoleToUser(role, user.getUsername());
+                }
+                for (GeoServerRole role : remove) {
+                    roleStore.disAssociateRoleFromUser(role, user.getUsername());
+                }
+                roleStore.store();
             }
         } catch (IOException ex) {
-            try {gaStore.load(); } catch (IOException ex2) {};
+            try { roleStore.load(); } catch (IOException ex2) {};
             throw ex;
         }
     }

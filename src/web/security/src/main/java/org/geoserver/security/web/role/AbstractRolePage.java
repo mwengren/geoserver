@@ -5,12 +5,10 @@
 package org.geoserver.security.web.role;
 
 import java.io.IOException;
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 import java.util.Set;
 import java.util.logging.Level;
 
@@ -19,7 +17,10 @@ import org.apache.wicket.markup.html.form.DropDownChoice;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.SubmitLink;
 import org.apache.wicket.markup.html.form.TextField;
-import org.apache.wicket.model.PropertyModel;
+import org.apache.wicket.model.CompoundPropertyModel;
+import org.apache.wicket.model.IModel;
+import org.apache.wicket.model.LoadableDetachableModel;
+import org.apache.wicket.model.Model;
 import org.apache.wicket.model.StringResourceModel;
 import org.geoserver.security.impl.GeoServerRole;
 import org.geoserver.security.impl.RoleHierarchyHelper;
@@ -33,179 +34,117 @@ import org.geoserver.web.wicket.property.PropertyEditorFormComponent;
  */
 @SuppressWarnings("serial")
 public abstract class AbstractRolePage extends AbstractSecurityPage {
-    TextField<String> rolenameField;
-    PropertyEditorFormComponent roleParamEditor;
-    DropDownChoice<String> parentRoles;
-    SubmitLink saveLink;
-    RoleUIModel uiRole;
-    Form<Serializable> form;
+    
     String roleServiceName;
 
-    protected AbstractRolePage(String roleService,RoleUIModel uiRole,Properties properties) {
-
-        this.roleServiceName=roleService;
-
-        this.uiRole=uiRole;
-        prepareForHierarchy(uiRole);
-                  
-        form = new Form<Serializable>("roleForm");        
-        add(form);
-        
-
-        Label descriptionLabel=new Label("roledescription");        
-        if (uiRole.username==null || uiRole.username.length()==0)
-            descriptionLabel.setDefaultModel(
-                    new StringResourceModel(AbstractRolePage.class.getSimpleName()+".anonymousRole",null));
-        else
-            descriptionLabel.setDefaultModel(
-                    new StringResourceModel(AbstractRolePage.class.getSimpleName()+".personalizedRole",null,
-                            new Object[] {uiRole.username}  ));
-        form.add(descriptionLabel);
-        
-        // populate the form editing components
-//        rolenameField = new TextField<String>("rolename") {
-//                public boolean isRequired() {
-//                    Form<?> form = getForm();
-//                    return form.getRootForm().findSubmittingButton() == saveLink;
-//                }
-//        };
-        
-        rolenameField = new TextField<String>("rolename");
+    protected AbstractRolePage(String roleService,GeoServerRole role) {
+        this.roleServiceName = roleService;
         boolean hasRoleStore = hasRoleStore(roleServiceName);
-        rolenameField.setDefaultModel(new PropertyModel<RoleUIModel>(uiRole, "rolename"));
-        rolenameField.setEnabled(hasRoleStore);
-        form.add(rolenameField);
-        
-        
-        parentRoles=new DropDownChoice<String>(
-                "parentRoles", new PropertyModel<String>(uiRole, "parentrolename"), uiRole.getPossibleParentRoleNames());
-        parentRoles.setEnabled(hasRoleStore);
-        form.add(parentRoles);
-        
-        
-        roleParamEditor = new PropertyEditorFormComponent("roleparameditor",properties);
-        roleParamEditor.setEnabled(hasRoleStore);
-        form.add(roleParamEditor);
-                        
-        // build the submit/cancel        
-        form.add(getCancelLink());
-        form.add(saveLink=saveLink());
-        saveLink.setVisibilityAllowed(hasRoleStore);
-                
-    }
 
-    SubmitLink saveLink() {
-        return new SubmitLink("save") {
+        Form form = new Form("form", new CompoundPropertyModel(role));
+        add(form);
+
+        StringResourceModel descriptionModel;
+        if (role.getUserName() == null) {
+            descriptionModel = new StringResourceModel("anonymousRole", getPage(), null);
+        }
+        else {
+            descriptionModel = new StringResourceModel("personalizedRole", getPage(), null, 
+                new Object[]{role.getUserName()});
+        }
+        form.add(new Label("description", descriptionModel));
+        
+        form.add(new TextField("name", new Model(role.getAuthority())).setRequired(true).setEnabled(hasRoleStore));
+        form.add(new DropDownChoice("parent", new ParentRoleModel(role), new ParentRolesModel(role))
+            .setEnabled(hasRoleStore));
+        form.add(new PropertyEditorFormComponent("properties").setEnabled(hasRoleStore));
+
+        form.add(new SubmitLink("save") {
             @Override
             public void onSubmit() {
                 try {
-                    onFormSubmit();
+                    onFormSubmit((GeoServerRole) getForm().getModelObject());
                     setReturnPageDirtyAndReturn(true);
                 } catch (IOException e) {
                     if (e.getCause() instanceof AbstractSecurityException) {
                         error(e.getCause());
-                    } else {                    
+                    } else {
                         error(new ParamResourceModel("saveError", getPage(), e.getMessage()).getObject());
                     }
                     LOGGER.log(Level.SEVERE, "Error occurred while saving role", e);
                 }
-
             }
-        };
+        }.setVisible(hasRoleStore));
+        
+        form.add(getCancelLink());
     }
-    
-    /**
-     * Prepare the model for hierarchy handling
-     * 
-     * @param uimodel
-     */
-    protected void prepareForHierarchy(RoleUIModel uimodel)  {
-        uimodel.setPossibleParentRoleNames(new ArrayList<String>());
-        uimodel.getPossibleParentRoleNames().add(""); // no parent        
-        try {
-            Map<String,String> parentMappings = getRoleService(roleServiceName).getParentMappings();  
-            
-            if (uimodel.getRolename() !=null && uimodel.getRolename().length()>0) { // rolename given
-                RoleHierarchyHelper helper = new RoleHierarchyHelper(parentMappings);
-                Set<String> invalidParents = new HashSet<String>();
-                invalidParents.addAll(helper.getDescendants(uimodel.getRolename()));
-                invalidParents.add(uimodel.getRolename()); 
-                for (String existingRole :parentMappings.keySet()) {
-                    if (invalidParents.contains(existingRole)==false) 
-                        uimodel.getPossibleParentRoleNames().add(existingRole);
-                }    
-                uimodel.setParentrolename(parentMappings.get(uimodel.getRolename()));
-                if (uimodel.getParentrolename()==null) 
-                    uimodel.setParentrolename("");
-            } else {  // no rolename given, we are creating a new one
-                uimodel.getPossibleParentRoleNames().addAll(parentMappings.keySet());
-                uimodel.setParentrolename("");
+
+    class ParentRoleModel extends LoadableDetachableModel<String> {
+        GeoServerRole role;
+
+        ParentRoleModel(GeoServerRole role) {
+            this.role = role;
+        }
+
+        @Override
+        protected String load() {
+            try {
+                GeoServerRole parentRole = getRoleService(roleServiceName).getParentRole(role);
+                return parentRole != null ? parentRole.getAuthority() : null;
+            } catch (IOException e) {
+                throw new RuntimeException(e);
             }
-        } catch (IOException e) {
-            throw new RuntimeException(e);
         }
     }
-    
-    
+
+    class ParentRolesModel implements IModel<List<String>> {
+
+        List<String> parentRoles;
+
+        ParentRolesModel(GeoServerRole role) {
+            try {
+                parentRoles = computeAllowableParentRoles(role);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        List<String> computeAllowableParentRoles(GeoServerRole role) throws IOException {
+            Map<String, String> parentMappings = 
+                    getRoleService(roleServiceName).getParentMappings();
+            
+            if (!role.getAuthority().equals(GeoServerRole.NULL_ROLE.getAuthority()) ) {
+                //filter out roles already used as parents
+                RoleHierarchyHelper helper = new RoleHierarchyHelper(parentMappings);
+                
+                Set<String> parents = new HashSet<String>(parentMappings.keySet());
+                parents.removeAll(helper.getDescendants(role.getAuthority()));
+                parents.remove(role.getAuthority());
+
+                return new ArrayList(parents);
+
+            } else {  
+                // no rolename given, we are creating a new one
+                return new ArrayList(parentMappings.keySet());
+            }
+        }
+
+        @Override
+        public List<String> getObject() {
+            return parentRoles;
+        }
+
+        @Override
+        public void setObject(List<String> object) {
+        }
+
+        @Override
+        public void detach() {
+        }
+    }
+
     /**
      * Implements the actual save action
      */
-    protected abstract void onFormSubmit() throws IOException;
-    
-    /**
-     * Mediates between the UI and the {@link GeoServerRole}  class
-     */
-    static class RoleUIModel implements Serializable {
-        private String rolename;
-        private String parentrolename;
-        private String username;
-        private List<String> possibleParentRoleNames;
-        
-        public String getUsername() {
-            return username;
-        }
-
-
-        public void setUsername(String username) {
-            this.username = username;
-        }
-       
-        public RoleUIModel(String rolename,String parentrolename,String username) {
-            this.rolename=rolename;
-            this.parentrolename=parentrolename;
-            this.username=username;
-        }
-
-        
-        public String getParentrolename() {
-            return parentrolename;
-        }
-
-
-        public void setParentrolename(String parentrolename) {
-            this.parentrolename = parentrolename;
-        }
-        
-        public String getRolename() {
-            return rolename;
-        }
-
-        public void setRolename(String rolename) {
-            this.rolename = rolename;
-        }
-
-        public List<String> getPossibleParentRoleNames() {
-            return possibleParentRoleNames;
-        }
-
-
-        public void setPossibleParentRoleNames(List<String> possibleParentRoleNames) {
-            this.possibleParentRoleNames = possibleParentRoleNames;
-        }
-
-
-    }
-
-    
-
+    protected abstract void onFormSubmit(GeoServerRole role) throws IOException;
 }

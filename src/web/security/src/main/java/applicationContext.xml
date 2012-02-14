@@ -49,6 +49,9 @@
         <property name="icon" value="img/icons/silk/group.png" />
         <property name="category" ref="securityCategory"/>
         <property name="order" value="120" />
+        <property name="authorizer">
+          <bean class="org.geoserver.security.web.GroupAdminComponentAuthorizer"/>
+        </property>
     </bean>
     
 	<!--

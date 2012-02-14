@@ -7,8 +7,6 @@ package org.geoserver.security.web.data;
 import java.util.Arrays;
 import java.util.List;
 
-import org.apache.wicket.model.IModel;
-import org.apache.wicket.model.Model;
 import org.geoserver.security.impl.DataAccessRule;
 import org.geoserver.security.impl.DataAccessRuleDAO;
 import org.geoserver.web.wicket.GeoServerDataProvider;

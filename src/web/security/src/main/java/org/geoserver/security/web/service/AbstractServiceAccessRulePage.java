@@ -6,20 +6,27 @@ package org.geoserver.security.web.service;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 
+import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.ajax.form.OnChangeAjaxBehavior;
 import org.apache.wicket.markup.html.form.DropDownChoice;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.FormComponent;
 import org.apache.wicket.markup.html.form.SubmitLink;
 import org.apache.wicket.markup.html.form.validation.AbstractFormValidator;
 import org.apache.wicket.markup.html.link.BookmarkablePageLink;
+import org.apache.wicket.model.CompoundPropertyModel;
+import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.PropertyModel;
 import org.geoserver.platform.GeoServerExtensions;
 import org.geoserver.platform.Service;
 import org.geoserver.security.impl.DataAccessRule;
 import org.geoserver.security.impl.ServiceAccessRule;
 import org.geoserver.security.web.AbstractSecurityPage;
+import org.geoserver.security.web.role.RuleRolesFormComponent;
 import org.geoserver.web.wicket.ParamResourceModel;
 
 /**
@@ -28,68 +35,56 @@ import org.geoserver.web.wicket.ParamResourceModel;
 @SuppressWarnings("serial")
 public abstract class AbstractServiceAccessRulePage extends AbstractSecurityPage {
 
-    DropDownChoice<String> service;
+    protected DropDownChoice<String> serviceChoice, methodChoice;
+    protected RuleRolesFormComponent rolesFormComponent;
 
-    DropDownChoice<String> method;
+    public AbstractServiceAccessRulePage(final ServiceAccessRule rule) {
 
-    ServiceRolesFormComponent rolesFormComponent;
-
-    Form<Serializable> form;
-    SubmitLink saveLink;
-    ServiceAccessRule model;
-
-    public AbstractServiceAccessRulePage(ServiceAccessRule rule) {
-        
-        //setDefaultModel(new CompoundPropertyModel<ServiceAccessRule>(new ServiceAccessRule(rule)));
-
-        model = new ServiceAccessRule(rule);
         // build the form
-        form = new Form<Serializable>("ruleForm");
+        Form form = new Form<Serializable>("form", new CompoundPropertyModel(rule));
         add(form);
         form.add(new EmptyRolesValidator());
         
-        form.add(service = new DropDownChoice<String>("service", getServiceNames()));
-        service.setDefaultModel(new PropertyModel<String>(model, "service"));
-//        service.add(new AjaxFormComponentUpdatingBehavior("onchange") {            
-//            @Override
-//            protected void onUpdate(AjaxRequestTarget target) {
-//                method.setChoices(new Model<ArrayList<String>>(getMethod(service.getConvertedInput())));
-//                method.modelChanged();
-//                target.addComponent(method);
-//            }
-//        });
-        setOutputMarkupId(true);
-        form.add(method = new DropDownChoice<String>("method", getMethod(model.getService())));
-        method.setDefaultModel(new PropertyModel<String>(model, "method"));
+        form.add(serviceChoice = new DropDownChoice<String>("service", getServiceNames()));
+        serviceChoice.add(new OnChangeAjaxBehavior() {
+            @Override
+            protected void onUpdate(AjaxRequestTarget target) {
+                methodChoice.updateModel();
+                target.addComponent(methodChoice);
+            }
+        });
+        serviceChoice.setRequired(true);
         
+        form.add(methodChoice = new DropDownChoice<String>("method", new MethodsModel(rule)));
+
+        //we add on change behavior to ensure the underlying model is updated but don't actually
+        // do anything on change... this allows us to keep state when someone adds a new role, 
+        // leaving the page, TODO: find a better way to do this
+        //methodChoice.add(new OnChangeAjaxBehavior() {
+        //    @Override
+        //    protected void onUpdate(AjaxRequestTarget target) {}
+        //});
+        methodChoice.setOutputMarkupId(true);
+        methodChoice.setRequired(true);
         
-        form.add(rolesFormComponent = new ServiceRolesFormComponent(model,form));
+        form.add(rolesFormComponent = new RuleRolesFormComponent("roles", 
+            new PropertyModel<Collection<String>>(rule, "roles")));
+            //new Model((Serializable)new ArrayList(rule.getRoles()))));
 
         // build the submit/cancel
-        form.add(new BookmarkablePageLink<ServiceAccessRulePage>
-                ("cancel", ServiceAccessRulePage.class));
-        
-        saveLink=saveLink();
-        form.add(saveLink);
-
-        // add the validators
-        service.setRequired(true);
-        method.setRequired(true);
-    }
-
-    SubmitLink saveLink() {
-        return new SubmitLink("save") {
+        form.add(new SubmitLink("save") {
             @Override
             public void onSubmit() {
-                onFormSubmit();
+                onFormSubmit((ServiceAccessRule) getForm().getModelObject());
             }
-        };
+        });
+        form.add(new BookmarkablePageLink("cancel", ServiceAccessRulePage.class));
     }
 
     /**
      * Implements the actual save action
      */
-    protected abstract void onFormSubmit();
+    protected abstract void onFormSubmit(ServiceAccessRule rule);
 
     /**
      * Returns a sorted list of workspace names
@@ -106,60 +101,65 @@ public abstract class AbstractServiceAccessRulePage extends AbstractSecurityPage
         return result;
     }
 
-    /**
-     * Returns a sorted list of layer names in the specified workspace (or * if the workspace is *)
-     */
-    ArrayList<String> getMethod(String service) {
-        ArrayList<String> result = new ArrayList<String>();
-        boolean flag = true;
-        for (Service ows : GeoServerExtensions.extensions(Service.class)) {
-            if (service.equals(ows.getId()) && !result.contains(ows.getOperations()) && flag) {
-                flag = false;
-                result.addAll(ows.getOperations());
-            }
-        }
-        Collections.sort(result);
-        result.add(0, "*");
-        return result;
-    }
-    
+
     class EmptyRolesValidator extends AbstractFormValidator {
 
         @Override
         public FormComponent<?>[] getDependentFormComponents() {
-           return new FormComponent[] { service, method, rolesFormComponent };
-
+           return new FormComponent[] { rolesFormComponent };
         }
 
         @Override
         public void validate(Form<?> form) {
-            
-        if (form.findSubmittingButton() != saveLink) { // only validate on final submit
+            // only validate on final submit
+            if (form.findSubmittingButton() != form.get("save")) { 
                 return;
-            }       
+            }
 
-       updateModels(); 
-       ServiceAccessRule rule = new ServiceAccessRule(                      
-              getServiceName(),getMethodName(),                    
-              rolesFormComponent.getRolesNamesForStoring());
-                        
-        if (rule.getRoles().isEmpty()) {
-            form.error(new ParamResourceModel("emptyRoles", getPage(),
-                  rule.getKey()).getString());
+            rolesFormComponent.updateModel();
+            if (rolesFormComponent.getRolesForStoring().isEmpty()) {
+                form.error(new ParamResourceModel("emptyRoles", getPage()).getString());
             }
         }
     }
-    
-    protected void updateModels() {
-        service.updateModel();
-        method.updateModel();
-        rolesFormComponent.updateModel();
-    }
-    protected String getMethodName() {
-        return method.getDefaultModelObjectAsString();
-    }
-    protected String getServiceName() {
-        return service.getDefaultModelObjectAsString();
+
+    class MethodsModel implements IModel<List<String>> {
+
+        ServiceAccessRule rule;
+
+        MethodsModel(ServiceAccessRule rule) {
+            this.rule = rule;
+        }
+
+        @Override
+        public List<String> getObject() {
+            ArrayList<String> result = new ArrayList<String>();
+            boolean flag = true;
+            for (Service ows : GeoServerExtensions.extensions(Service.class)) {
+                String service = rule.getService();
+                if (service.equals(ows.getId()) && !result.contains(ows.getOperations()) && flag) {
+                    flag = false;
+                    result.addAll(ows.getOperations());
+                }
+            }
+            Collections.sort(result);
+            result.add(0, "*");
+            return result;
+        }
+
+        @Override
+        public void setObject(List<String> object) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public void detach() {
+        }
     }
 
+    protected void updateModels() {
+        serviceChoice.updateModel();
+        methodChoice.updateModel();
+        rolesFormComponent.updateModel();
+    }
 }

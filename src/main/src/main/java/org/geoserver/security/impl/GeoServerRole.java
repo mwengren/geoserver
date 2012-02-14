@@ -25,23 +25,29 @@ import org.springframework.security.core.authority.GrantedAuthorityImpl;
  */
 public class GeoServerRole extends GrantedAuthorityImpl implements Comparable<GeoServerRole>{
 
-    
     /**
-     * Predefined Objects 
+     * Pre-defined role assigned to adminstrator.
      */
     public final static GeoServerRole ADMIN_ROLE = new GeoServerRole("ROLE_ADMINISTRATOR");
-    public final static GeoServerRole AUTHENTICATED_ROLE = new GeoServerRole("ROLE_AUTHENTICATED");
-    public final static GeoServerRole HASANY_ROLE = new GeoServerRole("*");
-    
-    
+
     /**
-     *  
+     * Pre-defined role assigned to any authenticated user. 
      */
+    public final static GeoServerRole AUTHENTICATED_ROLE = new GeoServerRole("ROLE_AUTHENTICATED");
+
+    /**
+     * Pre-defined wildcard role. 
+     */
+    public final static GeoServerRole ANY_ROLE = new GeoServerRole("*");
+
+    /**
+     * Pre-defined null role 
+     */
+    public final static GeoServerRole NULL_ROLE = new GeoServerRole("null");
+
     private static final long serialVersionUID = 1L;
-    
+
     protected String userName;
-
-
     protected Properties properties;
 
 
@@ -49,20 +55,19 @@ public class GeoServerRole extends GrantedAuthorityImpl implements Comparable<Ge
         super(role);
         
     }
-    public int compareTo(GeoServerRole o) {
-        if (o==null) return 1;
-        if (getAuthority().equals(o.getAuthority())) {
-            if (getUserName()==null && o.getUserName()==null)
-                return 0;
-            if (getUserName()==null) 
-                return -1;
-            if (o.getUserName()==null) 
-                return 1;
-            return getUserName().compareTo(o.getUserName());
-        }
-        return getAuthority().compareTo(o.getAuthority());        
+
+    public String getUserName() {
+        return userName;
+    }
+
+    public void setUserName(String userName) {
+        this.userName = userName;
     }
     
+    public boolean isAnonymous() {
+        return getUserName()==null;
+    }
+
     /**
      * Generic mechanism to store 
      * additional information (role paramaters)
@@ -79,20 +84,20 @@ public class GeoServerRole extends GrantedAuthorityImpl implements Comparable<Ge
         return properties;    
     }
 
-    public String getUserName() {
-        return userName;
+    public int compareTo(GeoServerRole o) {
+        if (o==null) return 1;
+        if (getAuthority().equals(o.getAuthority())) {
+            if (getUserName()==null && o.getUserName()==null)
+                return 0;
+            if (getUserName()==null) 
+                return -1;
+            if (o.getUserName()==null) 
+                return 1;
+            return getUserName().compareTo(o.getUserName());
+        }
+        return getAuthority().compareTo(o.getAuthority());        
     }
 
-
-    public void setUserName(String userName) {
-        this.userName = userName;
-    }
-    
-    public boolean isAnonymous() {
-        return getUserName()==null;
-    }
-
-    
     public boolean equals(Object obj) {
         
         if (obj instanceof String && getUserName()==null) {
@@ -108,7 +113,6 @@ public class GeoServerRole extends GrantedAuthorityImpl implements Comparable<Ge
         }
         return false;
     }
-
 
     public int hashCode() {
         int hash = getAuthority().hashCode();

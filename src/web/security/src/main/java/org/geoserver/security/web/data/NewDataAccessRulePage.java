@@ -4,15 +4,11 @@
  */
 package org.geoserver.security.web.data;
 
-import java.util.ArrayList;
 import java.util.logging.Level;
 
-import org.apache.wicket.ajax.AjaxRequestTarget;
-import org.apache.wicket.ajax.form.AjaxFormComponentUpdatingBehavior;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.FormComponent;
 import org.apache.wicket.markup.html.form.validation.AbstractFormValidator;
-import org.apache.wicket.model.Model;
 import org.geoserver.security.impl.DataAccessRule;
 import org.geoserver.security.impl.DataAccessRuleDAO;
 import org.geoserver.web.wicket.ParamResourceModel;
@@ -25,25 +21,13 @@ public class NewDataAccessRulePage extends AbstractDataAccessRulePage {
 
     public NewDataAccessRulePage() {
         super(new DataAccessRule());
-        workspace.add(new AjaxFormComponentUpdatingBehavior("onchange") {
-            @Override
-            protected void onUpdate(AjaxRequestTarget target) {
-                layer.setChoices(new Model<ArrayList<String>>(getLayerNames(workspace.getConvertedInput())));
-                layer.modelChanged();
-                target.addComponent(layer);
-            }
-        });        
-        layer.setOutputMarkupId(true);
-        form.add(new DuplicateRuleValidator());
+
+        ((Form)get("form")).add(new DuplicateRuleValidator());
     }
 
     @Override
-    protected void onFormSubmit() {
+    protected void onFormSubmit(DataAccessRule rule) {
         try {
-            
-            DataAccessRule rule = new DataAccessRule(model.getWorkspace(),
-                    model.getLayer(),model.getAccessMode(),
-                    rolesFormComponent.getRolesNamesForStoring());
             DataAccessRuleDAO dao = DataAccessRuleDAO.get();
             dao.addRule(rule);
             dao.storeRules();
@@ -65,24 +49,27 @@ public class NewDataAccessRulePage extends AbstractDataAccessRulePage {
      * 
      */
     class DuplicateRuleValidator extends AbstractFormValidator {
+        public FormComponent<?>[] getDependentFormComponents() {
+            return new FormComponent[] { 
+                workspaceChoice, layerChoice, accessModeChoice, rolesFormComponent };
+        }
+
         public void validate(Form<?> form) {
-            if (form.findSubmittingButton() != saveLink) { // only validate on final submit
+            if (form.findSubmittingButton() != form.get("save")) { // only validate on final submit
                 return;
             }
 
             updateModels();
-            DataAccessRule rule = new DataAccessRule(model.getWorkspace(),
-                    model.getLayer(),model.getAccessMode(),
-                    rolesFormComponent.getRolesNamesForStoring());
+            DataAccessRule rule = (DataAccessRule) form.getModelObject();
+            //DataAccessRule rule = new DataAccessRule(model.getWorkspace(),
+            //        model.getLayer(),model.getAccessMode(),
+             //       rolesFormComponent.getRolesNamesForStoring());
             if (DataAccessRuleDAO.get().getRules().contains(rule)) {
                 form.error(new ParamResourceModel("duplicateRule", getPage(), rule.getKey())
                         .getString());
             }
         }
 
-        public FormComponent<?>[] getDependentFormComponents() {
-            return new FormComponent[] { workspace, layer, accessMode, rolesFormComponent };
-        }
     }
 
 }

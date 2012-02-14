@@ -11,9 +11,7 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 
 import org.geoserver.security.GeoServerUserGroupService;
-import org.geoserver.security.impl.GeoServerUser;
 import org.geoserver.security.impl.GeoServerUserGroup;
-import org.geoserver.web.GeoServerApplication;
 import org.geoserver.web.wicket.GeoServerDataProvider;
 
 /**

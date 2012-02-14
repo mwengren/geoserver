@@ -6,95 +6,161 @@ package org.geoserver.web.wicket.property;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
-import java.util.SortedSet;
-import java.util.TreeSet;
 
-import org.apache.wicket.Component;
+import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.ajax.form.AjaxFormComponentUpdatingBehavior;
+import org.apache.wicket.ajax.markup.html.AjaxLink;
+import org.apache.wicket.markup.html.WebMarkupContainer;
+import org.apache.wicket.markup.html.form.FormComponent;
+import org.apache.wicket.markup.html.form.FormComponentPanel;
 import org.apache.wicket.markup.html.form.TextField;
+import org.apache.wicket.markup.html.list.ListItem;
+import org.apache.wicket.markup.html.list.ListView;
+import org.apache.wicket.model.CompoundPropertyModel;
+import org.apache.wicket.model.IModel;
+import org.apache.wicket.model.util.ListModel;
 
 /**
- * A form component that can be used to edit {@link Properties}
+ * Form component panel for editing {@link Properties} property.
+ * 
+ * @author Justin Deoliveira, OpenGeo
  */
+public class PropertyEditorFormComponent extends FormComponentPanel<Properties> {
 
-public  class PropertyEditorFormComponent extends AbstractListEditorFormComponent<PropertyEditorFormComponent.InternalEntry> {
-    private static final long serialVersionUID = 1L;
+    ListView<Tuple> listView;
 
-    static protected class InternalEntry implements Serializable{
+    public PropertyEditorFormComponent(String id) {
+        super(id);
+        init();
+    }
+
+    public PropertyEditorFormComponent(String id, IModel<Properties> model) {
+        super(id, model);
+        init();
+    }
+
+    void init() {
+        final WebMarkupContainer container = new WebMarkupContainer("container");
+        container.setOutputMarkupId(true);
+        add(container);
+
+        listView = new ListView<Tuple>("list") {
+            @Override
+            protected void populateItem(ListItem<Tuple> item) {
+                item.setModel(new CompoundPropertyModel<Tuple>(item.getModelObject()));
+                item.add(new TextField("key").add(new AjaxFormComponentUpdatingBehavior("onblur"){
+                    @Override
+                    protected void onUpdate(AjaxRequestTarget target) {
+                    }
+                }));
+                item.add(new TextField("value").add(new AjaxFormComponentUpdatingBehavior("onblur") {
+                    @Override
+                    protected void onUpdate(AjaxRequestTarget target) {
+                    }
+                }));
+                item.add(new AjaxLink<Tuple>("remove", item.getModel()) {
+                    @Override
+                    public void onClick(AjaxRequestTarget target) {
+                        List l = ((List)listView.getDefaultModelObject());
+                        l.remove(getModelObject());
+                        target.addComponent(container);
+                    }
+                });
+            }
+        };
+        //listView.setReuseItems(true);
+        container.add(listView);
+        
+        add(new AjaxLink("add") {
+            @Override
+            public void onClick(AjaxRequestTarget target) {
+                ((List)listView.getDefaultModelObject()).add(new Tuple());
+                target.addComponent(container);
+            }
+        });
+    }
+
+    List<Tuple> tuples() {
+        Properties props = getModelObject();
+        if (props == null) {
+            props = new Properties();
+        }
+
+        List<Tuple> tuples = new ArrayList<Tuple>();
+        for (Map.Entry e : props.entrySet()) {
+            tuples.add(new Tuple((String)e.getKey(), (String)e.getValue()));
+        }
+
+        Collections.sort(tuples);
+        return tuples;
+    }
+
+    @Override
+    protected void onBeforeRender() {
+        listView.setModel(new ListModel<Tuple>(tuples()));
+        super.onBeforeRender();
+    }
+
+    @Override
+    protected void convertInput() {
+        for (Iterator it = listView.iterator(); it.hasNext();) {
+            ListItem item = (ListItem) it.next();
+            ((FormComponent)item.get("key")).updateModel();
+            ((FormComponent)item.get("value")).updateModel();
+        }
+
+        Properties props = getModelObject();
+        if (props == null) {
+            props = new Properties();
+        }
+
+        props.clear();
+        for (Tuple t : listView.getModelObject()) {
+            props.put(t.getKey(), t.getValue());
+        }
+
+        setConvertedInput(props);
+    }
+
+    static class Tuple implements Serializable, Comparable<Tuple> {
         private static final long serialVersionUID = 1L;
+    
         private String key;
         private String value;
+
+        public Tuple() {
+        }
+
+        public Tuple(String key, String value) {
+            this.key = key;
+            this.value = value;
+        }
+
         public String getKey() {
             return key;
         }
+        
         public void setKey(String key) {
             this.key = key;
         }
+        
         public String getValue() {
             return value;
         }
+        
         public void setValue(String value) {
             this.value = value;
         }
-    }
-    
-    static List<InternalEntry> convertFromProperties(Properties props) {
-        SortedSet<String> sorted = new TreeSet<String>();
-        for (Object obj : props.keySet())
-            sorted.add(obj.toString());
 
-        List<InternalEntry> entryList = new ArrayList<InternalEntry>();                
-        for (String key: sorted) {
-            InternalEntry internalEntry = new InternalEntry();
-            internalEntry.setKey(key);
-            internalEntry.setValue(props.getProperty(key)==null ? "" : props.getProperty(key).toString());
-            entryList.add(internalEntry);
+        @Override
+        public int compareTo(Tuple o) {
+            return key != null ? key.compareTo(o.key) : 
+                o.key == null ? 0 : -1;
         }
-        return entryList;
     }
-
-    public PropertyEditorFormComponent(String id, List<InternalEntry> list) {
-        super(id,list);
-        setType(Properties.class);
-    }
-    
-    public PropertyEditorFormComponent(String id, Properties props) {
-        this(id,convertFromProperties(props));
-    }    
-                        
-                   
-    protected String[] getHeaderColumnResourceKeys() {
-        String prefix = this.getClass().getSimpleName();
-        return new String[] {
-                prefix+".key",
-                prefix+".value"
-        };
-    }
-    
-    protected  List<Component> getColumnComponents() {
-        List<Component> list = new ArrayList<Component>();
-        list.add(new TextField<String>("key"));
-        list.add(new TextField<String>("value"));
-        return list;
-    }
-
-    
-    protected InternalEntry createNew() {
-        return new InternalEntry();
-    }
-    
-    
-    
-  public Properties getProperties() {
-      Properties props = new Properties();        
-      for (InternalEntry e : editorModel.getObject()) {
-          if (e.getKey()==null || e.getKey().isEmpty()) 
-              continue;            
-          props.put(e.getKey(), e.getValue()==null ? "" : e.getValue());
-      }
-      return props;        
-  }
-
-
 }

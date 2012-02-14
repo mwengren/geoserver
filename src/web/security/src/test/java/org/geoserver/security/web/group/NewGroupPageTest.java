@@ -29,38 +29,38 @@ public class NewGroupPageTest extends AbstractSecurityWicketTestSupport {
                 new NewGroupPage(getUserGroupServiceName()).setReturnPage(returnPage));
         tester.assertRenderedPage(NewGroupPage.class);
         
-        FormTester form = tester.newFormTester("groupForm");
+        FormTester form = tester.newFormTester("form");
         form.setValue("groupname", "testgroup");
         
-        assertTrue(page.uiGroup.isEnabled());
+        assertTrue(((GeoServerUserGroup)page.get("form").getDefaultModelObject()).isEnabled());
         form.setValue("enabled", false);
 
         
-        assertTrue(page.groupRolesFormComponent.isEnabled());
-        tester.assertComponent("groupForm:roles:roles:recorder", Recorder.class);
+        assertTrue(page.rolePalette.isEnabled());
+        tester.assertComponent("form:roles:palette:recorder", Recorder.class);
 
                 
         // add a role on the fly
         form.submit("roles:addRole");
         tester.assertRenderedPage(NewRolePage.class);
-        form=tester.newFormTester("roleForm");                
-        form.setValue("rolename", "ROLE_NEW");
+        form=tester.newFormTester("form");                
+        form.setValue("name", "ROLE_NEW");
         form.submit("save");
         
         
         // assign the new role to the new group
-        form=tester.newFormTester("groupForm");
+        form=tester.newFormTester("form");
         tester.assertRenderedPage(NewGroupPage.class);
-        form.setValue("roles:roles:recorder", gaService.getRoleByName("ROLE_NEW").getAuthority());
+        form.setValue("roles:palette:recorder", gaService.getRoleByName("ROLE_NEW").getAuthority());
         
         // reopen new role dialog again to ensure that the current state is not lost
         form.submit("roles:addRole");
         tester.assertRenderedPage(NewRolePage.class);
-        tester.clickLink("roleForm:cancel");
+        tester.clickLink("form:cancel");
         tester.assertRenderedPage(NewGroupPage.class);
         
         // now save
-        form=tester.newFormTester("groupForm");
+        form=tester.newFormTester("form");
         form.submit("save");
         tester.assertRenderedPage(SecurityNamedServiceEditPage.class);
 
@@ -82,7 +82,7 @@ public class NewGroupPageTest extends AbstractSecurityWicketTestSupport {
         tester.startPage(page=(NewGroupPage) 
             new NewGroupPage(getUserGroupServiceName()).setReturnPage(returnPage));
         
-        FormTester form = tester.newFormTester("groupForm");
+        FormTester form = tester.newFormTester("form");
         form.setValue("groupname", "group1");
         form.submit("save");
         
@@ -112,9 +112,9 @@ public class NewGroupPageTest extends AbstractSecurityWicketTestSupport {
         AbstractSecurityPage returnPage = initializeForUGServiceNamed(getUserGroupServiceName());
         tester.startPage(page=(NewGroupPage) 
             new NewGroupPage(getUserGroupServiceName()).setReturnPage(returnPage));
-        assertFalse(page.groupRolesFormComponent.isEnabled());
+        assertFalse(page.rolePalette.isEnabled());
         
-        FormTester form = tester.newFormTester("groupForm");
+        FormTester form = tester.newFormTester("form");
         form.setValue("groupname", "testgroup");
         form.submit("save");
         

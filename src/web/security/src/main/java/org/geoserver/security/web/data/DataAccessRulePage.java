@@ -26,7 +26,6 @@ import org.geoserver.security.impl.DataAccessRule;
 import org.geoserver.security.impl.DataAccessRuleDAO;
 import org.geoserver.security.web.AbstractSecurityPage;
 import org.geoserver.web.GeoServerHomePage;
-
 import org.geoserver.web.wicket.GeoServerDataProvider.Property;
 import org.geoserver.web.wicket.GeoServerTablePanel;
 import org.geoserver.web.wicket.ParamResourceModel;

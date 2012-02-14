@@ -937,18 +937,20 @@ public class GeoServerSecurityManager extends ProviderManager implements Applica
                     authProviderHelper.loadConfig(config.getName()));
         }
 
-        //update the running auth provider
-        GeoServerAuthenticationProvider authProvider = null;
-        for (GeoServerAuthenticationProvider ap : authProviders) {
-            if (config.getName().equals(ap.getName())) {
-                authProvider = ap;
-                break;
+        //update the running auth providers
+        if (authProviders != null) {
+            GeoServerAuthenticationProvider authProvider = null;
+            for (GeoServerAuthenticationProvider ap : authProviders) {
+                if (config.getName().equals(ap.getName())) {
+                    authProvider = ap;
+                    break;
+                }
             }
-        }
-
-        if (authProvider != null) {
-            synchronized (authProvider) {
-                authProvider.initializeFromConfig(config);
+    
+            if (authProvider != null) {
+                synchronized (authProvider) {
+                    authProvider.initializeFromConfig(config);
+                }
             }
         }
 

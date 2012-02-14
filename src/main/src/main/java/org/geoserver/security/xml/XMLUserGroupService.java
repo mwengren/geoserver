@@ -179,6 +179,7 @@ public class XMLUserGroupService extends AbstractUserGroupService {
                     userProps.put(propertyName, propertyValue);
                 }                                
                 GeoServerUser user=createUserObject(userName, userPassword, userEnabled);
+
                 helper.userMap.put(user.getUsername(), user);
                 user.getProperties().clear();       // set properties
                 for (Object key: userProps.keySet()) {

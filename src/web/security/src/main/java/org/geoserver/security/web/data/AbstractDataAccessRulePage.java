@@ -4,12 +4,13 @@
  */
 package org.geoserver.security.web.data;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.ajax.form.AjaxFormComponentUpdatingBehavior;
 import org.apache.wicket.markup.html.form.DropDownChoice;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.FormComponent;
@@ -17,12 +18,16 @@ import org.apache.wicket.markup.html.form.IChoiceRenderer;
 import org.apache.wicket.markup.html.form.SubmitLink;
 import org.apache.wicket.markup.html.form.validation.AbstractFormValidator;
 import org.apache.wicket.markup.html.link.BookmarkablePageLink;
+import org.apache.wicket.model.CompoundPropertyModel;
+import org.apache.wicket.model.Model;
 import org.apache.wicket.model.PropertyModel;
 import org.geoserver.catalog.ResourceInfo;
 import org.geoserver.catalog.WorkspaceInfo;
 import org.geoserver.security.AccessMode;
 import org.geoserver.security.impl.DataAccessRule;
+import org.geoserver.security.impl.GeoServerRole;
 import org.geoserver.security.web.AbstractSecurityPage;
+import org.geoserver.security.web.role.RuleRolesFormComponent;
 import org.geoserver.web.wicket.ParamResourceModel;
 
 /**
@@ -31,65 +36,61 @@ import org.geoserver.web.wicket.ParamResourceModel;
 @SuppressWarnings("serial")
 public abstract class AbstractDataAccessRulePage extends AbstractSecurityPage {
 
-    
-    List<AccessMode> MODES = Arrays.asList(AccessMode.READ, AccessMode.WRITE);
+    static List<AccessMode> MODES = Arrays.asList(AccessMode.READ, AccessMode.WRITE);
 
-    DropDownChoice<String> workspace;
+    DropDownChoice<String> workspaceChoice, layerChoice;
+    DropDownChoice<AccessMode> accessModeChoice;
+    RuleRolesFormComponent rolesFormComponent;
 
-    DropDownChoice<String> layer;
-
-    DropDownChoice<AccessMode> accessMode;
-
-    DataRolesFormComponent rolesFormComponent;
-    DataAccessRule model;
-
-    Form<Serializable> form;
-    SubmitLink saveLink;
-
-    public AbstractDataAccessRulePage(DataAccessRule rule) {
-        model =new DataAccessRule(rule);
-
+    public AbstractDataAccessRulePage(final DataAccessRule rule) {
         // build the form
-        form = new Form<Serializable>("ruleForm");
+        Form form = new Form<DataAccessRule>("form", new CompoundPropertyModel(rule));
         add(form);
+
         form.add (new EmptyRolesValidator());
-        form.add(workspace = new DropDownChoice<String>("workspace", getWorkspaceNames()));
-        workspace.setDefaultModel(new PropertyModel<String>(model, "workspace"));
-        
-        setOutputMarkupId(true);
-        
-        form.add(layer = new DropDownChoice<String>("layer", getLayerNames(rule.getWorkspace())));
-        layer.setDefaultModel(new PropertyModel<String>(model,"layer"));
-        
-        form.add(accessMode = new DropDownChoice<AccessMode>("accessMode", MODES, new AccessModeRenderer()));
-        accessMode.setDefaultModel(new PropertyModel<AccessMode>(model,"accessMode"));
-        
-        form.add(rolesFormComponent = new DataRolesFormComponent(rule,form));
+        form.add(workspaceChoice = new DropDownChoice<String>("workspace", getWorkspaceNames()));
+        workspaceChoice.setRequired(true);
+        workspaceChoice.add(new AjaxFormComponentUpdatingBehavior("onchange") {
+            @Override
+            protected void onUpdate(AjaxRequestTarget target) {
+                layerChoice.setChoices(new Model<ArrayList<String>>(
+                    getLayerNames(workspaceChoice.getConvertedInput())));
+                layerChoice.modelChanged();
+                target.addComponent(layerChoice);
+            }
+        });
+
+        form.add(layerChoice = new DropDownChoice<String>("layer", getLayerNames(rule.getWorkspace())));
+        layerChoice.setRequired(true);
+        layerChoice.setOutputMarkupId(true);
+
+        form.add(accessModeChoice = 
+            new DropDownChoice<AccessMode>("accessMode", MODES, new AccessModeRenderer()));
+        accessModeChoice.setRequired(true);
+
+        form.add(rolesFormComponent = new RuleRolesFormComponent("roles",
+            new PropertyModel(rule, "roles")).setHasAnyRole(
+                rule.getRoles().contains(GeoServerRole.ANY_ROLE.getAuthority())));
 
         // build the submit/cancel
-        form.add(new BookmarkablePageLink<DataAccessRule>("cancel", DataSecurityPage.class));
-        saveLink=saveLink();
-        form.add(saveLink);
-
-        // add the validators
-        workspace.setRequired(true);
-        layer.setRequired(true);
-        accessMode.setRequired(true);
-    }
-
-    SubmitLink saveLink() {
-        return new SubmitLink("save") {
+        form.add(new SubmitLink("save") {
             @Override
             public void onSubmit() {
-                onFormSubmit();
+                DataAccessRule rule = (DataAccessRule) getForm().getModelObject();
+                if (rolesFormComponent.isHasAnyRole()) {
+                    rule.getRoles().clear();
+                    rule.getRoles().add(GeoServerRole.ANY_ROLE.getAuthority());
+                }
+                onFormSubmit(rule);
             }
-        };
+        });
+        form.add(new BookmarkablePageLink<DataAccessRule>("cancel", DataSecurityPage.class));
     }
 
     /**
      * Implements the actual save action
      */
-    protected abstract void onFormSubmit();
+    protected abstract void onFormSubmit(DataAccessRule rule);
 
     /**
      * Returns a sorted list of workspace names
@@ -136,47 +137,32 @@ public abstract class AbstractDataAccessRulePage extends AbstractSecurityPage {
 
     }
 
-    
     class EmptyRolesValidator extends AbstractFormValidator {
 
         @Override
         public FormComponent<?>[] getDependentFormComponents() {
-           return new FormComponent[] { workspace, layer, accessMode, rolesFormComponent };
-
+           return new FormComponent[] { 
+               workspaceChoice, layerChoice, accessModeChoice, rolesFormComponent };
         }
 
         @Override
         public void validate(Form<?> form) {
-            if (form.findSubmittingButton() != saveLink) { // only validate on final submit
+            // only validate on final submit
+            if (form.findSubmittingButton() != form.get("save")) { 
                 return;
             }
+
             updateModels();
-            DataAccessRule rule = new DataAccessRule(getWorkspace(),
-                    getLayer(),getAccessMode(),
-                    rolesFormComponent.getRolesNamesForStoring());
-                if (rule.getRoles().isEmpty()) {
-                    form.error(new ParamResourceModel("emptyRoles", getPage(),
-                            rule.getKey()).getString());
-                }
+            if (rolesFormComponent.getRolesNamesForStoring().isEmpty()) {
+                form.error(new ParamResourceModel("emptyRoles", getPage()).getString());
+            }
         }
     }
 
-    protected String getWorkspace() {
-        return workspace.getDefaultModelObjectAsString();
-    }
-    
-    protected String getLayer() {
-        return layer.getDefaultModelObjectAsString();
-    }
-
-    protected AccessMode getAccessMode() {
-        return accessMode.getModelObject();
-    }
-
     protected void updateModels() {
-        workspace.updateModel();
-        layer.updateModel();
-        accessMode.updateModel();
+        workspaceChoice.updateModel();
+        layerChoice.updateModel();
+        accessModeChoice.updateModel();
         rolesFormComponent.updateModel();
     }
 }

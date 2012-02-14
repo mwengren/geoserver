@@ -14,7 +14,6 @@ import java.util.TreeSet;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
 import org.geoserver.security.GeoServerUserGroupService;
-import org.geoserver.security.impl.GeoServerRole;
 import org.geoserver.security.impl.GeoServerUser;
 import org.geoserver.web.wicket.GeoServerDataProvider;
 

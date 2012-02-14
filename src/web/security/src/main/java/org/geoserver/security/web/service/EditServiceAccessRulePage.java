@@ -15,43 +15,28 @@ import org.geoserver.web.wicket.ParamResourceModel;
  */
 public class EditServiceAccessRulePage extends AbstractServiceAccessRulePage {
     
-    public String methodName,serviceName;
+    ServiceAccessRule orig;
     
     public EditServiceAccessRulePage(ServiceAccessRule rule) {
-        super(rule);
-        // save the names, DropdownChoices have a strange behavior
-        // if the are read only, the select model object is empty
-        methodName = rule.getMethod();
-        serviceName = rule.getService();
-        method.setEnabled(false);        
-        service.setEnabled(false);        
+        super(new ServiceAccessRule(rule));
+        
+        //save the original 
+        this.orig = rule;
+
+        //set drop downs to disabled
+        serviceChoice.setEnabled(false);
+        methodChoice.setEnabled(false);
     }
 
     @Override
-    protected String getMethodName() {
-        return methodName;
-    }
-    @Override
-    protected String getServiceName() {
-        return serviceName;
-    }
-
-    
-    @Override
-    protected void onFormSubmit() {
+    protected void onFormSubmit(ServiceAccessRule rule) {
         try {
             ServiceAccessRuleDAO dao = ServiceAccessRuleDAO.get();
-                        
-            ServiceAccessRule storedRule=null;
-            for (ServiceAccessRule rule : dao.getRules()) {
-                if (serviceName.equals(rule.getService()) && 
-                        methodName.equals(rule.getMethod())) {
-                    storedRule=rule;
-                    break;
-                }
-            }
-            storedRule.getRoles().clear();
-            storedRule.getRoles().addAll(rolesFormComponent.getRolesNamesForStoring());
+
+            //update the original
+            orig.getRoles().clear();
+            orig.getRoles().addAll(rolesFormComponent.getRolesNamesForStoring());
+
             dao.storeRules();
             setResponsePage(ServiceAccessRulePage.class);
         } catch(Exception e) {
@@ -59,6 +44,5 @@ public class EditServiceAccessRulePage extends AbstractServiceAccessRulePage {
             error(new ParamResourceModel("saveError", getPage(), e.getMessage()));
         }
     }
-    
 
 }

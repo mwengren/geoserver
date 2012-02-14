@@ -43,9 +43,9 @@ public class DataSecurityPageTest extends AbstractListPageTest<DataAccessRule> {
     protected boolean checkEditForm(String objectString) {
         String[] array=objectString.split("\\.");
         return  array[0].equals(
-                    tester.getComponentFromLastRenderedPage("ruleForm:workspace").getDefaultModelObject()) &&
+                    tester.getComponentFromLastRenderedPage("form:workspace").getDefaultModelObject()) &&
                 array[1].equals( 
-                        tester.getComponentFromLastRenderedPage("ruleForm:layer").getDefaultModelObject());
+                        tester.getComponentFromLastRenderedPage("form:layer").getDefaultModelObject());
     }
     
     @Override

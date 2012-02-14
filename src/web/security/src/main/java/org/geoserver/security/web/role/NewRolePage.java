@@ -5,8 +5,6 @@
 package org.geoserver.security.web.role;
 
 import java.io.IOException;
-import java.util.Map.Entry;
-import java.util.Properties;
 
 import org.geoserver.security.GeoServerRoleStore;
 import org.geoserver.security.impl.GeoServerRole;
@@ -20,43 +18,41 @@ import org.geoserver.security.validation.RoleStoreValidationWrapper;
  */
 public class NewRolePage extends AbstractRolePage {
 
-    
     public NewRolePage(String roleServiceName) {
-        super(roleServiceName,new RoleUIModel("", "",null),new Properties());
+        super(roleServiceName, new GeoServerRole(GeoServerRole.NULL_ROLE.getAuthority()));
+        
         if (hasRoleStore(roleServiceName)==false) {
             throw new RuntimeException("Workflow error, new role not possible for read only service");
         }
-
     }
 
-    
     @Override
-    protected void onFormSubmit() throws IOException {
+    protected void onFormSubmit(GeoServerRole role) throws IOException {
         
         GeoServerRoleStore store = null;
         try {
-            store = new RoleStoreValidationWrapper(
-                    getRoleStore(roleServiceName));
-    
-            GeoServerRole role = store.createRoleObject(uiRole.getRolename());
-            
-            role.getProperties().clear();
-            for (Entry<Object,Object> entry : roleParamEditor.getProperties().entrySet())
-                role.getProperties().put(entry.getKey(),entry.getValue());
-    
+
+            //copy into a new one so we can set the name properly
+            GeoServerRole newRole = 
+                new GeoServerRole(get("form:name").getDefaultModelObjectAsString());
+            newRole.setUserName(role.getUserName());
+            newRole.getProperties().putAll(role.getProperties());
+            role = newRole;
+
+            store = new RoleStoreValidationWrapper(getRoleStore(roleServiceName));
             store.addRole(role);
-                    
-            GeoServerRole parentRole = null;
-            if (uiRole.getParentrolename()!=null && uiRole.getParentrolename().length() > 0) {
-                parentRole=store.getRoleByName(uiRole.getParentrolename());
+
+            String parentRoleName = get("form:parent").getDefaultModelObjectAsString();
+            if (parentRoleName != null) {
+                GeoServerRole parentRole = store.getRoleByName(parentRoleName);
+                store.setParentRole(role, parentRole);
             }
-            store.setParentRole(role,parentRole);
+
             store.store();
         } catch (IOException ex) {
             try {store.load(); } catch (IOException ex2) {};
             throw ex;
         }
-                                    
     }
 
 }

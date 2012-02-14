@@ -76,7 +76,6 @@ public class RoleListPageTest extends AbstractTabbedListPageTest<GeoServerRole> 
         
         tester.assertRenderedPage(EditRolePage.class);
         assertTrue(checkEditForm(role.getAuthority()));
-                
     }
     
         
@@ -101,7 +100,7 @@ public class RoleListPageTest extends AbstractTabbedListPageTest<GeoServerRole> 
     @Override
     protected boolean checkEditForm(String objectString) {
         return objectString.equals( 
-                tester.getComponentFromLastRenderedPage("roleForm:rolename").getDefaultModelObject());
+                tester.getComponentFromLastRenderedPage("form:name").getDefaultModelObject());
     }
     
     public void testReadOnlyService() throws Exception{

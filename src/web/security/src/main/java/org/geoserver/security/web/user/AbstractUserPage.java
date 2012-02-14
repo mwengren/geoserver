@@ -9,25 +9,25 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Properties;
 import java.util.logging.Level;
 
-import org.apache.wicket.Component;
+import org.apache.wicket.WicketRuntimeException;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.form.AjaxFormComponentUpdatingBehavior;
-import org.apache.wicket.behavior.IBehavior;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.markup.html.form.Form;
+import org.apache.wicket.markup.html.form.FormComponent;
 import org.apache.wicket.markup.html.form.PasswordTextField;
 import org.apache.wicket.markup.html.form.SubmitLink;
 import org.apache.wicket.markup.html.form.TextField;
 import org.apache.wicket.markup.html.form.validation.EqualInputValidator;
 import org.apache.wicket.markup.html.list.ListItem;
 import org.apache.wicket.markup.html.list.ListView;
+import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
-import org.apache.wicket.model.PropertyModel;
+import org.apache.wicket.model.Model;
 import org.geoserver.security.GeoServerRoleService;
 import org.geoserver.security.GeoServerUserGroupService;
 import org.geoserver.security.impl.GeoServerRole;
@@ -40,8 +40,7 @@ import org.geoserver.security.validation.PasswordPolicyException;
 import org.geoserver.security.web.AbstractSecurityPage;
 import org.geoserver.security.web.role.EditRolePage;
 import org.geoserver.security.web.role.RoleListProvider;
-import org.geoserver.web.GeoServerApplication;
-import org.geoserver.web.wicket.GeoServerDataProvider.Property;
+import org.geoserver.security.web.role.RolePaletteFormComponent;
 import org.geoserver.web.wicket.ParamResourceModel;
 import org.geoserver.web.wicket.SimpleAjaxLink;
 import org.geoserver.web.wicket.property.PropertyEditorFormComponent;
@@ -50,135 +49,149 @@ import org.geoserver.web.wicket.property.PropertyEditorFormComponent;
  * Allows creation of a new user in users.properties
  */
 public abstract class AbstractUserPage extends AbstractSecurityPage {
-    protected TextField<String> username;
-    protected UserGroupFormComponent userGroupFormComponent;
-    protected UserRolesFormComponent userRolesFormComponent;
-    protected PropertyEditorFormComponent userpropertyeditor;
-    protected ListView<GeoServerRole> calculatedRoles;
-    protected UserUIModel uiUser;
-    protected Form<Serializable> form;
-    protected SubmitLink saveLink;
-    protected WebMarkupContainer calculatedrolesContainer;
-    protected String userGroupServiceName;
 
-    protected AbstractUserPage(String userGroupServiceName,UserUIModel uiUser,Properties properties) {
-        this.userGroupServiceName=userGroupServiceName;
-        this.uiUser=uiUser;
-        
-        GeoServerUserGroupService ugService = getUserGroupService(userGroupServiceName);
+    protected RolePaletteFormComponent rolePalette;
+    protected UserGroupPaletteFormComponent userGroupPalette;
+    protected ListView<GeoServerRole> calculatedRoles;
+
+    protected String ugServiceName;
+
+    protected AbstractUserPage(String ugServiceName, final GeoServerUser user) {
+        this.ugServiceName=ugServiceName;
+
+        GeoServerUserGroupService ugService = getUserGroupService(ugServiceName);
         boolean emptyPasswd = getSecurityManager().loadPasswordEncoder(ugService.getPasswordEncoderName()) 
             instanceof GeoServerEmptyPasswordEncoder;
+        boolean hasUserGroupStore = ugService.canCreateStore();
+        boolean hasRoleStore = hasRoleStore(getSecurityManager().getActiveRoleService().getName());
 
         // build the form
-        form = new Form<Serializable>("userForm");                
+        Form form = new Form<Serializable>("form", new CompoundPropertyModel(user));
         add(form);
-        
-        // populate the form editing components
-//        username = new TextField<String>("username",
-//                new PropertyModel<String>(uiUser, "username")) {
-//                    private static final long serialVersionUID = 1L;
-//                    public boolean isRequired() {
-//                        Form<?> form = getForm();
-//                        return form.getRootForm().findSubmittingButton() == saveLink;
-//                    }
-//            };
-            
-        username = new TextField<String>("username",
-                    new PropertyModel<String>(uiUser, "username")); 
-            
-        form.add(username);
-        boolean hasUserGroupStore = hasUserGroupStore(userGroupServiceName);
-        username.setEnabled(hasUserGroupStore);
-        
-        CheckBox enable = new CheckBox("enabled",
-                new PropertyModel<Boolean>(uiUser, "enabled"));        
-        form.add(enable);
-        enable.setEnabled(hasUserGroupStore);
 
-        PasswordTextField pw1 = new PasswordTextField("password",
-                new PropertyModel<String>(uiUser, "password")) {
-            private static final long serialVersionUID = 1L;
+        form.add(new TextField("username").setEnabled(hasUserGroupStore));
+        form.add(new CheckBox("enabled").setEnabled(hasUserGroupStore));
+
+        PasswordTextField pw1 = new PasswordTextField("password") {
+            @Override
             public boolean isRequired() {
-                Form<?> form = Form.findForm(this);
-                if (form==null) return false;
-                return form.getRootForm().findSubmittingButton() == saveLink;
+                return isFinalSubmit(this);
             }
         };
         form.add(pw1);
-        pw1.setResetPassword(false);        
+        pw1.setResetPassword(false);
         pw1.setEnabled(hasUserGroupStore && !emptyPasswd);
-        
-        PasswordTextField pw2 = new PasswordTextField("confirmPassword",
-                new PropertyModel<String>(uiUser, "confirmPassword")) {
-            private static final long serialVersionUID = 1L;
+
+        PasswordTextField pw2 = new PasswordTextField("confirmPassword", 
+            new Model(user.getPassword())) {
+            @Override
             public boolean isRequired() {
-                Form<?> form = Form.findForm(this);
-                if (form==null) return false;
-                return form.getRootForm().findSubmittingButton() == saveLink;
+                return isFinalSubmit(this);
             }
         };
         form.add(pw2);
         pw2.setResetPassword(false);                
         pw2.setEnabled(hasUserGroupStore && !emptyPasswd);
+
+        form.add(new PropertyEditorFormComponent("properties").setEnabled(hasUserGroupStore));
+
+        form.add(userGroupPalette = new UserGroupPaletteFormComponent("groups", ugServiceName, user));
+        userGroupPalette.add(new AjaxFormComponentUpdatingBehavior("onchange") {
+            @Override
+            protected void onUpdate(AjaxRequestTarget target) {
+                updateCalculatedRoles(target);
+            }
+        });
+        userGroupPalette.setEnabled(hasUserGroupStore);
+
+        List<GeoServerRole> roles;
+        try {
+            roles = new ArrayList(
+                getSecurityManager().getActiveRoleService().getRolesForUser(user.getUsername()));
+        } catch (IOException e) {
+            throw new WicketRuntimeException(e);
+        }
         
-        
-        LoadableDetachableModel<List<GeoServerRole>> caclulatedRolesModel = new 
-                LoadableDetachableModel<List<GeoServerRole>> () {
-                    private static final long serialVersionUID = 1L;                                       
+        form.add(rolePalette = new RolePaletteFormComponent("roles", new Model((Serializable)roles)));
+        rolePalette.add(new AjaxFormComponentUpdatingBehavior("onchange") {
+           @Override
+           protected void onUpdate(AjaxRequestTarget target) {
+               updateCalculatedRoles(target);
+           }
+        });
+        rolePalette.setEnabled(hasRoleStore);
+
+        WebMarkupContainer container = new WebMarkupContainer("calculatedRolesContainer");
+        form.add(container);
+        container.setOutputMarkupId(true);
+
+        container.add(calculatedRoles = 
+            new ListView<GeoServerRole>("calculatedRoles", new CalculatedRoleModel(user)) {
+            @Override
+            @SuppressWarnings("unchecked")
+            protected void populateItem(ListItem<GeoServerRole> item) {
+                IModel<GeoServerRole> model = item.getModel();
+                item.add(new SimpleAjaxLink("role", model, RoleListProvider.ROLENAME.getModel(model)) {
                     @Override
-                    protected List<GeoServerRole> load() {                        
-                            return getCalculatedroles();
-                    }            
-        };
-
-
-                
-        calculatedRoles = new ListView<GeoServerRole>
-        ("calculatedroles", caclulatedRolesModel) {
-                private static final long serialVersionUID = 1L;
-                protected void populateItem(ListItem<GeoServerRole> item) {
-                    item.add(editRoleLink("calculatedrole", item.getModel(), RoleListProvider.ROLENAME));
-                }
-        };
+                    protected void onClick(AjaxRequestTarget target) {
+                        setResponsePage(
+                            new EditRolePage(getSecurityManager().getActiveRoleService().getName(),
+                                (GeoServerRole) getDefaultModelObject()).setReturnPage(this.getPage()));
+                    }
+                });
+            }
+        });
         calculatedRoles.setOutputMarkupId(true);
-        
-        //form.add(calculatedRoles);
-        calculatedrolesContainer=new WebMarkupContainer("calculatedrolesContainer");
-        calculatedrolesContainer.setOutputMarkupId(true);
-        calculatedrolesContainer.add(calculatedRoles);
-        form.add(calculatedrolesContainer);
 
-                        
-        GeoServerUser tmpUser = uiUser.toGeoserverUser(userGroupServiceName);
-        
-        form.add(userpropertyeditor=new PropertyEditorFormComponent("userpropertyeditor",properties));        
-        userpropertyeditor.setEnabled(hasUserGroupStore);
-        form.add(userGroupFormComponent = new UserGroupFormComponent(userGroupServiceName,tmpUser,form,getCalculatedRolesBehavior()));
-        userGroupFormComponent.setEnabled(hasUserGroupStore);
-        form.add(userRolesFormComponent =new UserRolesFormComponent(tmpUser,form,getCalculatedRolesBehavior()));
-        userRolesFormComponent.setEnabled(hasRoleStore(getSecurityManager().getActiveRoleService().getName()));
-                                       
-        // build the submit/cancel
+        form.add(new SubmitLink("save") {
+            @Override
+            public void onSubmit() {
+                try {
+                    //manually update properties
+                    //user.getProperties().clear();
+                    //user.getProperties().putAll(propEditor.getProperties());
+
+                    onFormSubmit(user);
+                    setReturnPageDirtyAndReturn(true);
+                }
+                catch(Exception e) {
+                    handleSubmitError(e);
+                }
+            }
+        }.setEnabled(hasUserGroupStore || hasRoleStore(getSecurityManager().getActiveRoleService().getName())));
         form.add(getCancelLink());
-        form.add(saveLink=saveLink());
-        saveLink.setVisible(hasUserGroupStore || hasRoleStore(getSecurityManager().getActiveRoleService().getName()));
-        
-                               
+
         // add the validators
         form.add(new EqualInputValidator(pw1, pw2) {
             private static final long serialVersionUID = 1L;
+            
             @Override
             public void validate(Form<?> form) {
-                if (form.findSubmittingButton() != saveLink) { // only validate on final submit
-                    return;
+                if (isFinalSubmit(form)) {
+                    super.validate(form);
                 }
-                super.validate(form);
             }
             @Override
             protected String resourceKey() {
                 return "AbstractUserPage.passwordMismatch";
-            }                        
+            }
         });
+    }
+
+    boolean isFinalSubmit(FormComponent component) {
+        return isFinalSubmit(Form.findForm(component));
+    }
+
+    boolean isFinalSubmit(Form form) {
+        if (form == null) {
+            return false;
+        }
+        return form.findSubmittingButton() == form.get("save");
+    }
+
+    void updateCalculatedRoles(AjaxRequestTarget target) {
+        calculatedRoles.modelChanged();
+        target.addComponent(calculatedRoles.getParent());
     }
 
     void handleSubmitError(Exception e) {
@@ -200,172 +213,47 @@ public abstract class AbstractUserPage extends AbstractSecurityPage {
         }
     }
 
-    SubmitLink saveLink() {
-        return new SubmitLink("save") {
-            
-            @Override
-            public void onSubmit() {
-                try {
-                    onFormSubmit();
-                    setReturnPageDirtyAndReturn(true);
-                }
-                catch(Exception e) {
-                    handleSubmitError(e);
-                }
-            }
-        };
-    }
-    
-    Component editRoleLink(String id, IModel<GeoServerRole> itemModel, Property<GeoServerRole> property) {
-        return new SimpleAjaxLink(id, itemModel, property.getModel(itemModel)) {
-            private static final long serialVersionUID = 1L;
+    class CalculatedRoleModel extends LoadableDetachableModel<List<GeoServerRole>> {
 
-            @Override
-            protected void onClick(AjaxRequestTarget target) {                
-                setResponsePage(new EditRolePage(
-                        getSecurityManager().getActiveRoleService().getName(),
-                        (GeoServerRole) getDefaultModelObject()).setReturnPage(this.getPage()));
-            }
-        };
-    }
+        GeoServerUser user;
 
-    protected IBehavior getCalculatedRolesBehavior() {
-        return new AjaxFormComponentUpdatingBehavior("onchange") {            
-               private static final long serialVersionUID = 1L;
-               @Override
-               protected void onUpdate(AjaxRequestTarget target) {
-                   AbstractUserPage.this.calculatedRoles.modelChanged();
-                   target.addComponent(AbstractUserPage.this.calculatedrolesContainer);
-               }
-        };
-    }
-    
-    public List<GeoServerRole> getCalculatedroles() {
-        List<GeoServerRole> tmpList = new ArrayList<GeoServerRole>();
-        List<GeoServerRole> resultList = new ArrayList<GeoServerRole>();
-        try {
-            GeoServerUserGroupService ugService= getSecurityManager().loadUserGroupService(userGroupServiceName);
-            GeoServerRoleService gaService = getSecurityManager().getActiveRoleService();
-            RoleCalculator calc = new RoleCalculator(ugService, gaService);
-            tmpList.addAll(userRolesFormComponent.getSelectedRoles());
-            calc.addInheritedRoles(tmpList);
-            for (GeoServerUserGroup group : userGroupFormComponent.getSelectedGroups()) {
-                if (group.isEnabled())
-                    tmpList.addAll(calc.calculateRoles(group));
-            }
-            resultList.addAll(calc.personalizeRoles(uiUser.toGeoserverUser(userGroupServiceName), tmpList));
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+        CalculatedRoleModel(GeoServerUser user) {
+            this.user = user;
         }
-        Collections.sort(resultList);
-        return resultList;
+
+        @Override
+        protected List<GeoServerRole> load() {
+            List<GeoServerRole> tmp = new ArrayList<GeoServerRole>();
+            List<GeoServerRole> result = new ArrayList<GeoServerRole>();
+            try {
+                GeoServerUserGroupService ugService = getSecurityManager()
+                        .loadUserGroupService(ugServiceName);
+                GeoServerRoleService gaService = getSecurityManager()
+                        .getActiveRoleService();
+
+                RoleCalculator calc = new RoleCalculator(ugService, gaService);
+                tmp.addAll(rolePalette.getSelectedRoles());
+                calc.addInheritedRoles(tmp);
+
+                for (GeoServerUserGroup group : userGroupPalette.getSelectedGroups()) {
+                    if (group.isEnabled()) {
+                        tmp.addAll(calc.calculateRoles(group));
+                    }
+                }
+                result.addAll(calc.personalizeRoles(user, tmp));
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        
+            Collections.sort(result);
+            return result;
+        }
     }
 
     /**
      * Implements the actual save action.
      */
-    protected abstract void onFormSubmit() throws IOException, PasswordPolicyException;
-    
-    /**
-     * Mediates between the UI and the Spring User class
-     */
-    static class UserUIModel implements Serializable {
-        private static final long serialVersionUID = 1L;
-        private String username;
+    protected abstract void onFormSubmit(GeoServerUser user)
+        throws IOException, PasswordPolicyException;
 
-        /**
-         * Will be used to check if the user edited the pw in case the pw is encrypted with a one
-         * way only (digest) encryption algorithm
-         */
-        private String originalPassword;
-
-        private String password;
-
-        private String confirmPassword;
-        
-
-        private boolean enabled;
-
-        /**
-         * Maps a {@link GeoServerUser} into something that maps 1-1 with the UI
-         * 
-         * @param user
-         */
-        public UserUIModel(GeoServerUser user) {
-            this.username = user.getUsername();
-            this.originalPassword = user.getPassword();
-            this.password = this.originalPassword;
-            this.confirmPassword = this.originalPassword;            
-            this.enabled = user.isEnabled();
-        }
-
-        /**
-         * Prepares for an emtpy new user
-         */
-        public UserUIModel() {
-            this.username = "";
-            this.originalPassword = "";
-            this.password = "";
-            this.confirmPassword = "";
-            this.enabled = true;
-        }
-
-        /**
-         * Converts this UI view back into an Spring {@link GeoServerUser} object
-         * 
-         * @return
-         */
-        public GeoServerUser toGeoserverUser(String userGroupServiceName) {
-            GeoServerUser user;
-            try {
-                user = GeoServerApplication.get().getSecurityManager()
-                    .loadUserGroupService(userGroupServiceName).createUserObject(username, password, enabled);
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-            return user;
-        }
-
-        public String getUsername() {
-            return username;
-        }
-
-        public void setUsername(String username) {
-            this.username = username;
-        }
-
-        public String getOriginalPassword() {
-            return originalPassword;
-        }
-
-        public void setOriginalPassword(String originalPassword) {
-            this.originalPassword = originalPassword;
-        }
-
-        public String getPassword() {
-            return password;
-        }
-
-        public void setPassword(String password) {
-            this.password = password;
-        }
-
-        public String getConfirmPassword() {
-            return confirmPassword;
-        }
-
-        public void setConfirmPassword(String confirmPassword) {
-            this.confirmPassword = confirmPassword;
-        }
-
-        public boolean isEnabled() {
-            return enabled;
-        }
-
-        public void setEnabled(boolean enabled) {
-            this.enabled = enabled;
-        }
-
-    }
-    
 }

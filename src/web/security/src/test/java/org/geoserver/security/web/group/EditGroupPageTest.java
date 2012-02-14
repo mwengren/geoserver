@@ -30,38 +30,38 @@ public class EditGroupPageTest extends AbstractSecurityWicketTestSupport {
         tester.assertRenderedPage(EditGroupPage.class);
         
         tester.assertRenderedPage(EditGroupPage.class);
-        assertFalse(tester.getComponentFromLastRenderedPage("groupForm:groupname").isEnabled());
-        assertTrue(tester.getComponentFromLastRenderedPage("groupForm:enabled").isEnabled());
-        assertTrue(tester.getComponentFromLastRenderedPage("groupForm:roles").isEnabled());
-        tester.assertVisible("groupForm:save");
+        assertFalse(tester.getComponentFromLastRenderedPage("form:groupname").isEnabled());
+        assertTrue(tester.getComponentFromLastRenderedPage("form:enabled").isEnabled());
+        assertTrue(tester.getComponentFromLastRenderedPage("form:roles").isEnabled());
+        tester.assertVisible("form:save");
 
-        tester.assertModelValue("groupForm:groupname", "group1");
-        tester.assertModelValue("groupForm:enabled", Boolean.TRUE);
+        tester.assertModelValue("form:groupname", "group1");
+        tester.assertModelValue("form:enabled", Boolean.TRUE);
         
-        FormTester form = tester.newFormTester("groupForm");
+        FormTester form = tester.newFormTester("form");
         form.setValue("enabled", Boolean.FALSE);
         
         
                         // add a role on the fly
         form.submit("roles:addRole");
         tester.assertRenderedPage(NewRolePage.class);
-        form=tester.newFormTester("roleForm");                
-        form.setValue("rolename", "ROLE_NEW");
+        form=tester.newFormTester("form");                
+        form.setValue("name", "ROLE_NEW");
         form.submit("save");
         
         // assign the new role to the new group
-        form=tester.newFormTester("groupForm");
+        form=tester.newFormTester("form");
         tester.assertRenderedPage(EditGroupPage.class);
-        form.setValue("roles:roles:recorder", gaService.getRoleByName("ROLE_NEW").getAuthority());
+        form.setValue("roles:palette:recorder", gaService.getRoleByName("ROLE_NEW").getAuthority());
         
         // reopen new role dialog again to ensure that the current state is not lost
         form.submit("roles:addRole");
         tester.assertRenderedPage(NewRolePage.class);
-        tester.clickLink("roleForm:cancel");
+        tester.clickLink("form:cancel");
         tester.assertRenderedPage(EditGroupPage.class);
         
         // now save
-        form=tester.newFormTester("groupForm");
+        form=tester.newFormTester("form");
         form.submit("save");
         
         tester.assertRenderedPage(SecurityNamedServiceEditPage.class);
@@ -89,13 +89,13 @@ public class EditGroupPageTest extends AbstractSecurityWicketTestSupport {
         tester.startPage(page=(EditGroupPage) new EditGroupPage(getROUserGroupServiceName(),
                 ugService.getGroupByGroupname("group1")).setReturnPage(returnPage));
         tester.assertRenderedPage(EditGroupPage.class);
-        assertFalse(tester.getComponentFromLastRenderedPage("groupForm:groupname").isEnabled());
-        assertFalse(tester.getComponentFromLastRenderedPage("groupForm:enabled").isEnabled());
-        assertTrue(tester.getComponentFromLastRenderedPage("groupForm:roles").isEnabled());
-        tester.assertVisible("groupForm:save");
+        assertFalse(tester.getComponentFromLastRenderedPage("form:groupname").isEnabled());
+        assertFalse(tester.getComponentFromLastRenderedPage("form:enabled").isEnabled());
+        assertTrue(tester.getComponentFromLastRenderedPage("form:roles").isEnabled());
+        assertTrue(tester.getComponentFromLastRenderedPage("form:save").isEnabled());
         
-        FormTester form=tester.newFormTester("groupForm");
-        form.setValue("roles:roles:recorder", gaService.getRoleByName("ROLE_WFS").getAuthority());
+        FormTester form=tester.newFormTester("form");
+        form.setValue("roles:palette:recorder", gaService.getRoleByName("ROLE_WFS").getAuthority());
         form.submit("save");
         tester.assertRenderedPage(SecurityNamedServiceEditPage.class);
         
@@ -118,12 +118,12 @@ public class EditGroupPageTest extends AbstractSecurityWicketTestSupport {
         tester.startPage(page=(EditGroupPage) new EditGroupPage(getUserGroupServiceName(),
             ugService.getGroupByGroupname("group1")).setReturnPage(returnPage));
         tester.assertRenderedPage(EditGroupPage.class);
-        assertFalse(tester.getComponentFromLastRenderedPage("groupForm:groupname").isEnabled());
-        assertTrue(tester.getComponentFromLastRenderedPage("groupForm:enabled").isEnabled());
-        assertFalse(tester.getComponentFromLastRenderedPage("groupForm:roles").isEnabled());
-        tester.assertVisible("groupForm:save");
+        assertFalse(tester.getComponentFromLastRenderedPage("form:groupname").isEnabled());
+        assertTrue(tester.getComponentFromLastRenderedPage("form:enabled").isEnabled());
+        assertFalse(tester.getComponentFromLastRenderedPage("form:roles").isEnabled());
+        tester.assertVisible("form:save");
         
-        FormTester form = tester.newFormTester("groupForm");
+        FormTester form = tester.newFormTester("form");
         form.setValue("enabled", Boolean.FALSE);
         form.submit("save");
         tester.assertRenderedPage(SecurityNamedServiceEditPage.class);
@@ -143,10 +143,10 @@ public class EditGroupPageTest extends AbstractSecurityWicketTestSupport {
         tester.startPage(page=(EditGroupPage) new EditGroupPage(getROUserGroupServiceName(),
                 ugService.getGroupByGroupname("group1")).setReturnPage(returnPage));
         tester.assertRenderedPage(EditGroupPage.class);
-        assertFalse(tester.getComponentFromLastRenderedPage("groupForm:groupname").isEnabled());
-        assertFalse(tester.getComponentFromLastRenderedPage("groupForm:enabled").isEnabled());
-        assertFalse(tester.getComponentFromLastRenderedPage("groupForm:roles").isEnabled());
-        tester.assertInvisible("groupForm:save");
+        assertFalse(tester.getComponentFromLastRenderedPage("form:groupname").isEnabled());
+        assertFalse(tester.getComponentFromLastRenderedPage("form:enabled").isEnabled());
+        assertFalse(tester.getComponentFromLastRenderedPage("form:roles").isEnabled());
+        assertFalse(tester.getComponentFromLastRenderedPage("form:save").isEnabled());
     }
 
 
