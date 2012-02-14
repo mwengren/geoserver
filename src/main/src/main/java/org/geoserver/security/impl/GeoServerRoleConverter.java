@@ -4,10 +4,11 @@
  */
 package org.geoserver.security.impl;
 
-import java.util.Map.Entry;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
+import java.util.Map.Entry;
 import java.util.Properties;
-import java.util.StringTokenizer;
 
 import org.springframework.security.core.GrantedAuthority;
 
@@ -90,23 +91,41 @@ public class GeoServerRoleConverter {
         return buff.toString();
     }
     
+    protected List<String> splitString(String theString, String delim) {
+                
+        List<String> result = new ArrayList<String>();
+        int startIndex = 0;
+        while (true) {
+            int index = theString.indexOf(delim,startIndex);
+            if (index==-1) {
+                result.add(theString.substring(startIndex));
+                break;
+            } else {
+                result.add(theString.substring(startIndex,index));
+                index+=delim.length();
+            }
+            
+        }
+        return result;        
+    }
+    
     public GeoServerRole convertRoleFromString(String roleString, String userName) {
-        GeoServerRole result = null;
-        int index = roleString.indexOf(getRoleParameterStartString());        
-        if (index == -1 ) {
-            result= new GeoServerRole(roleString);
-            result.setUserName(userName);
+        
+        List<String> working = splitString(roleString,getRoleParameterStartString());
+        GeoServerRole result= new GeoServerRole(working.get(0));
+        result.setUserName(userName);
+        
+        if (working.size()==1) {
             return result;
         }
         
-        result= new GeoServerRole(roleString.substring(0, index));
-        result.setUserName(userName);
-        index+=getRoleParameterStartString().length();
-        int index2 = roleString.lastIndexOf(getRoleParameterEndString(), index);
-        if (index2 == -1)
-            throw new RuntimeException("Invalid role string: "+roleString);
-        String paramString = roleString.substring(index,index2);
-        //StringTokenizer tokenizer = new StringTokenizer()
-        return null;
+        int index = working.get(1).lastIndexOf(getRoleParameterEndString());
+        String roleParamString = working.get(1).substring(0, index);
+        working = splitString(roleParamString,getRoleParameterDelimiterString());
+        for (String kvp : working) {
+            List<String> tmp = splitString(kvp, getRoleParameterAssignmentString());
+            result.getProperties().put(tmp.get(0), tmp.get(1));
+        }
+       return result; 
     }
 }

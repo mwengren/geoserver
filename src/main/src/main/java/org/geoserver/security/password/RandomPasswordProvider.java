@@ -44,7 +44,7 @@ public class RandomPasswordProvider {
     /**
      * The default password length assures a key strength of 2 ^ 261
      * {@link #PRINTABLE_ALPHABET} has 92 characters
-     * ln (92 * 40 ) / ln (2) = 260.942478242
+     * ln (92 ^ 40 ) / ln (2) = 260.942478242
      */
     public static int DefaultPasswordLength = 40;
     
