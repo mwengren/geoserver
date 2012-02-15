@@ -119,7 +119,19 @@ public class SecurityConfigValidatorTest extends GeoServerSecurityTestSupport {
         }
         assertTrue(failed);
         config.getAuthProviderNames().remove("XX");
-
+        
+        failed = false;
+        config.setIncludingRolesInResponse(true);
+        config.setHttpResponseHeaderAttrForIncludedRoles("");
+        try {
+            getSecurityManager().saveSecurityConfig(config);
+        } catch (SecurityConfigException ex){
+            assertEquals(HEADER_ATTRIBUTE_NAME_REQUIRED,ex.getId());
+            LOGGER.info(ex.getMessage());
+            failed=true;
+        }
+        assertTrue(failed);
+        
     }
     
     public void testNamedServices() {

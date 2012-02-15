@@ -14,6 +14,8 @@ import java.util.List;
  */
 public class GeoServerSecurityFilterChain extends LinkedHashMap<String, List<FilterChainEntry>> {
 
+    private static final long serialVersionUID = 1L;
+    
     public static final String SECURITY_CONTEXT_ASC_FILTER = "securityContextAscFilter";
     public static final String SECURITY_CONTEXT_NO_ASC_FILTER = "securityContextNoAscFilter";
     
@@ -35,6 +37,8 @@ public class GeoServerSecurityFilterChain extends LinkedHashMap<String, List<Fil
 
     public static final String FILTER_SECURITY_INTERCEPTOR = "filterSecurityInterceptor";
     public static final String FILTER_SECURITY_REST_INTERCEPTOR = "filterSecurityRestInterceptor";
+    
+    public static final String ROLE_FILTER ="roleFilter";
 
     public GeoServerSecurityFilterChain() {
     }

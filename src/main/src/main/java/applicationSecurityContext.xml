@@ -194,10 +194,12 @@
     we always get an anonymous user and anonymous role if all other authentication
     attempts failed
   -->
+  
+  
   <bean id="anonymousFilter"
-    class="org.springframework.security.web.authentication.AnonymousAuthenticationFilter">
+    class="org.geoserver.security.impl.GeoServerAnonymousAuthFilter">
     <property name="key" value="geoserver" />
-    <property name="userAttribute" value="anonymousUser,ROLE_ANONYMOUS" />
+    <property name="userAttribute" value="anonymousUser,dummy" />
   </bean>
 
   <!-- 
@@ -340,10 +342,22 @@
   <bean id="keyStoreProvider" class="org.geoserver.security.KeyStoreProviderImpl" />
    -->
    
-  <!--
-  Extensions can inject another class implementing org.geoserver.security.GeoServerRoleConverter   
-  <bean id="roleConverter" class="org.geoserver.security.impl.GeoServerRoleConverterImpl" />
-   -->
+  <bean id="roleConverter" class="org.geoserver.security.impl.GeoServerRoleConverterImpl" >  
+  	<property name="roleDelimiterString" value=";" />
+  	<property name="roleParameterDelimiterString" value=","/>
+  	<property name="roleParameterStartString" value="("/>
+  	<property name="roleParameterEndString" value= ")"/>
+  	<property name="roleParameterAssignmentString" value="="/>  
+  </bean>
+  
+  <!-- filter for returning the roles of the authenticated principal. This filter
+    uses a GeoServerRoleConverter bean for string conversion
+   --> 
+  <bean id="roleFilter" class="org.geoserver.security.impl.GeoServerRoleFilter">
+    <property name="converter">
+      <ref bean="roleConverter" />
+    </property>   
+  </bean>
    
 
   <bean id="xmlSecurityProvider" class="org.geoserver.security.xml.XMLSecurityProvider"/>  	

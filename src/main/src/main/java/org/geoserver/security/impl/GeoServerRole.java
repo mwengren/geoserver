@@ -44,6 +44,11 @@ public class GeoServerRole extends GrantedAuthorityImpl implements Comparable<Ge
      * Pre-defined null role 
      */
     public final static GeoServerRole NULL_ROLE = new GeoServerRole("null");
+        
+    /**
+     * Predefined anonymous role
+     */
+    public final static GeoServerRole ANONYMOUS_ROLE = new GeoServerRole("ROLE_ANONYMOUS");
 
     private static final long serialVersionUID = 1L;
 

@@ -13,6 +13,7 @@ import static org.geoserver.security.GeoServerSecurityFilterChain.REMEMBER_ME_FI
 import static org.geoserver.security.GeoServerSecurityFilterChain.SECURITY_CONTEXT_ASC_FILTER;
 import static org.geoserver.security.GeoServerSecurityFilterChain.SECURITY_CONTEXT_NO_ASC_FILTER;
 import static org.geoserver.security.GeoServerSecurityFilterChain.SERVLET_API_SUPPORT_FILTER;
+import static org.geoserver.security.GeoServerSecurityFilterChain.ROLE_FILTER;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -94,7 +95,7 @@ public class GeoServerSecurityFilterChainProxy extends FilterChainProxy
             BASIC_AUTH_NO_REMEMBER_ME_FILTER, EXCEPTION_TRANSLATION_OWS_FILTER, 
             FILTER_SECURITY_REST_INTERCEPTOR));
 
-        filterChain.put("/**", Arrays.asList(SECURITY_CONTEXT_NO_ASC_FILTER, BASIC_AUTH_FILTER, 
+        filterChain.put("/**", Arrays.asList(SECURITY_CONTEXT_NO_ASC_FILTER, ROLE_FILTER,BASIC_AUTH_FILTER, 
             ANONYMOUS_FILTER, EXCEPTION_TRANSLATION_OWS_FILTER, FILTER_SECURITY_INTERCEPTOR));
 
         return filterChain;

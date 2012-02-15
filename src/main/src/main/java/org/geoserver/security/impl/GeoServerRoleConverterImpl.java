@@ -153,7 +153,7 @@ public class GeoServerRoleConverterImpl implements GeoServerRoleConverter {
                 break;
             } else {
                 result.add(theString.substring(startIndex,index));
-                index+=delim.length();
+                startIndex = index+delim.length();
             }
             
         }
@@ -183,7 +183,9 @@ public class GeoServerRoleConverterImpl implements GeoServerRoleConverter {
     @Override
     public GeoServerRole convertRoleFromString(String roleString, String userName) {
         
-        if (roleString == null || roleString.isEmpty()) return null;
+        if (roleString == null) return null;
+        roleString=roleString.trim();
+        if (roleString.isEmpty()) return null;
         
         checkDelimiters();
         

@@ -65,6 +65,11 @@ public class SecurityConfigValidator extends AbstractSecurityValidator{
             throw createSecurityException(SEC_ERR_07);
         }
 
+        if (config.isIncludingRolesInResponse()) {
+            if (isNotEmpty(config.getHttpResponseHeaderAttrForIncludedRoles())==false)
+                throw createSecurityException(HEADER_ATTRIBUTE_NAME_REQUIRED);
+        }
+        
         GeoServerPasswordEncoder encoder = null;
         try {
             encoder = manager.loadPasswordEncoder(config.getConfigPasswordEncrypterName());

@@ -164,6 +164,8 @@ public class SecurityConfigException extends AbstractSecurityException {
     @Deprecated
     public static final String SEC_ERR_42 = PASSWD_POLICY_MASTER_DELETE;
 
+    public static final String HEADER_ATTRIBUTE_NAME_REQUIRED="HEADER_ATTRIBUTE_NAME_REQUIRED";
+    
     public SecurityConfigException(String errorId, Object[] args) {
         super(errorId, args);
     }
