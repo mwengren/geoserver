@@ -29,7 +29,7 @@ public abstract class AbstractRoleService extends AbstractGeoServerSecurityServi
     implements GeoServerRoleService {
     
     
-    protected GeoServerRole adminRole;
+    protected GeoServerRole adminRole, groupAdminRole;
     protected RoleStoreHelper helper;
     
     
@@ -45,7 +45,13 @@ public abstract class AbstractRoleService extends AbstractGeoServerSecurityServi
         if (adminRole!=null) return adminRole;
         return GeoServerRole.ADMIN_ROLE;
     }
-    
+
+    @Override
+    public GeoServerRole getGroupAdminRole() {
+        if (groupAdminRole != null) return groupAdminRole;
+        return GeoServerRole.GROUP_ADMIN_ROLE;
+    }
+
     @Override
     public GeoServerRoleStore createStore() throws IOException {
         //return null, subclasses can override if they support a store along with a service
@@ -202,8 +208,9 @@ public abstract class AbstractRoleService extends AbstractGeoServerSecurityServi
                 props.put(key, userProps.get(key));
                 personalized=true;
             }
-            else
+            else {
                 props.put(key,roleParams.get(key));
+            }
         }
         return personalized ?  props : null;
     }

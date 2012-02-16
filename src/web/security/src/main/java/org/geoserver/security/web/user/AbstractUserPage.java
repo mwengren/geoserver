@@ -7,13 +7,16 @@ package org.geoserver.security.web.user;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.SortedSet;
 import java.util.logging.Level;
 
 import org.apache.wicket.WicketRuntimeException;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.form.AjaxFormComponentUpdatingBehavior;
+import org.apache.wicket.ajax.markup.html.form.AjaxCheckBox;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.markup.html.form.Form;
@@ -21,6 +24,7 @@ import org.apache.wicket.markup.html.form.FormComponent;
 import org.apache.wicket.markup.html.form.PasswordTextField;
 import org.apache.wicket.markup.html.form.SubmitLink;
 import org.apache.wicket.markup.html.form.TextField;
+import org.apache.wicket.markup.html.form.validation.AbstractFormValidator;
 import org.apache.wicket.markup.html.form.validation.EqualInputValidator;
 import org.apache.wicket.markup.html.list.ListItem;
 import org.apache.wicket.markup.html.list.ListView;
@@ -28,11 +32,15 @@ import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
+import org.apache.wicket.model.StringResourceModel;
+import org.apache.wicket.model.util.ListModel;
+import org.apache.wicket.validation.IValidator;
 import org.geoserver.security.GeoServerRoleService;
 import org.geoserver.security.GeoServerUserGroupService;
 import org.geoserver.security.impl.GeoServerRole;
 import org.geoserver.security.impl.GeoServerUser;
 import org.geoserver.security.impl.GeoServerUserGroup;
+import org.geoserver.security.impl.GroupAdminProperty;
 import org.geoserver.security.impl.RoleCalculator;
 import org.geoserver.security.password.GeoServerEmptyPasswordEncoder;
 import org.geoserver.security.validation.AbstractSecurityException;
@@ -44,6 +52,7 @@ import org.geoserver.security.web.role.RolePaletteFormComponent;
 import org.geoserver.web.wicket.ParamResourceModel;
 import org.geoserver.web.wicket.SimpleAjaxLink;
 import org.geoserver.web.wicket.property.PropertyEditorFormComponent;
+import org.geotools.resources.UnmodifiableArrayList;
 
 /**
  * Allows creation of a new user in users.properties
@@ -52,6 +61,7 @@ public abstract class AbstractUserPage extends AbstractSecurityPage {
 
     protected RolePaletteFormComponent rolePalette;
     protected UserGroupPaletteFormComponent userGroupPalette;
+    protected UserGroupListMultipleChoice adminGroupChoice;
     protected ListView<GeoServerRole> calculatedRoles;
 
     protected String ugServiceName;
@@ -112,14 +122,33 @@ public abstract class AbstractUserPage extends AbstractSecurityPage {
             throw new WicketRuntimeException(e);
         }
         
-        form.add(rolePalette = new RolePaletteFormComponent("roles", new Model((Serializable)roles)));
+        form.add(rolePalette = new RolePaletteFormComponent("roles", new ListModel(roles)));
         rolePalette.add(new AjaxFormComponentUpdatingBehavior("onchange") {
            @Override
            protected void onUpdate(AjaxRequestTarget target) {
                updateCalculatedRoles(target);
+               updateGroupAdminList(target);
            }
         });
+        rolePalette.setOutputMarkupId(true);
         rolePalette.setEnabled(hasRoleStore);
+
+        boolean isGroupAdmin = roles.contains(GeoServerRole.GROUP_ADMIN_ROLE);
+        List<GeoServerUserGroup> adminGroups = new ArrayList();
+        if (isGroupAdmin) {
+            for (String groupName : GroupAdminProperty.get(user.getProperties())) {
+                try {
+                    adminGroups.add(ugService.getGroupByGroupname(groupName));
+                } catch (IOException e) {
+                    throw new WicketRuntimeException(e);
+                }
+            }
+        }
+
+        form.add(adminGroupChoice = new UserGroupListMultipleChoice("adminGroups", 
+            new ListModel(adminGroups), new GroupsModel(ugServiceName)));
+        adminGroupChoice.setOutputMarkupId(true);
+        adminGroupChoice.setEnabled(hasUserGroupStore && isGroupAdmin);
 
         WebMarkupContainer container = new WebMarkupContainer("calculatedRolesContainer");
         form.add(container);
@@ -147,9 +176,20 @@ public abstract class AbstractUserPage extends AbstractSecurityPage {
             @Override
             public void onSubmit() {
                 try {
-                    //manually update properties
-                    //user.getProperties().clear();
-                    //user.getProperties().putAll(propEditor.getProperties());
+                    //update the user property listing the group names the user is admin for
+                    if (adminGroupChoice.isEnabled()) {
+                        Collection<GeoServerUserGroup> groups = adminGroupChoice.getModelObject();
+                        String[] groupNames = new String[groups.size()];
+                        int i = 0;
+                        for (GeoServerUserGroup group : groups) {
+                            groupNames[i++] = group.getGroupname();
+                        }
+
+                        GroupAdminProperty.set(user.getProperties(), groupNames);
+                    }
+                    else {
+                        GroupAdminProperty.del(user.getProperties());
+                    }
 
                     onFormSubmit(user);
                     setReturnPageDirtyAndReturn(true);
@@ -176,6 +216,7 @@ public abstract class AbstractUserPage extends AbstractSecurityPage {
                 return "AbstractUserPage.passwordMismatch";
             }
         });
+        form.add(new GroupAdminValidator());
     }
 
     boolean isFinalSubmit(FormComponent component) {
@@ -192,6 +233,12 @@ public abstract class AbstractUserPage extends AbstractSecurityPage {
     void updateCalculatedRoles(AjaxRequestTarget target) {
         calculatedRoles.modelChanged();
         target.addComponent(calculatedRoles.getParent());
+    }
+
+    void updateGroupAdminList(AjaxRequestTarget target) {
+        adminGroupChoice.setEnabled(
+            rolePalette.getSelectedRoles().contains(GeoServerRole.GROUP_ADMIN_ROLE));
+        target.addComponent(adminGroupChoice);
     }
 
     void handleSubmitError(Exception e) {
@@ -213,6 +260,10 @@ public abstract class AbstractUserPage extends AbstractSecurityPage {
         }
     }
 
+    /**
+     * List model that calculates derived roles for the user, those assigned directly and through
+     * group membership.
+     */
     class CalculatedRoleModel extends LoadableDetachableModel<List<GeoServerRole>> {
 
         GeoServerUser user;
@@ -247,6 +298,28 @@ public abstract class AbstractUserPage extends AbstractSecurityPage {
         
             Collections.sort(result);
             return result;
+        }
+    }
+
+    /**
+     * Validator that ensures when a user is assigned to be a group admin that at least one group
+     * is selected.
+     */
+    class GroupAdminValidator extends AbstractFormValidator {
+
+        @Override
+        public FormComponent<?>[] getDependentFormComponents() {
+            return new FormComponent[] {adminGroupChoice};
+        }
+
+        @Override
+        public void validate(Form<?> form) {
+            if (adminGroupChoice.isEnabled()) {
+                adminGroupChoice.updateModel();
+                if (adminGroupChoice.getModelObject().isEmpty()) {
+                    form.error(new StringResourceModel("noAdminGroups", getPage(), null).getString());
+                }
+            }
         }
     }
 

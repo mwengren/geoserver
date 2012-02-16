@@ -62,6 +62,10 @@ public class PaletteFormComponent<T> extends FormComponentPanel {
         return palette;
     }
 
+    public IModel<List<T>> getPaletteModel() {
+        return (IModel<List<T>>) palette.getDefaultModel();
+    }
+
     @Override
     public void updateModel() {
         super.updateModel();

@@ -172,11 +172,15 @@ public interface GeoServerRoleService extends GeoServerSecurityService {
             String userName,Properties userProps) throws IOException;
         
     /**
-     * @return the admin role, default is
-     * {@link GeoserverRole#ADMIN_ROLE#getAuthority()}
+     * @return the admin role, default is {@link GeoserverRole#ADMIN_ROLE}
      */
     GeoServerRole getAdminRole();
-    
+
+    /**
+     * @return the group admin role, default is {@link GeoServerRole#GROUP_ADMIN_ROLE}.
+     */
+    GeoServerRole getGroupAdminRole();
+
     /**
      * @return the number of roles
      */

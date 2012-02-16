@@ -51,6 +51,8 @@ public abstract class SecurityNamedServicesPanel<T extends SecurityNamedServiceC
 
     public SecurityNamedServicesPanel(String id, SecurityNamedServiceProvider<T> dataProvider) {
         super(id);
+
+        final boolean isAdmin = getSecurityManager().checkAuthenticationForAdminRole();
         add(new AjaxLink("add") {
             @Override
             public void onClick(AjaxRequestTarget target) {
@@ -60,7 +62,8 @@ public abstract class SecurityNamedServicesPanel<T extends SecurityNamedServiceC
                 newPage.setReturnPage(getPage());
                 setResponsePage(newPage);
             }
-        });
+        }.setEnabled(isAdmin));
+
         add(removeLink = new AjaxLink("remove") {
             @Override
             public void onClick(AjaxRequestTarget target) {
@@ -118,7 +121,9 @@ public abstract class SecurityNamedServicesPanel<T extends SecurityNamedServiceC
         add(tablePanel = new SecurityNamedServiceTablePanel<T>("table", dataProvider) {
             @Override
             protected void onSelectionUpdate(AjaxRequestTarget target) {
-                target.addComponent(removeLink.setEnabled(!getSelection().isEmpty()));
+                if (isAdmin) {
+                    target.addComponent(removeLink.setEnabled(!getSelection().isEmpty()));
+                }
             }
         });
         tablePanel.setOutputMarkupId(true);

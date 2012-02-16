@@ -2,7 +2,6 @@
  * This code is licensed under the GPL 2.0 license, availible at the root
  * application directory.
  */
-
 package org.geoserver.security.xml;
 
 import java.io.File;
@@ -88,14 +87,19 @@ public class XMLRoleServiceTest extends AbstractRoleServiceTest {
         try {
             GeoServerRoleService service = getSecurityManager().loadRoleService("default");
             
-            assertEquals(1, service.getRoles().size());
-            GeoServerRole admin_role= service.getRoleByName(
-                    GeoServerRole.ADMIN_ROLE.getAuthority());
-            assertEquals(0,service.getGroupNamesForRole(admin_role).size());
-            assertEquals(1,service.getUserNamesForRole(admin_role).size());
+            assertEquals(2, service.getRoles().size());
+            GeoServerRole adminRole =
+                service.getRoleByName(GeoServerRole.ADMIN_ROLE.getAuthority());
+            GeoServerRole groupAdminRole = 
+                service.getRoleByName(GeoServerRole.GROUP_ADMIN_ROLE.getAuthority());
+            
+            assertEquals(0,service.getGroupNamesForRole(adminRole).size());
+            assertEquals(0,service.getGroupNamesForRole(groupAdminRole).size());
+            assertEquals(1,service.getUserNamesForRole(adminRole).size());
+            assertEquals(0,service.getUserNamesForRole(groupAdminRole).size());
             assertEquals(1, 
                     service.getRolesForUser(GeoServerUser.AdminName).size());
-            assertTrue(service.getRolesForUser(GeoServerUser.AdminName).contains(admin_role));
+            assertTrue(service.getRolesForUser(GeoServerUser.AdminName).contains(adminRole));
             
             
         } catch (Exception ex) {

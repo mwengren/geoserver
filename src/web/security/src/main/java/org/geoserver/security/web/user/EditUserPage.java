@@ -7,6 +7,7 @@ package org.geoserver.security.web.user;
 import java.io.IOException;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.logging.Level;
 
 import org.geoserver.security.GeoServerRoleStore;
 import org.geoserver.security.GeoServerUserGroupService;
@@ -51,6 +52,7 @@ public class EditUserPage extends AbstractUserPage {
                 ugStore.store();
             }
         } catch (IOException ex) {
+            LOGGER.log(Level.WARNING, ex.getLocalizedMessage(), ex);
             try { ugStore.load(); } catch (IOException ex2) {};
             throw ex;
         } catch (PasswordPolicyException ex) {

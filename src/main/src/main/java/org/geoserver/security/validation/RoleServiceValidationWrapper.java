@@ -107,19 +107,21 @@ public class RoleServiceValidationWrapper extends AbstractSecurityValidator impl
     }
     
     /**
-     * Prevents the removal of the admin role
+     * Prevents the removal of the admin and group admin roles.
      * 
      * @param role
      * @throws IOException
      */
     public void checkRemovalOfAdminRole(GeoServerRole role) throws IOException {
-        if (getAdminRole()==null)
-            return;
-        if (role.getAuthority().equals(getAdminRole().getAuthority()))
+        if (getAdminRole() != null && role.getAuthority().equals(getAdminRole().getAuthority())) {
             throw createSecurityException(ROLE_ERR_08,role.getAuthority());
+        }
+        if (getGroupAdminRole() != null 
+            && role.getAuthority().equals(getGroupAdminRole().getAuthority())) {
+            throw createSecurityException(GROUP_ADMIN_ROLE_NOT_REMOVABLE_$1, role.getAuthority());
+        }
     }
-    
-    
+
     /**
      * Prevents removal of a role used by access rules
      * Only checks if {@link #checkAgainstRules} is 
@@ -182,7 +184,7 @@ public class RoleServiceValidationWrapper extends AbstractSecurityValidator impl
         if (service.getRoleByName(roleName)!=null)
             throw createSecurityException(ROLE_ERR_03,roleName);
     }
-    
+
     // start wrapper methods
     
     public void initializeFromConfig(SecurityNamedServiceConfig config) throws IOException {
@@ -294,6 +296,10 @@ public class RoleServiceValidationWrapper extends AbstractSecurityValidator impl
 
     public GeoServerRole getAdminRole() {
         return service.getAdminRole();
+    }
+
+    public GeoServerRole getGroupAdminRole() {
+        return service.getGroupAdminRole();
     }
 
     public int getRoleCount() throws IOException {

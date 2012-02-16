@@ -76,7 +76,7 @@ public class SecurityNamedServiceEditPage<T extends SecurityNamedServiceConfig>
                 public void onSubmit() {
                     handleSubmit(getForm());
                 }
-            });
+            }.setVisible(getSecurityManager().checkAuthenticationForAdminRole()));
             form.add(new Link("cancel") {
                 @Override
                 public void onClick() {

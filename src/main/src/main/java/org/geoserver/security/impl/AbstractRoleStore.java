@@ -72,6 +72,11 @@ public abstract  class AbstractRoleStore  implements GeoServerRoleStore {
         return service.getAdminRole();
     }
 
+    @Override
+    public GeoServerRole getGroupAdminRole() {
+        return service.getGroupAdminRole();
+    }
+
     public GeoServerRoleStore createStore() throws IOException {
         return service.createStore();
     }

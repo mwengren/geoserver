@@ -107,7 +107,9 @@ import org.springframework.security.authentication.AnonymousAuthenticationProvid
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.authentication.RememberMeAuthenticationProvider;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -528,9 +530,20 @@ public class GeoServerSecurityManager extends ProviderManager implements Applica
                 }
             }
         }
+
+        return wrapRoleService(roleService);
+    }
+
+    GeoServerRoleService wrapRoleService(GeoServerRoleService roleService) {
+        //check for group administrator and wrap accordingly
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (checkAuthenticationForRole(auth, GeoServerRole.GROUP_ADMIN_ROLE)) {
+            roleService = 
+                new GroupAdminRoleService(roleService, (GeoServerUser) auth.getPrincipal());
+        }
         return roleService;
     }
-    
+
     /**
      * Loads a role {@link SecurityRoleServiceConfig} from a named configuration.
      * <code>null</code> if not found
@@ -841,9 +854,20 @@ public class GeoServerSecurityManager extends ProviderManager implements Applica
                 }
             }
         }
+
+        return wrapUserGroupService(ugService);
+    }
+
+    GeoServerUserGroupService wrapUserGroupService(GeoServerUserGroupService ugService) {
+        //check for group administrator and wrap accordingly
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (checkAuthenticationForRole(auth, GeoServerRole.GROUP_ADMIN_ROLE)) {
+            ugService = 
+                new GroupAdminUserGroupService(ugService, (GeoServerUser) auth.getPrincipal());
+        }
         return ugService;
     }
-    
+
     /**
      * Loads a user {@link SecurityUserGroupServiceConfig} from a named configuration.
      * <code>null</code> if not foun
@@ -958,6 +982,54 @@ public class GeoServerSecurityManager extends ProviderManager implements Applica
         }
 
         authProviderHelper.saveConfig(config);
+    }
+
+    /**
+     * Checks if the currently authenticated user has the administrator role.
+     * <p>
+     * This method is shorthand for:
+     * <code>
+     * <pre>
+     *   checkAuthenticationForAdminRole(SecurityContextHolder.getContext().getAuthentication())
+     * </pre>
+     * </code>
+     * </p>
+     */
+    public boolean checkAuthenticationForAdminRole() {
+        return checkAuthenticationForAdminRole(SecurityContextHolder.getContext().getAuthentication());
+    }
+
+    /**
+     * Checks if the specified authentication has the administrator role.
+     * <p>
+     * This method is shorthand for:
+     * <code>
+     * <pre>
+     *   checkAuthenticationForRole(auth, GeoServerRole.ADMIN_ROLE)
+     * </pre>
+     * </code>
+     * </p>
+     * 
+     */
+    public boolean checkAuthenticationForAdminRole(Authentication auth) {
+        return checkAuthenticationForRole(auth, GeoServerRole.ADMIN_ROLE);
+    }
+
+    /**
+     * Checks if the specified authentication contains the specified role.
+     * 
+     * @return <code>true</code> if the authenticated contains the role, otherwise <code>false</false>
+     */
+    public boolean checkAuthenticationForRole(Authentication auth, GeoServerRole role) {
+        if (auth == null || !auth.isAuthenticated()) {
+            return false;
+        }
+        for (GrantedAuthority authority : auth.getAuthorities()) {
+            if (role.getAuthority().equals(authority.getAuthority())) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
@@ -1625,6 +1697,11 @@ public class GeoServerSecurityManager extends ProviderManager implements Applica
             }
         }
 
+        //add the built-in group admin role
+        if (roleStore.getRoleByName(GeoServerRole.GROUP_ADMIN_ROLE.getAuthority()) == null) {
+            roleStore.addRole(GeoServerRole.GROUP_ADMIN_ROLE);
+        }
+
         //persist the changes
         roleStore.store();
         userGroupStore.store();
@@ -1924,9 +2001,11 @@ public class GeoServerSecurityManager extends ProviderManager implements Applica
                 boolean needsLockProtection =
                         GeoServerSecurityProvider.getProvider(GeoServerRoleService.class, 
                         config.getClassName()).roleServiceNeedsLockProtection();
-                if (needsLockProtection)
+                if (needsLockProtection) {
                         service = new LockingRoleService(service);
-            }            
+                }
+            }
+
             service.setName(name);
 
             //TODO: do we need this anymore?
@@ -2053,7 +2132,7 @@ public class GeoServerSecurityManager extends ProviderManager implements Applica
      * @return the active {@link GeoServerRoleService}
      */
     public GeoServerRoleService getActiveRoleService() {
-        return activeRoleService;
+        return wrapRoleService(activeRoleService);
     }
 
     /**

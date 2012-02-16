@@ -44,7 +44,7 @@ public  class JDBCRoleService extends AbstractJDBCService implements GeoServerRo
     protected Set<RoleLoadedListener> listeners = 
         Collections.synchronizedSet(new HashSet<RoleLoadedListener>());
     
-    protected GeoServerRole adminRole;
+    protected GeoServerRole adminRole, groupAdminRole;
     
     
     public JDBCRoleService() {
@@ -57,7 +57,12 @@ public  class JDBCRoleService extends AbstractJDBCService implements GeoServerRo
         return GeoServerRole.ADMIN_ROLE;
     }
 
-    
+    @Override
+    public GeoServerRole getGroupAdminRole() {
+        if (groupAdminRole != null) return groupAdminRole;
+        return GeoServerRole.GROUP_ADMIN_ROLE;
+    }
+
     @Override
     public boolean canCreateStore() {
         return true;

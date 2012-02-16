@@ -21,13 +21,7 @@ public class AdminComponentAuthorizer implements ComponentAuthorizer {
             return false;
         }
 
-        GeoServerRole adminRole = getSecurityManager().getActiveRoleService().getAdminRole();
-        for (GrantedAuthority authority : authentication.getAuthorities()) {
-            if (adminRole.getAuthority().equals(authority.getAuthority())) {
-                return true;
-            }
-        }
-        return false;
+        return getSecurityManager().checkAuthenticationForAdminRole(authentication);
     }
 
     protected GeoServerSecurityManager getSecurityManager() {

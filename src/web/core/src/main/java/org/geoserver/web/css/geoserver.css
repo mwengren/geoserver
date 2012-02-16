@@ -81,7 +81,9 @@ input[readonly] {
 	border: 1px solid Lightgrey;
 }
 
-
+.palette th, .palette td {
+  padding: 0;
+}
 
 /*-----------------------
 Utility Classes

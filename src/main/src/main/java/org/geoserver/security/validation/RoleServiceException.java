@@ -59,6 +59,8 @@ public class RoleServiceException extends AbstractSecurityException {
     public static final String ADMIN_ROLE_NOT_REMOVABLE_$1 = "ADMIN_ROLE_NOT_REMOVABLE";
     //return MessageFormat.format("Administrator role {0} is not removable",args);
 
+    public static final String GROUP_ADMIN_ROLE_NOT_REMOVABLE_$1 = "GROUP_ADMIN_ROLE_NOT_REMOVABLE";
+
     @Deprecated
     public static final String ROLE_ERR_08 = ADMIN_ROLE_NOT_REMOVABLE_$1;
 

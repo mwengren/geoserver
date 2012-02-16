@@ -56,11 +56,13 @@ public class UserGroupServiceException extends AbstractSecurityException {
     @Deprecated
     public static final String UG_ERR_06 = GROUP_ALREADY_EXISTS_$1;
 
+    public static final String USER_IN_OTHER_GROUP_NOT_MODIFIABLE_$1 = "USER_IN_OTHER_GROUP_NOT_MODIFIABLE";
+
     public UserGroupServiceException(String errorId, Object[] args) {
         super(errorId, args);
     }
 
     public UserGroupServiceException(String errorId, String message, Object[] args) {
-        super(errorId, message, args);        
+        super(errorId, message, args);
     }
 }

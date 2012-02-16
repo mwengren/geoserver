@@ -98,6 +98,8 @@ public class RoleStoreValidationWrapper extends RoleServiceValidationWrapper imp
     public void associateRoleToUser(GeoServerRole role, String username) throws IOException {
         checkExistingRoleName(role.getAuthority());
         checkValidUserName(username);
+        //TODO:
+        //checkGroupAdminRole(username);
         getStore().associateRoleToUser(role, username);
     }
     public void disAssociateRoleFromUser(GeoServerRole role, String username) throws IOException {

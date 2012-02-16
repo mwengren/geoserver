@@ -6,10 +6,13 @@ package org.geoserver.security.web;
 
 import java.util.logging.Logger;
 
+import org.apache.wicket.behavior.AttributeAppender;
+import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.FormComponentPanel;
 import org.apache.wicket.markup.html.form.TextField;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
+import org.apache.wicket.model.StringResourceModel;
 import org.geoserver.security.GeoServerSecurityManager;
 import org.geoserver.security.config.SecurityNamedServiceConfig;
 import org.geoserver.web.GeoServerApplication;
@@ -43,6 +46,16 @@ public abstract class SecurityNamedServicePanel<T extends SecurityNamedServiceCo
     public SecurityNamedServicePanel(String id, IModel<T> model) {
         super(id, new Model());
         this.configModel = model;
+
+        //check for administrator, if not disable the panel and emit warning message
+        boolean isAdmin = getSecurityManager().checkAuthenticationForAdminRole();
+        setEnabled(isAdmin);
+
+        add(new Label("message", 
+            isAdmin ? new Model() : new StringResourceModel("notAdmin", this, null)));
+        if (!isAdmin) {
+            get("message").add(new AttributeAppender("class", new Model("info-link"), " "));
+        }
 
         setOutputMarkupId(true);
         add(new TextField("name").setRequired(true).setEnabled(model.getObject().getId() == null));

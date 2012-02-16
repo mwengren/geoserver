@@ -28,29 +28,14 @@ public class UserGroupPaletteFormComponent extends PaletteFormComponent<GeoServe
 
     GeoServerUser user;
 
-    public UserGroupPaletteFormComponent(String id, final String ugServiceName, GeoServerUser user) {
-        super(id, new SelectedGroupsModel(ugServiceName, user), new GroupsModel(ugServiceName), 
-            new ChoiceRenderer<GeoServerUserGroup>("groupname", "groupname"));
+    public UserGroupPaletteFormComponent(String id, String ugServiceName, GeoServerUser user) {
+        this(id, new SelectedGroupsModel(ugServiceName, user), ugServiceName, user);
+    }
 
-//        if (behavior==null) {
-//            groupPalette = new Palette<GeoServerUserGroup>(
-//                "groups", model,choicesModel,
-//                new ChoiceRenderer<GeoServerUserGroup>("groupname","groupname"), 10, false);
-//        } else {
-//            groupPalette = new Palette<GeoServerUserGroup>(
-//                    "groups", model,choicesModel,
-//                    new ChoiceRenderer<GeoServerUserGroup>("groupname","groupname"), 10, false) {
-//                        private static final long serialVersionUID = 1L;
-//
-//                        @Override
-//                        protected Recorder<GeoServerUserGroup> newRecorderComponent() {                            
-//                            Recorder<GeoServerUserGroup> r= super.newRecorderComponent();
-//                            r.add(behavior);
-//                            return r;
-//                        }                                        
-//            };            
-//        }
-        //palette.setOutputMarkupId(true);
+    public UserGroupPaletteFormComponent(String id, IModel<List<GeoServerUserGroup>> model, 
+        final String ugServiceName, GeoServerUser user) {
+        super(id, model, (IModel) new GroupsModel(ugServiceName), 
+            new ChoiceRenderer<GeoServerUserGroup>("groupname", "groupname"));
 
         add(new SubmitLink("addGroup") {
             @Override
@@ -77,51 +62,6 @@ public class UserGroupPaletteFormComponent extends PaletteFormComponent<GeoServe
             }
         }
     }
-//
-//    @Override
-//    public void updateModel() {
-//        groupPalette.getRecorderComponent().updateModel();
-//    }
-//    
-//    public Palette<GeoServerUserGroup> getGroupPalette() {
-//        return groupPalette;
-//    }
-
-//    class SelectedGroupsModel implements IModel<List<GeoServerUserGroup>> {
-//
-//        String ugServiceName;
-//        GeoServerUser user;
-//
-//        List<GeoServerUserGroup> groups;
-//
-//        SelectedGroupsModel(String ugServiceName, GeoServerUser user) {
-//            this.ugServiceName = ugServiceName;
-//            this.user = user;
-//        }
-//
-//        @Override
-//        public List<GeoServerUserGroup> getObject() {
-//            if (groups == null) {
-//                GeoServerSecurityManager secMgr = GeoServerApplication.get().getSecurityManager();
-//                try {
-//                    groups = 
-//                        new ArrayList(secMgr.loadUserGroupService(ugServiceName).getGroupsForUser(user));
-//                } catch (IOException e) {
-//                    throw new RuntimeException(e);
-//                }
-//            }
-//            return groups;
-//        }
-//
-//        @Override
-//        public void setObject(List<GeoServerUserGroup> object) {
-//            this.groups = object;
-//        }
-//    
-//        @Override
-//        public void detach() {
-//        }
-//    }
 
     static class SelectedGroupsModel implements IModel<List<GeoServerUserGroup>> {
         List<GeoServerUserGroup> groups;

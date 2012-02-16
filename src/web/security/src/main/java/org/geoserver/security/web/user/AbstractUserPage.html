@@ -39,10 +39,30 @@
           </fieldset>
         </li>
         <li>
-            <div wicket:id="groups" />
+          <fieldset>
+            <legend>
+              <span><wicket:message key="groups"></wicket:message></span>
+            </legend>
+            <ul>
+              <li>
+                <div wicket:id="groups" />
+              </li>
+            </ul>
+          </fieldset>
         </li>
         <li>
             <div wicket:id="roles" />
+        </li>
+        <li>
+          <fieldset>
+           <ul>
+             <li>
+               <label><wicket:message key="adminGroups"></wicket:message></label>
+               <select class="select choicesSelect" wicket:id="adminGroups" multiple="multiple" style="width:200px;"></select>
+             </li>
+           </ul>
+          </fieldset>
+          
         </li>
         <li>
           <fieldset>

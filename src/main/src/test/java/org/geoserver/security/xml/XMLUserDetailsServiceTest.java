@@ -77,7 +77,7 @@ public class XMLUserDetailsServiceTest extends AbstractUserDetailsServiceTest {
         assertEquals(0,userService.getUserGroups().size());
         assertEquals(0,userService.getGroupCount());
         
-        assertEquals(8,roleService.getRoles().size());
+        assertEquals(9,roleService.getRoles().size());
         
         GeoServerUser admin = (GeoServerUser) userService.loadUserByUsername("admin");
         assertNotNull(admin);

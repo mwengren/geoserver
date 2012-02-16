@@ -31,6 +31,11 @@ public class GeoServerRole extends GrantedAuthorityImpl implements Comparable<Ge
     public final static GeoServerRole ADMIN_ROLE = new GeoServerRole("ROLE_ADMINISTRATOR");
 
     /**
+     * Pre-defined role assigned to group adminstrators.
+     */
+    public final static GeoServerRole GROUP_ADMIN_ROLE = new GeoServerRole("ROLE_GROUP_ADMIN");
+
+    /**
      * Pre-defined role assigned to any authenticated user. 
      */
     public final static GeoServerRole AUTHENTICATED_ROLE = new GeoServerRole("ROLE_AUTHENTICATED");
