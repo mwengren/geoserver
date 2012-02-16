@@ -321,7 +321,7 @@ public class AbstractSecurityWicketTestSupport extends GeoServerWicketTestSuppor
           tester.startPage(page);
           tester.assertRenderedPage(page.getPageClass());
 
-          SecurityNamedServicesPanel panel = (SecurityNamedServicesPanel) page.get(panelName);
+          SecurityNamedServicesPanel panel = (SecurityNamedServicesPanel) page.get("panel:panel:" +panelName);
           
 //          AjaxTabbedPanel tabbedPanel=  (AjaxTabbedPanel) page.get(AbstractSecurityPage.TabbedPanelId);
 //          String linkId = tabbedPanel.getId()+":tabs-container:tabs:"+tabIndex+":link";        

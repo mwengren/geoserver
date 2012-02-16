@@ -9,6 +9,7 @@ import java.io.IOException;
 import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.behavior.AttributeAppender;
+import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.link.Link;
 import org.apache.wicket.markup.html.panel.Panel;
@@ -73,21 +74,35 @@ public class RolePanel extends Panel {
 
     }
 
+    public RolePanel setHeaderVisible(boolean visible) {
+        get("header").setVisible(visible);
+        return this;
+    }
+
+    public RolePanel setPagersVisible(boolean top, boolean bottom) {
+        roles.getTopPager().setVisible(top);
+        roles.getBottomPager().setVisible(bottom);
+        return this;
+    }
+    
     protected void headerComponents() {
 
         
         boolean canCreateStore=getService().canCreateStore();
       
+        WebMarkupContainer h = new WebMarkupContainer("header");
+        add(h);
+        
         if (!canCreateStore) {
-            add(new Label("message", new StringResourceModel("noCreateStore", this, null))
+            h.add(new Label("message", new StringResourceModel("noCreateStore", this, null))
                 .add(new AttributeAppender("class", new Model("info-link"), " ")));
         }
         else {
-            add(new Label("message", new Model()));
+            h.add(new Label("message", new Model()));
         }
 
         // the add button
-        add(add = new Link("addNew") {
+        h.add(add = new Link("addNew") {
             @Override
             public void onClick() {
                 setResponsePage(new NewRolePage(roleServiceName).setReturnPage(getPage()));
@@ -96,7 +111,7 @@ public class RolePanel extends Panel {
         add.setVisible(canCreateStore);
 
         // the removal button
-        add(removal = new SelectionRoleRemovalLink(roleServiceName,"removeSelected", roles, dialog));
+        h.add(removal = new SelectionRoleRemovalLink(roleServiceName,"removeSelected", roles, dialog));
         removal.setOutputMarkupId(true);
         removal.setEnabled(false);
         removal.setVisible(canCreateStore);

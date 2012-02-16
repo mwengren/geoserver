@@ -9,6 +9,7 @@ import java.io.IOException;
 import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.behavior.AttributeAppender;
+import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.link.Link;
 import org.apache.wicket.markup.html.panel.Panel;
@@ -46,7 +47,7 @@ public class UserPanel extends Panel {
         }
     }
     
-    public UserPanel(String id, String serviceName) throws IOException{
+    public UserPanel(String id, String serviceName) {
         super(id);
         
         this.serviceName=serviceName;
@@ -89,23 +90,37 @@ public class UserPanel extends Panel {
         headerComponents();
         
     }
-    
+
+    public UserPanel setHeaderVisible(boolean visible) {
+        get("header").setVisible(visible);
+        return this;
+    }
+
+    public UserPanel setPagersVisible(boolean top, boolean bottom) {
+        users.getTopPager().setVisible(top);
+        users.getBottomPager().setVisible(bottom);
+        return this;
+    }
+
     protected void headerComponents() {
 
         
         boolean canCreateStore=getService().canCreateStore();
 
+        WebMarkupContainer h = new WebMarkupContainer("header");
+        add(h);
+
         if (!canCreateStore) {
-            add(new Label("message", new StringResourceModel("noCreateStore", this, null))
+            h.add(new Label("message", new StringResourceModel("noCreateStore", this, null))
                 .add(new AttributeAppender("class", new Model("info-link"), " ")));
         }
         else {
-            add(new Label("message", new Model())
+            h.add(new Label("message", new Model())
                 .add(new AttributeAppender("class", new Model("displayNone"), " ")));
         }
 
         // the add button
-        add(add=new Link("addNew") {
+        h.add(add=new Link("addNew") {
             @Override
             public void onClick() {
                 setResponsePage(new NewUserPage(serviceName).setReturnPage(this.getPage()));
@@ -117,13 +132,13 @@ public class UserPanel extends Panel {
         add.setVisible(canCreateStore);
 
         // the removal button
-        add(removal = new SelectionUserRemovalLink(serviceName,"removeSelected", users, dialog,false));
+        h.add(removal = new SelectionUserRemovalLink(serviceName,"removeSelected", users, dialog,false));
         removal.setOutputMarkupId(true);
         removal.setEnabled(false);
         removal.setVisible(canCreateStore);
         
 
-        add(removalWithRoles = new SelectionUserRemovalLink(serviceName,"removeSelectedWithRoles", users, dialog,true));
+        h.add(removalWithRoles = new SelectionUserRemovalLink(serviceName,"removeSelectedWithRoles", users, dialog,true));
         removalWithRoles.setOutputMarkupId(true);
         removalWithRoles.setEnabled(false);
         removalWithRoles.setVisible(canCreateStore && 

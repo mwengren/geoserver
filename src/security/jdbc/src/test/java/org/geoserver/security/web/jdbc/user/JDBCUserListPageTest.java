@@ -10,14 +10,14 @@ public class JDBCUserListPageTest extends UserListPageTest {
         initializeForJDBC();
         insertValues();
         addAdditonalData();
-        doRemove(getTabbedPanelPath()+":panel:removeSelectedWithRoles");
+        doRemove(getTabbedPanelPath()+":panel:header:removeSelectedWithRoles");
     }
     
     public void testRemoveJDBC() throws Exception {
         initializeForJDBC();
         insertValues();
         addAdditonalData();
-        doRemove(getTabbedPanelPath()+":panel:removeSelected");
+        doRemove(getTabbedPanelPath()+":panel:header:removeSelected");
     }
 
     void initializeForJDBC() throws Exception {

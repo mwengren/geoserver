@@ -3,10 +3,25 @@
 <html xmlns="http://www.w3.org/1999/xhtml"
     xmlns:wicket="http://wicket.apache.org/">
 <wicket:head>
+ <style type="text/css">
+   label {
+     float:left;
+     padding-left:0.5em;
+   }
+ </style>
 </wicket:head>
 <body>
 <wicket:extend>
-  <div wicket:id="panel"></div>
+    <ul>
+      <li>
+        <label>Users</label>
+        <div wicket:id="users"></div>
+      </li>
+      <li>
+        <label>Groups</label>
+        <div wicket:id="groups"></div>
+      </li>
+    </ul>
 </wicket:extend>
 </body>
 </html>

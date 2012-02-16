@@ -103,7 +103,7 @@ public class GroupListPageTest extends AbstractTabbedListPageTest<GeoServerUserG
         initializeForXML();
         insertValues();
         addAdditonalData();
-        doRemove(getTabbedPanelPath()+":panel:removeSelectedWithRoles");
+        doRemove(getTabbedPanelPath()+":panel:header:removeSelectedWithRoles");
     }
     @Override
     protected String getTabbedPanelPath() {

@@ -103,6 +103,7 @@ public abstract class AbstractSecurityNamedServicePanelTest extends AbstractSecu
     }
     
     protected int countItmes() {
+        tester.debugComponentTrees();
         return  getDataView().getItemCount();
     }
     

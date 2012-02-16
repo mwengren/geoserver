@@ -36,7 +36,7 @@ public class XMLUserGroupConfigDetailsPanelTest extends AbstractSecurityNamedSer
 
     @Override
     protected String getBasePanelId() {
-        return "userGroupServices";
+        return "panel:panel:userGroupServices";
     }
     
     @Override

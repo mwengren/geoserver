@@ -102,7 +102,7 @@ public class UserListPageTest extends AbstractTabbedListPageTest<GeoServerUser> 
         initializeForXML();
         insertValues();
         addAdditonalData();
-        doRemove(getTabbedPanelPath()+":panel:removeSelectedWithRoles");
+        doRemove(getTabbedPanelPath()+":panel:header:removeSelectedWithRoles");
     }
     
     @Override

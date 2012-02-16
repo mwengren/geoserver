@@ -10,6 +10,7 @@ import java.io.IOException;
 import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.behavior.AttributeAppender;
+import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.link.Link;
 import org.apache.wicket.markup.html.panel.Panel;
@@ -18,6 +19,7 @@ import org.apache.wicket.model.Model;
 import org.apache.wicket.model.StringResourceModel;
 import org.geoserver.security.GeoServerUserGroupService;
 import org.geoserver.security.impl.GeoServerUserGroup;
+import org.geoserver.security.web.user.UserPanel;
 import org.geoserver.web.CatalogIconFactory;
 import org.geoserver.web.GeoServerApplication;
 import org.geoserver.web.wicket.GeoServerDataProvider.Property;
@@ -47,7 +49,7 @@ public class GroupPanel extends Panel {
             throw new RuntimeException(e);
         }
     }
-    public GroupPanel(String id, String serviceName) throws IOException{
+    public GroupPanel(String id, String serviceName) {
         super(id);
         
         this.serviceName=serviceName;
@@ -83,20 +85,33 @@ public class GroupPanel extends Panel {
         headerComponents();
     }
     
+    public GroupPanel setHeaderVisible(boolean visible) {
+        get("header").setVisible(visible);
+        return this;
+    }
+
+    public GroupPanel setPagersVisible(boolean top, boolean bottom) {
+        groups.getTopPager().setVisible(top);
+        groups.getBottomPager().setVisible(bottom);
+        return this;
+    }
+
     protected void headerComponents() {
 
         boolean canCreateStore=getService().canCreateStore();
         // the add button
         
+        WebMarkupContainer h = new WebMarkupContainer("header");
+        add(h);
         if (!canCreateStore) {
-            add(new Label("message", new StringResourceModel("noCreateStore", this, null))
+            h.add(new Label("message", new StringResourceModel("noCreateStore", this, null))
                     .add(new AttributeAppender("class", new Model("info-link"), " ")));
         }
         else {
-            add(new Label("message", new Model()));
+            h.add(new Label("message", new Model()));
         }
         
-        add(add = new Link("addNew") {
+        h.add(add = new Link("addNew") {
             @Override
             public void onClick() {
                 setResponsePage(new NewGroupPage(serviceName).setReturnPage(getPage()));
@@ -105,13 +120,13 @@ public class GroupPanel extends Panel {
         add.setVisible(canCreateStore);
 
         // the removal button
-        add(removal = new SelectionGroupRemovalLink(serviceName,"removeSelected", groups, dialog,false));
+        h.add(removal = new SelectionGroupRemovalLink(serviceName,"removeSelected", groups, dialog,false));
         removal.setOutputMarkupId(true);
         removal.setEnabled(false);
         removal.setVisibilityAllowed(canCreateStore);
 
         // the removal button
-        add(removalWithRoles  = new SelectionGroupRemovalLink(serviceName,"removeSelectedWithRoles", groups, dialog,true));
+        h.add(removalWithRoles  = new SelectionGroupRemovalLink(serviceName,"removeSelectedWithRoles", groups, dialog,true));
         removalWithRoles.setOutputMarkupId(true);
         removalWithRoles.setEnabled(false);
         removalWithRoles.setVisibilityAllowed(canCreateStore&& 

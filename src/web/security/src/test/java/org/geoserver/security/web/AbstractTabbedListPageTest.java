@@ -89,7 +89,7 @@ public abstract class AbstractTabbedListPageTest<T> extends AbstractSecurityWick
     public void testNew() throws Exception {
         initializeForXML();
         listPage(getServiceName());        
-        tester.clickLink(getTabbedPanelPath()+":panel:addNew");        
+        tester.clickLink(getTabbedPanelPath()+":panel:header:addNew");        
         Page newPage = tester.getLastRenderedPage();
         tester.assertRenderedPage(newPage.getClass());
     }
@@ -100,7 +100,7 @@ public abstract class AbstractTabbedListPageTest<T> extends AbstractSecurityWick
         initializeForXML();
         insertValues();
         addAdditonalData();
-        doRemove(getTabbedPanelPath()+":panel:removeSelected");
+        doRemove(getTabbedPanelPath()+":panel:header:removeSelected");
     }
     
     
@@ -141,20 +141,20 @@ public abstract class AbstractTabbedListPageTest<T> extends AbstractSecurityWick
     protected abstract void simulateDeleteSubmit() throws Exception;        
 
     protected Component getRemoveLink() {
-        Component result =tester.getLastRenderedPage().get(getTabbedPanelPath()+":panel:removeSelected");
+        Component result =tester.getLastRenderedPage().get(getTabbedPanelPath()+":panel:header:removeSelected");
         assertNotNull(result);
         return result;
     }
     
     protected Component getRemoveLinkWithRoles() {
-        Component result =tester.getLastRenderedPage().get(getTabbedPanelPath()+":panel:removeSelectedWithRoles");
+        Component result =tester.getLastRenderedPage().get(getTabbedPanelPath()+":panel:header:removeSelectedWithRoles");
         assertNotNull(result);
         return result;
     }
 
     
     protected Component getAddLink() {
-        Component result =tester.getLastRenderedPage().get(getTabbedPanelPath()+":panel:addNew");
+        Component result =tester.getLastRenderedPage().get(getTabbedPanelPath()+":panel:header:addNew");
         assertNotNull(result);
         return result;
     }

@@ -45,21 +45,13 @@ public class UserGroupServicePanel<T extends SecurityUserGroupServiceConfig>
         tabs.add(new AbstractTab(new StringResourceModel("users", this, null)) {
             @Override
             public Panel getPanel(String panelId) {
-                try {
-                    return new UserPanel(panelId, model.getObject().getName());
-                } catch (IOException e) {
-                    throw new WicketRuntimeException(e);
-                }
+                return new UserPanel(panelId, model.getObject().getName());
             }
         });
         tabs.add(new AbstractTab(new StringResourceModel("groups", this, null)) {
             @Override
             public Panel getPanel(String panelId) {
-                try {
-                    return new GroupPanel(panelId, model.getObject().getName());
-                } catch (IOException e) {
-                    throw new WicketRuntimeException(e);
-                }
+                return new GroupPanel(panelId, model.getObject().getName());
             }
         });
         return tabs;

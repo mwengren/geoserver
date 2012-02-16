@@ -105,6 +105,7 @@ public class RoleListPageTest extends AbstractTabbedListPageTest<GeoServerRole> 
     
     public void testReadOnlyService() throws Exception{
         initializeForXML();
+
         listPage(getRoleServiceName());
         tester.assertVisible(getRemoveLink().getPageRelativePath());
         tester.assertVisible(getAddLink().getPageRelativePath());

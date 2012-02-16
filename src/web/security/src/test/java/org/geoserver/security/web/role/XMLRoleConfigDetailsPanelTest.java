@@ -27,7 +27,7 @@ public  class XMLRoleConfigDetailsPanelTest extends AbstractSecurityNamedService
 
     @Override
     protected String getBasePanelId() {
-        return "roleServices";
+        return "panel:panel:roleServices";
     }
 
     @Override
