@@ -537,6 +537,12 @@ public class GeoServerSecurityManager extends ProviderManager implements Applica
     GeoServerRoleService wrapRoleService(GeoServerRoleService roleService) {
         //check for group administrator and wrap accordingly
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (checkAuthenticationForAdminRole(auth)) {
+            //admin, no need to wrap
+            return roleService;
+        }
+
+        //check for group admin
         if (checkAuthenticationForRole(auth, GeoServerRole.GROUP_ADMIN_ROLE)) {
             roleService = 
                 new GroupAdminRoleService(roleService, (GeoServerUser) auth.getPrincipal());
@@ -859,8 +865,14 @@ public class GeoServerSecurityManager extends ProviderManager implements Applica
     }
 
     GeoServerUserGroupService wrapUserGroupService(GeoServerUserGroupService ugService) {
-        //check for group administrator and wrap accordingly
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+
+        if (checkAuthenticationForAdminRole(auth)) {
+            //full admin, no need to wrap
+            return ugService;
+        }
+
+        //check for group administrator and wrap accordingly
         if (checkAuthenticationForRole(auth, GeoServerRole.GROUP_ADMIN_ROLE)) {
             ugService = 
                 new GroupAdminUserGroupService(ugService, (GeoServerUser) auth.getPrincipal());

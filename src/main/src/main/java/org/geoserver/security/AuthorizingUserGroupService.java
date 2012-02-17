@@ -23,7 +23,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
  * 
  * @author Justin Deoliveira, OpenGeo
  */
-public abstract class AuthorizingUserGroupService implements GeoServerUserGroupService, GeoServerUserGroupStore {
+public abstract class AuthorizingUserGroupService implements GeoServerUserGroupStore {
 
     protected GeoServerUserGroupService delegate;
 

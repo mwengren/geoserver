@@ -19,7 +19,7 @@ import org.geoserver.security.impl.GeoServerRole;
  * 
  * @author Justin Deoliveira, OpenGeo
  */
-public abstract class AuthorizingRoleService implements GeoServerRoleService, GeoServerRoleStore {
+public abstract class AuthorizingRoleService implements GeoServerRoleStore {
 
     protected GeoServerRoleService delegate;
 

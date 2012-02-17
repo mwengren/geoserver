@@ -2,17 +2,25 @@ package org.geoserver.security;
 
 import java.io.IOException;
 
+import org.geoserver.security.impl.AbstractSecurityServiceTest;
 import org.geoserver.security.impl.GeoServerRole;
 import org.geoserver.security.impl.GeoServerUser;
 import org.geoserver.security.impl.GeoServerUserGroup;
 import org.geoserver.security.impl.GroupAdminProperty;
-import org.geoserver.security.impl.RoleCalculator;
+import org.geoserver.security.password.PasswordValidator;
+import org.geoserver.security.xml.XMLRoleService;
+import org.geoserver.security.xml.XMLRoleServiceConfig;
+import org.geoserver.security.xml.XMLUserGroupService;
+import org.geoserver.security.xml.XMLUserGroupServiceConfig;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 
-public class GroupAdminServiceTest extends GeoServerSecurityTestSupport {
+public class GroupAdminServiceTest extends AbstractSecurityServiceTest {
+
+    protected GeoServerUserGroupStore ugStore;
+    protected GeoServerRoleStore roleStore;
 
     GeoServerUser bob, alice;
     GeoServerUserGroup users, admins;
@@ -21,9 +29,14 @@ public class GroupAdminServiceTest extends GeoServerSecurityTestSupport {
     protected void setUpInternal() throws Exception {
         super.setUpInternal();
 
-        //set up the users
-        GeoServerUserGroupService ugService = getSecurityManager().loadUserGroupService("default");
-        GeoServerUserGroupStore ugStore = ugService.createStore();
+        //set up the services
+        GeoServerUserGroupService ugService = createUserGroupService("gaugs");
+
+        GeoServerRoleService roleService = createRoleService("gars");
+        getSecurityManager().setActiveRoleService(roleService);
+
+        //add the users
+        ugStore = ugService.createStore();
 
         bob = ugStore.createUserObject("bob", "foobar", true);
         GroupAdminProperty.set(bob.getProperties(), new String[]{"users"});
@@ -41,9 +54,10 @@ public class GroupAdminServiceTest extends GeoServerSecurityTestSupport {
         ugStore.store();
 
         //grant bob group admin privilege
-        GeoServerRoleService roleService = getSecurityManager().getActiveRoleService();
-        GeoServerRoleStore roleStore = roleService.createStore();
-
+        roleStore = roleService.createStore();
+        roleStore.addRole(GeoServerRole.ADMIN_ROLE);
+        roleStore.addRole(GeoServerRole.GROUP_ADMIN_ROLE);
+        
         roleStore.associateRoleToUser(roleStore.getGroupAdminRole(), bob.getUsername());
         roleStore.store();
     }
@@ -52,6 +66,33 @@ public class GroupAdminServiceTest extends GeoServerSecurityTestSupport {
     protected void tearDownInternal() throws Exception {
         super.tearDownInternal();
         clearAuth();
+    }
+
+    @Override
+    public GeoServerRoleService createRoleService(String name) throws Exception {
+        XMLRoleServiceConfig config = new XMLRoleServiceConfig();
+        config.setName(name);
+        config.setClassName(XMLRoleService.class.getName());
+        config.setCheckInterval(1000);   
+        config.setFileName("roles.xml");
+        getSecurityManager().saveRoleService(config);
+        return getSecurityManager().loadRoleService(config.getName());
+    }
+
+    @Override
+    public GeoServerUserGroupService createUserGroupService(String name)
+            throws Exception {
+        XMLUserGroupServiceConfig config = new XMLUserGroupServiceConfig();
+        config.setName(name);
+        config.setClassName(XMLUserGroupService.class.getName());
+        config.setFileName("users.xml");
+        config.setCheckInterval(1000); 
+        config.setPasswordEncoderName(getDigestPasswordEncoder().getName());
+        config.setPasswordPolicyName(PasswordValidator.DEFAULT_NAME);
+        
+        getSecurityManager().saveUserGroupService(config);
+            
+        return getSecurityManager().loadUserGroupService(name);
     }
 
     void setAuth() {
@@ -74,11 +115,12 @@ public class GroupAdminServiceTest extends GeoServerSecurityTestSupport {
     }
 
     public void testWrapUserGroupService() throws Exception {
-        GeoServerUserGroupService ugService = getSecurityManager().loadUserGroupService("default");
+        GeoServerUserGroupService ugService = 
+                getSecurityManager().loadUserGroupService(ugStore.getName());
         assertFalse(ugService instanceof GroupAdminUserGroupService);
 
         setAuth();
-        ugService = getSecurityManager().loadUserGroupService("default");
+        ugService = getSecurityManager().loadUserGroupService(ugStore.getName());
         assertTrue(ugService instanceof GroupAdminUserGroupService);
     }
 
@@ -96,14 +138,15 @@ public class GroupAdminServiceTest extends GeoServerSecurityTestSupport {
     }
 
     public void testHideGroups() throws Exception {
-        GeoServerUserGroupService ugService = getSecurityManager().loadUserGroupService("default");
+        GeoServerUserGroupService ugService = 
+                getSecurityManager().loadUserGroupService(ugStore.getName());
         assertTrue(ugService.getUserGroups().contains(users));
         assertNotNull(ugService.getGroupByGroupname("users"));
         assertTrue(ugService.getUserGroups().contains(admins));
         assertNotNull(ugService.getGroupByGroupname("admins"));
 
         setAuth();
-        ugService = getSecurityManager().loadUserGroupService("default");
+        ugService = getSecurityManager().loadUserGroupService(ugStore.getName());
         assertTrue(ugService.getUserGroups().contains(users));
         assertNotNull(ugService.getGroupByGroupname("users"));
         assertFalse(ugService.getUserGroups().contains(admins));
@@ -120,7 +163,8 @@ public class GroupAdminServiceTest extends GeoServerSecurityTestSupport {
     public void testCreateNewUser() throws Exception {
         setAuth();
 
-        GeoServerUserGroupService ugService = getSecurityManager().loadUserGroupService("default");
+        GeoServerUserGroupService ugService = 
+            getSecurityManager().loadUserGroupService(ugStore.getName());
         GeoServerUserGroupStore ugStore = ugService.createStore();
 
         GeoServerUser bill = ugStore.createUserObject("bill", "foobar", true);
@@ -133,7 +177,8 @@ public class GroupAdminServiceTest extends GeoServerSecurityTestSupport {
     public void testAssignUserToGroup() throws Exception {
         testCreateNewUser();
 
-        GeoServerUserGroupService ugService = getSecurityManager().loadUserGroupService("default");
+        GeoServerUserGroupService ugService = 
+                getSecurityManager().loadUserGroupService(ugStore.getName());
         GeoServerUserGroupStore ugStore = ugService.createStore();
 
         GeoServerUser bill = ugStore.getUserByUsername("bill");
@@ -152,7 +197,8 @@ public class GroupAdminServiceTest extends GeoServerSecurityTestSupport {
     public void testRemoveUserInGroup() throws Exception {
         testAssignUserToGroup();
 
-        GeoServerUserGroupService ugService = getSecurityManager().loadUserGroupService("default");
+        GeoServerUserGroupService ugService = 
+                getSecurityManager().loadUserGroupService(ugStore.getName());
         GeoServerUserGroupStore ugStore = ugService.createStore();
         GeoServerUser bill = ugStore.getUserByUsername("bill");
 
@@ -163,7 +209,8 @@ public class GroupAdminServiceTest extends GeoServerSecurityTestSupport {
     }
 
     public void testRemoveUserNotInGroup() throws Exception {
-        GeoServerUserGroupService ugService = getSecurityManager().loadUserGroupService("default");
+        GeoServerUserGroupService ugService = 
+                getSecurityManager().loadUserGroupService(ugStore.getName());
         GeoServerUserGroupStore ugStore = ugService.createStore();
 
         GeoServerUser sally = ugStore.createUserObject("sally", "foobar", true);
@@ -172,7 +219,7 @@ public class GroupAdminServiceTest extends GeoServerSecurityTestSupport {
         ugStore.store();
 
         setAuth();
-        ugService = getSecurityManager().loadUserGroupService("default");
+        ugService = getSecurityManager().loadUserGroupService(ugStore.getName());
         ugStore = ugService.createStore();
         try {
             ugStore.removeUser(sally);
