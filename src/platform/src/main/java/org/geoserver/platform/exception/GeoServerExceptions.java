@@ -33,7 +33,7 @@ public class GeoServerExceptions {
      * 
      * @see #localize(GeoServerException, Locale)
      */
-    public static String localize(GeoServerException e) {
+    public static String localize(IGeoServerException e) {
         return localize(e, Locale.getDefault());
     }
 
@@ -51,8 +51,8 @@ public class GeoServerExceptions {
      * 
      * @return The localized message, or <code>null</code> if none could be found.
      */
-    public static String localize(GeoServerException e, Locale locale) {
-        Class<? extends GeoServerException> clazz = e.getClass();
+    public static String localize(IGeoServerException e, Locale locale) {
+        Class<? extends IGeoServerException> clazz = e.getClass();
         while(clazz != null) {
             String localized = doLocalize(e.getId(), e.getArgs(), clazz, locale);
             if (localized != null) {
@@ -62,8 +62,8 @@ public class GeoServerExceptions {
             //could not find string, if the exception parent class is also a geoserver exception
             // move up the hierarchy and try that
             
-            if (GeoServerException.class.isAssignableFrom(clazz.getSuperclass()) ) {
-                clazz = (Class<? extends GeoServerException>) clazz.getSuperclass();
+            if (IGeoServerException.class.isAssignableFrom(clazz.getSuperclass()) ) {
+                clazz = (Class<? extends IGeoServerException>) clazz.getSuperclass();
             }
             else {
                 clazz = null;
@@ -72,7 +72,7 @@ public class GeoServerExceptions {
         return null;
     }
     
-    static String doLocalize(String id, Object[] args, Class<? extends GeoServerException> clazz, 
+    static String doLocalize(String id, Object[] args, Class<? extends IGeoServerException> clazz, 
             Locale locale) {
         
         ResourceBundle bundle = null;
