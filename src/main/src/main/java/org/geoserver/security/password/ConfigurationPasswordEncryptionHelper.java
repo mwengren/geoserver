@@ -14,8 +14,10 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.geoserver.catalog.Catalog;
 import org.geoserver.catalog.DataStoreInfo;
 import org.geoserver.catalog.StoreInfo;
+import org.geoserver.platform.GeoServerExtensions;
 import org.geoserver.security.GeoServerSecurityManager;
 import org.geotools.data.DataAccessFactory;
 import org.geotools.data.DataAccessFactory.Param;
@@ -45,6 +47,15 @@ public class ConfigurationPasswordEncryptionHelper {
         this.securityManager = securityManager;
     }
 
+    public Catalog getCatalog() {
+        // JD: this class gets called during catalog initialization when reading store instances that
+        // potentially have encrypted parameters, so we have to be careful about how we access the
+        // catalog, raw catalog directly to avoid triggering the initialization of the secure 
+        // catalog as we are reading the raw catalog contents (this could for instance cause a rule 
+        //to be ignored since a workspace has not been read)
+        return (Catalog) GeoServerExtensions.bean("rawCatalog");
+    }
+
     /**
      * Determines the fields in {@link StoreInfo#getConnectionParameters()} that require encryption
      * for this type of store object.
@@ -58,7 +69,7 @@ public class ConfigurationPasswordEncryptionHelper {
         //find this store object data access factory
         DataAccessFactory factory;
         try {
-            factory = securityManager.getCatalog().getResourcePool().getDataStoreFactory((DataStoreInfo) info);
+            factory = getCatalog().getResourcePool().getDataStoreFactory((DataStoreInfo) info);
         } catch (IOException e) {
             LOGGER.log(Level.WARNING, "Error looking up factory for store : " + info + ". Unable to " +
                 "encrypt connection parameters.", e);
