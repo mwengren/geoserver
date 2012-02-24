@@ -873,7 +873,7 @@ public class GeoServerSecurityManager extends ProviderManager implements Applica
 
         for (String ugServiceName : listUserGroupServices()) {
             try {
-                GeoServerUserGroupService ugService = loadUserGroupService(ugServiceName);
+                GeoServerUserGroupService ugService = userGroupServiceHelper.load(ugServiceName);
                 ugServices.add(ugService);
             }
             catch(IOException e) {
