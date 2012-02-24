@@ -68,6 +68,8 @@ import org.geoserver.security.file.RoleFileWatcher;
 import org.geoserver.security.file.UserGroupFileWatcher;
 import org.geoserver.security.impl.GeoServerRole;
 import org.geoserver.security.impl.GeoServerUser;
+import org.geoserver.security.impl.GeoServerUserGroup;
+import org.geoserver.security.impl.GroupAdminProperty;
 import org.geoserver.security.impl.Util;
 import org.geoserver.security.password.ConfigurationPasswordEncryptionHelper;
 import org.geoserver.security.password.GeoServerDigestPasswordEncoder;
@@ -534,7 +536,7 @@ public class GeoServerSecurityManager extends ProviderManager implements Applica
         return wrapRoleService(roleService);
     }
 
-    GeoServerRoleService wrapRoleService(GeoServerRoleService roleService) {
+    GeoServerRoleService wrapRoleService(GeoServerRoleService roleService) throws IOException {
         //check for group administrator and wrap accordingly
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (checkAuthenticationForAdminRole(auth)) {
@@ -544,10 +546,32 @@ public class GeoServerSecurityManager extends ProviderManager implements Applica
 
         //check for group admin
         if (checkAuthenticationForRole(auth, GeoServerRole.GROUP_ADMIN_ROLE)) {
-            roleService = 
-                new GroupAdminRoleService(roleService, (GeoServerUser) auth.getPrincipal());
+            roleService = new GroupAdminRoleService(roleService, 
+                calculateAdminGroups((UserDetails) auth.getPrincipal()));
         }
         return roleService;
+    }
+
+    List<String> calculateAdminGroups(UserDetails userDetails) throws IOException {
+        if (userDetails instanceof GeoServerUser) {
+            Properties props = ((GeoServerUser)userDetails).getProperties();
+            if (GroupAdminProperty.has(props)) {
+                return Arrays.asList(GroupAdminProperty.get(props));
+            }
+        }
+
+        //fall back on including every group the user is part of
+        List<String> groupNames = new ArrayList<String>();
+        for (GeoServerUserGroupService ugService : loadUserGroupServices()) {
+            GeoServerUser user = ugService.getUserByUsername(userDetails.getUsername());
+            if (user != null) {
+                for (GeoServerUserGroup group : ugService.getGroupsForUser(user)) {
+                    groupNames.add(group.getGroupname());
+                }
+            }
+
+        }
+        return groupNames;
     }
 
     /**
@@ -841,6 +865,24 @@ public class GeoServerSecurityManager extends ProviderManager implements Applica
         return listFiles(getPasswordPolicyRoot());
     }
 
+    /**
+     * Loads all available user group services.
+     */
+    public List<GeoServerUserGroupService> loadUserGroupServices() throws IOException {
+        List<GeoServerUserGroupService> ugServices = new ArrayList<GeoServerUserGroupService>();
+
+        for (String ugServiceName : listUserGroupServices()) {
+            try {
+                GeoServerUserGroupService ugService = loadUserGroupService(ugServiceName);
+                ugServices.add(ugService);
+            }
+            catch(IOException e) {
+                LOGGER.log(Level.WARNING, "Failed to load user group service " + ugServiceName, e);
+            }
+        }
+
+        return ugServices;
+    }
 
     /**
      * Loads a user group service from a named configuration.
@@ -864,7 +906,8 @@ public class GeoServerSecurityManager extends ProviderManager implements Applica
         return wrapUserGroupService(ugService);
     }
 
-    GeoServerUserGroupService wrapUserGroupService(GeoServerUserGroupService ugService) {
+    GeoServerUserGroupService wrapUserGroupService(GeoServerUserGroupService ugService) 
+        throws IOException {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
 
         if (checkAuthenticationForAdminRole(auth)) {
@@ -874,8 +917,8 @@ public class GeoServerSecurityManager extends ProviderManager implements Applica
 
         //check for group administrator and wrap accordingly
         if (checkAuthenticationForRole(auth, GeoServerRole.GROUP_ADMIN_ROLE)) {
-            ugService = 
-                new GroupAdminUserGroupService(ugService, (GeoServerUser) auth.getPrincipal());
+            ugService = new GroupAdminUserGroupService(ugService, 
+                calculateAdminGroups((UserDetails) auth.getPrincipal()));
         }
         return ugService;
     }
@@ -2144,7 +2187,11 @@ public class GeoServerSecurityManager extends ProviderManager implements Applica
      * @return the active {@link GeoServerRoleService}
      */
     public GeoServerRoleService getActiveRoleService() {
-        return wrapRoleService(activeRoleService);
+        try {
+            return wrapRoleService(activeRoleService);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     /**
