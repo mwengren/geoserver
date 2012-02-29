@@ -203,38 +203,6 @@
   </bean>
 
   <!-- 
-    Handles the basic authentication headers. This integrates with the remember-me services, so that
-    you'll have to provide username/password just once during interactive tests.
-  -->
-  <bean id="basicAuthFilter"
-    class="org.springframework.security.web.authentication.www.BasicAuthenticationFilter">
-    <property name="authenticationManager">
-      <ref local="authenticationManager" />
-    </property>
-    <property name="authenticationEntryPoint">
-      <ref local="basicProcessingFilterEntryPoint" />
-    </property>
-    <property name="rememberMeServices">
-      <ref local="rememberMeServices" />
-    </property>
-  </bean>
-
- <!-- 
-    Handles the basic authentication headers without integration with the remember-me services.
-    Used for /gwc/rest/** entry points as somehow the presence of the remember-me service makes the
-    POST'ed form to reach the gwc restlets empty.
-  -->
-  <bean id="basicAuthNoRememberMeFilter"
-    class="org.springframework.security.web.authentication.www.BasicAuthenticationFilter">
-    <property name="authenticationManager">
-      <ref local="authenticationManager" />
-    </property>
-    <property name="authenticationEntryPoint">
-      <ref local="basicProcessingFilterEntryPoint" />
-    </property>
-  </bean>
-
-  <!-- 
     This entry point gets called when basic authentication is needed 
     (or a previous attempt fail) to commence authentication 
     with the basic processing filter 

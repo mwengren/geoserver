@@ -39,7 +39,7 @@ import org.springframework.security.core.GrantedAuthority;
 public class GeoServerRootAuthenticationProvider extends GeoServerAuthenticationProvider {
 
 
-    final static String ROOT_USERNAME="root";
+    final public static String ROOT_USERNAME="root";
 
     public GeoServerRootAuthenticationProvider() {
         super();

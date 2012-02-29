@@ -7,10 +7,12 @@ package org.geoserver.security.impl;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Properties;
 import java.util.Set;
 import java.util.TreeSet;
 
+import org.geoserver.security.auth.GeoServerRootAuthenticationProvider;
 import org.springframework.security.core.CredentialsContainer;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -38,6 +40,17 @@ public class GeoServerUser implements UserDetails, CredentialsContainer, Compara
         admin.setEnabled(AdminEnabled);
         return admin;
     }
+    
+    public static GeoServerUser createRoot() {
+        GeoServerUser root = new GeoServerUser(GeoServerRootAuthenticationProvider.ROOT_USERNAME);
+        root.setPassword(null);
+        root.setEnabled(true);
+        Set<GrantedAuthority> roles = new HashSet<GrantedAuthority>();
+        roles.add(GeoServerRole.ADMIN_ROLE);
+        root.setAuthorities(roles);
+        return root;
+    }
+
 
     private String password;
     private String username;

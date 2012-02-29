@@ -11,20 +11,14 @@ import java.io.FileFilter;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.lang.reflect.Modifier;
 import java.net.URL;
-import java.net.URLConnection;
 import java.rmi.server.UID;
 import java.security.InvalidKeyException;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.Set;
@@ -55,6 +49,7 @@ import org.geoserver.security.auth.GeoServerRootAuthenticationProvider;
 import org.geoserver.security.concurrent.LockingKeyStoreProvider;
 import org.geoserver.security.concurrent.LockingRoleService;
 import org.geoserver.security.concurrent.LockingUserGroupService;
+import org.geoserver.security.config.BasicAuthenticationFilterConfig;
 import org.geoserver.security.config.FileBasedSecurityServiceConfig;
 import org.geoserver.security.config.PasswordPolicyConfig;
 import org.geoserver.security.config.SecurityAuthProviderConfig;
@@ -67,6 +62,8 @@ import org.geoserver.security.config.UsernamePasswordAuthenticationProviderConfi
 import org.geoserver.security.file.FileWatcher;
 import org.geoserver.security.file.RoleFileWatcher;
 import org.geoserver.security.file.UserGroupFileWatcher;
+import org.geoserver.security.filter.GeoServerBasicAuthenticationFilter;
+import org.geoserver.security.filter.GeoServerSecurityFilter;
 import org.geoserver.security.impl.GeoServerRole;
 import org.geoserver.security.impl.GeoServerUser;
 import org.geoserver.security.impl.Util;
@@ -221,6 +218,8 @@ public class GeoServerSecurityManager extends ProviderManager implements Applica
     
     /** generator of random passwords */
     RandomPasswordProvider randomPasswdProvider = new RandomPasswordProvider();
+
+    public static final String REALM="GeoServer Realm";
     
     public GeoServerSecurityManager(GeoServerDataDirectory dataDir) throws Exception {
         this.dataDir = dataDir;
@@ -1592,6 +1591,24 @@ public class GeoServerSecurityManager extends ProviderManager implements Applica
             roleService = loadRoleService(XMLRoleService.DEFAULT_NAME);
         }
         
+        GeoServerSecurityFilter filter =  
+                loadFilter("basicAuthFilter");
+        if (filter==null) {
+            BasicAuthenticationFilterConfig bfConfig = new BasicAuthenticationFilterConfig();
+            bfConfig.setName("basicAuthFilter");
+            bfConfig.setClassName(GeoServerBasicAuthenticationFilter.class.getName());
+            bfConfig.setRememberMeServiceName("rememberMeServices");
+            saveFilter(bfConfig);
+        }
+        filter =  
+                loadFilter("basicAuthNoRememberMeFilter");
+        if (filter==null) {
+            BasicAuthenticationFilterConfig bfConfig = new BasicAuthenticationFilterConfig();
+            bfConfig.setClassName(GeoServerBasicAuthenticationFilter.class.getName());
+            bfConfig.setName("basicAuthNoRememberMeFilter");
+            saveFilter(bfConfig);
+        }
+
 
         //check for the default auth provider, create if necessary
         GeoServerAuthenticationProvider authProvider = (GeoServerAuthenticationProvider) 
@@ -1605,7 +1622,6 @@ public class GeoServerSecurityManager extends ProviderManager implements Applica
 
             saveAuthenticationProvider(upAuthConfig);
             authProvider = loadAuthenticationProvider(GeoServerAuthenticationProvider.DEFAULT_NAME);
-
         }
 
         //save the top level config
