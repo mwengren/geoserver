@@ -12,8 +12,6 @@ import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.Cookie;
 
-import org.geoserver.security.FilterChainEntry;
-import org.geoserver.security.FilterChainEntry.Position;
 import org.geoserver.security.GeoServerSecurityFilter;
 import org.geoserver.security.GeoServerSecurityFilterChain;
 import org.geoserver.security.GeoServerSecurityFilterChainProxy;
@@ -45,9 +43,11 @@ public class RememberMeTest extends GeoServerTestSupport {
         secMgr.saveFilter(filterCfg);
 
         SecurityManagerConfig cfg = secMgr.getSecurityConfig();
-        cfg.getFilterChain().put("/web/**", Arrays.asList(
-            new FilterChainEntry(filterCfg.getName(), Position.AFTER, 
-                GeoServerSecurityFilterChain.REMEMBER_ME_FILTER)));
+        cfg.getFilterChain().insertAfter("/web/**", filterCfg.getName(), GeoServerSecurityFilterChain.REMEMBER_ME_FILTER);
+        
+//        cfg.getFilterChain().put("/web/**", Arrays.asList(
+//            new FilterChainEntry(filterCfg.getName(), Position.AFTER, 
+//                GeoServerSecurityFilterChain.REMEMBER_ME_FILTER)));
         
         secMgr.saveSecurityConfig(cfg);
     }

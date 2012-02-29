@@ -28,8 +28,10 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.Set;
+import java.util.SortedMap;
 import java.util.SortedSet;
 import java.util.StringTokenizer;
+import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
@@ -49,7 +51,6 @@ import org.geoserver.config.util.XStreamPersister;
 import org.geoserver.config.util.XStreamPersisterFactory;
 import org.geoserver.platform.ContextLoadedEvent;
 import org.geoserver.platform.GeoServerExtensions;
-import org.geoserver.security.FilterChainEntry.Position;
 import org.geoserver.security.auth.GeoServerRootAuthenticationProvider;
 import org.geoserver.security.concurrent.LockingKeyStoreProvider;
 import org.geoserver.security.concurrent.LockingRoleService;
@@ -1623,6 +1624,7 @@ public class GeoServerSecurityManager extends ProviderManager implements Applica
         rememberMeConfig.setUserGroupService(userGroupService.getName());
         config.setRememberMeService(rememberMeConfig);
 
+        config.setFilterChain(GeoServerSecurityFilterChain.getInitialChain());
         saveSecurityConfig(config);
 
         //TODO: just call initializeFrom
@@ -2347,59 +2349,64 @@ public class GeoServerSecurityManager extends ProviderManager implements Applica
         public void marshal(Object source, HierarchicalStreamWriter writer,
                 MarshallingContext context) {
             GeoServerSecurityFilterChain filterChain = (GeoServerSecurityFilterChain) source;
-            for (Map.Entry<String, List<FilterChainEntry>> e : filterChain.entrySet()) {
+            int index=0;
+            for (String pattern : filterChain.getAntPatterns()) {
+            
             
                 //<filterChain>
-                //  <filters path="...">
+                //  <filters path="..." index="...">
                 //    <filter>name1</filter>
                 //    <filter>name2</filter>
                 //    ...
                 writer.startNode("filters");
-                writer.addAttribute("path", e.getKey());
+                writer.addAttribute("path", pattern);
+                writer.addAttribute("index", Integer.toString(index));
                 
-                for (FilterChainEntry filterEntry : e.getValue()) {
+                for (String filterName : filterChain.getFilterMap().get(pattern)) {
                     writer.startNode("filter");
-
-                    Position pos = filterEntry.getPosition();
-                    writer.addAttribute("position", pos.name());
-                    if (pos == Position.BEFORE || pos == Position.AFTER) {
-                        writer.addAttribute("relativeTo", filterEntry.getRelativeTo());
-                    }
-
-                    writer.setValue(filterEntry.getFilterName());
-                    
+                    writer.setValue(filterName);                    
                     writer.endNode();
                 }
 
                 writer.endNode();
+                index++;
             }
         }
 
         @Override
         public Object unmarshal(HierarchicalStreamReader reader, UnmarshallingContext context) {
+
             GeoServerSecurityFilterChain filterChain = new GeoServerSecurityFilterChain();
+            SortedMap<Integer, String> temp = new TreeMap<Integer,String>(); 
+
             while(reader.hasMoreChildren()) {
                 
                 //<filters path="..."
                 reader.moveDown();
                 String path = reader.getAttribute("path");
+                String indexString = reader.getAttribute("index");
+                Integer index = new Integer(indexString);
+                temp.put(index,path);
 
                 //<filter
-                List<FilterChainEntry> filterEntries = new ArrayList<FilterChainEntry>();
+                ArrayList<String> filterEntries = new ArrayList<String>();
                 while(reader.hasMoreChildren()) {
                     reader.moveDown();
-                    String name = reader.getValue();
-                    Position pos = Position.valueOf(reader.getAttribute("position"));
-                    String relativeTo = reader.getAttribute("relativeTo");
-                    
-                    filterEntries.add(new FilterChainEntry(name, pos, relativeTo));
+                    String name = reader.getValue();                    
+                    filterEntries.add(name);
                     reader.moveUp();
                 }
-
-                filterChain.put(path, filterEntries);
+                filterChain.getFilterMap().put(path, filterEntries);
                 reader.moveUp();
             }
-            
+
+            ArrayList<String> antPatterns = new ArrayList<String>();
+            // iterate sorted by index
+            for (Entry<Integer,String> e : temp.entrySet()) {
+                antPatterns.add(e.getValue());
+            }
+                        
+            filterChain.setAntPatterns(antPatterns);
             return filterChain;
         }
 

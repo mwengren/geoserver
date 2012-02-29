@@ -4,18 +4,29 @@
  */
 package org.geoserver.security;
 
-import java.util.LinkedHashMap;
-import java.util.List;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
 
 /**
- * The security filter chain.
+ * The security filter filter chain
  * 
- * @author Justin Deoliveira, OpenGeo
+ * The content of {@link #antPatterns} must be 
+ * equal to the keys of {@link #filterMap}
+ * 
+ * The order of {@link #antPatterns} determines
+ * the order of ant pattern matching used
+ * by GeoServerSecurityFilterChainProxy
+ * 
+ * @author christian
+ *
  */
-public class GeoServerSecurityFilterChain extends LinkedHashMap<String, List<FilterChainEntry>> {
+public class GeoServerSecurityFilterChain  {
 
-    private static final long serialVersionUID = 1L;
+    private ArrayList<String> antPatterns;
+    private HashMap<String,ArrayList<String>>  filterMap; 
     
+
     public static final String SECURITY_CONTEXT_ASC_FILTER = "securityContextAscFilter";
     public static final String SECURITY_CONTEXT_NO_ASC_FILTER = "securityContextNoAscFilter";
     
@@ -41,9 +52,171 @@ public class GeoServerSecurityFilterChain extends LinkedHashMap<String, List<Fil
     public static final String ROLE_FILTER ="roleFilter";
 
     public GeoServerSecurityFilterChain() {
+        antPatterns = new ArrayList<String>();
+        filterMap = new HashMap<String,ArrayList<String>>();   
+    }
+        
+    /**
+     * Constructor cloning all collections
+     * 
+     * @param other
+     */
+    public GeoServerSecurityFilterChain(GeoServerSecurityFilterChain other) {                
+        this.antPatterns=new ArrayList<String>(other.antPatterns);        
+        this.filterMap=new HashMap<String,ArrayList<String>>();
+        for (String pattern: other.filterMap.keySet()) {
+            this.filterMap.put(pattern, new  ArrayList<String>(other.getFilterMap().get(pattern)));
+        }
     }
     
-    public GeoServerSecurityFilterChain(GeoServerSecurityFilterChain other) {
-        super(other);
+            
+    /**
+     * Create the initial {@link GeoServerSecurityFilterChain} 
+     * 
+     * @return
+     */
+    public static GeoServerSecurityFilterChain getInitialChain() {
+        GeoServerSecurityFilterChain chain = new GeoServerSecurityFilterChain();
+        chain.setAntPatterns(createListFromStrings(
+                "/web/**","/j_spring_security_check/**","/j_spring_security_logout/**","/rest/**",
+                "/gwc/rest/web/**","/gwc/rest/**","/**"));
+        
+        chain.filterMap.put("/web/**",
+                createListFromStrings(SECURITY_CONTEXT_ASC_FILTER, LOGOUT_FILTER, 
+                        FORM_LOGIN_FILTER, SERVLET_API_SUPPORT_FILTER, REMEMBER_ME_FILTER, ANONYMOUS_FILTER, 
+                        EXCEPTION_TRANSLATION_FILTER, FILTER_SECURITY_INTERCEPTOR));
+        
+        chain.filterMap.put("/j_spring_security_check/**", 
+                createListFromStrings(SECURITY_CONTEXT_ASC_FILTER, 
+                LOGOUT_FILTER, FORM_LOGIN_FILTER, SERVLET_API_SUPPORT_FILTER, REMEMBER_ME_FILTER, 
+                ANONYMOUS_FILTER, EXCEPTION_TRANSLATION_FILTER, FILTER_SECURITY_INTERCEPTOR));
+            
+        chain.filterMap.put("/j_spring_security_logout/**", 
+                createListFromStrings(SECURITY_CONTEXT_ASC_FILTER, 
+                LOGOUT_FILTER, FORM_LOGIN_FILTER, SERVLET_API_SUPPORT_FILTER, REMEMBER_ME_FILTER, 
+                ANONYMOUS_FILTER, EXCEPTION_TRANSLATION_FILTER, FILTER_SECURITY_INTERCEPTOR));
+            
+        chain.filterMap.put("/rest/**", 
+                createListFromStrings(SECURITY_CONTEXT_NO_ASC_FILTER, BASIC_AUTH_FILTER,
+                ANONYMOUS_FILTER, EXCEPTION_TRANSLATION_OWS_FILTER, FILTER_SECURITY_REST_INTERCEPTOR));
+
+        chain.filterMap.put("/gwc/rest/web/**",
+                createListFromStrings(ANONYMOUS_FILTER, 
+                EXCEPTION_TRANSLATION_FILTER, FILTER_SECURITY_INTERCEPTOR));
+
+        chain.filterMap.put("/gwc/rest/**", 
+                createListFromStrings(SECURITY_CONTEXT_NO_ASC_FILTER, 
+                BASIC_AUTH_NO_REMEMBER_ME_FILTER, EXCEPTION_TRANSLATION_OWS_FILTER, 
+                FILTER_SECURITY_REST_INTERCEPTOR));
+
+         chain.filterMap.put("/**", 
+                 createListFromStrings(SECURITY_CONTEXT_NO_ASC_FILTER, ROLE_FILTER,BASIC_AUTH_FILTER, 
+                ANONYMOUS_FILTER, EXCEPTION_TRANSLATION_OWS_FILTER, FILTER_SECURITY_INTERCEPTOR));        
+         
+        return chain;
     }
+
+    /**
+     * Helper method to create a list
+     * 
+     * @param filterName
+     * @return
+     */
+    protected static ArrayList<String> createListFromStrings(String... filterName) {
+        
+        return new ArrayList<String>(Arrays.asList(filterName));
+    }
+    
+    public ArrayList<String> getAntPatterns() {
+        return antPatterns;
+    }
+
+    public void setAntPatterns(ArrayList<String> antPatterns) {
+        this.antPatterns = antPatterns;
+    }
+
+    public HashMap<String, ArrayList<String>> getFilterMap() {
+        return filterMap;
+    }
+
+    public void setFilterMap(HashMap<String, ArrayList<String>> filterMap) {
+        this.filterMap = filterMap;
+    }
+
+    /**
+     * Convenience method, insert filter name at
+     * first position for the given pattern
+     * 
+     * returns true on success
+     * 
+     * @param pattern
+     * @param filterName
+     * @return
+     */
+    public boolean insertFirst(String pattern, String filterName) {
+        ArrayList<String> filterNames = filterMap.get(pattern);
+        if (filterNames==null) return false;
+        filterNames.add(0,filterName);
+        return true;
+    }
+    
+    /**
+     * Convenience method, insert filter name at
+     * last position for the given pattern
+     * 
+     * returns true on success
+     * 
+     * @param pattern
+     * @param filterName
+     * @return
+     */
+    public boolean insertLast(String pattern, String filterName) {
+        ArrayList<String> filterNames = filterMap.get(pattern);
+        if (filterNames==null) return false;
+        filterNames.add(filterName);
+        return true;
+    }
+
+    /**
+     * Convenience method, insert filter name before
+     * filter named positionName for the given pattern
+     * 
+     * returns true on success
+     * 
+     * @param pattern
+     * @param filterName
+     * @param poslitionName
+     * @return
+     */
+    public boolean insertBefore(String pattern, String filterName, String positionName) {
+        ArrayList<String> filterNames = filterMap.get(pattern);
+        if (filterNames==null) return false;
+        int index = filterNames.indexOf(positionName);
+        if (index==-1) return false;
+        filterNames.add(index,filterName);
+        return true;
+    }
+    
+    /**
+     * Convenience method, insert filter name after
+     * filter named positionName for the given pattern
+     * 
+     * returns true on success
+     * 
+     * @param pattern
+     * @param filterName
+     * @param poslitionName
+     * @return
+     */
+    public boolean insertAfter(String pattern, String filterName, String positionName) {
+        ArrayList<String> filterNames = filterMap.get(pattern);
+        if (filterNames==null) return false;
+        int index = filterNames.indexOf(positionName);
+        if (index==-1) return false;
+        filterNames.add(index+1,filterName);
+        return true;
+    }
+
+
+    
 }

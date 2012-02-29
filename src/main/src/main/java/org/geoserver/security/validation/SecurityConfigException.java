@@ -166,6 +166,8 @@ public class SecurityConfigException extends AbstractSecurityException {
 
     public static final String HEADER_ATTRIBUTE_NAME_REQUIRED="HEADER_ATTRIBUTE_NAME_REQUIRED";
     
+    public static final String FILTER_CHAIN_CONFIG_ERROR="FILTER_CHAIN_CONFIG_ERROR";
+    
     public SecurityConfigException(String errorId, Object[] args) {
         super(errorId, args);
     }

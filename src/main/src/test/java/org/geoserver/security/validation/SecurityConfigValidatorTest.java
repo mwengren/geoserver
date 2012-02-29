@@ -132,6 +132,18 @@ public class SecurityConfigValidatorTest extends GeoServerSecurityTestSupport {
         }
         assertTrue(failed);
         
+        failed = false;
+        config.setIncludingRolesInResponse(false);
+        config.getFilterChain().getAntPatterns().add("/foo");
+        try {
+            getSecurityManager().saveSecurityConfig(config);
+        } catch (SecurityConfigException ex){
+            assertEquals(SecurityConfigException.FILTER_CHAIN_CONFIG_ERROR,ex.getId());
+            LOGGER.info(ex.getMessage());
+            failed=true;
+        }
+        assertTrue(failed);        
+        config.getFilterChain().getAntPatterns().remove("/foo");
     }
     
     public void testNamedServices() {

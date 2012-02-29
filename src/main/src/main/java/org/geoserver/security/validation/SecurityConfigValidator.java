@@ -9,10 +9,12 @@ import static org.geoserver.security.validation.SecurityConfigException.*;
 
 
 import java.io.IOException;
+import java.util.Set;
 import java.util.SortedSet;
 
 import org.geoserver.platform.GeoServerExtensions;
 import org.geoserver.security.GeoServerAuthenticationProvider;
+import org.geoserver.security.GeoServerSecurityFilterChain;
 import org.geoserver.security.GeoServerSecurityManager;
 import org.geoserver.security.GeoServerSecurityProvider;
 import org.geoserver.security.GeoServerAuthenticationProcessingFilter;
@@ -112,6 +114,16 @@ public class SecurityConfigValidator extends AbstractSecurityValidator{
             if (authProviders.contains(authProvName)==false)
                 throw createSecurityException(SEC_ERR_03, authProvName);
         }
+        
+        // check the filter chain
+        GeoServerSecurityFilterChain chain = config.getFilterChain();
+        Set<String> keys = chain.getFilterMap().keySet();
+        if (keys.size()!=chain.getAntPatterns().size())
+            throw createSecurityException(SecurityConfigException.FILTER_CHAIN_CONFIG_ERROR);
+        for (String pattern : chain.getAntPatterns()) {
+            if (keys.contains(pattern)==false)
+                throw createSecurityException(SecurityConfigException.FILTER_CHAIN_CONFIG_ERROR);
+        }        
     }
     
     protected void checkExtensionPont(Class<?> extensionPoint, String className) throws SecurityConfigException{
