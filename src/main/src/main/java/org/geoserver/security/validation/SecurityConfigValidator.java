@@ -9,6 +9,7 @@ import static org.geoserver.security.validation.SecurityConfigException.*;
 
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Set;
 import java.util.SortedSet;
 
@@ -27,11 +28,13 @@ import org.geoserver.security.config.SecurityManagerConfig;
 import org.geoserver.security.config.SecurityNamedServiceConfig;
 import org.geoserver.security.config.SecurityRoleServiceConfig;
 import org.geoserver.security.config.SecurityUserGroupServiceConfig;
+import org.geoserver.security.filter.GeoServerSecurityFilter;
 import org.geoserver.security.password.GeoServerPasswordEncoder;
 import org.geoserver.security.password.MasterPasswordProviderConfig;
 import org.geoserver.security.password.PasswordValidator;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.security.authentication.AuthenticationProvider;
+import org.springframework.util.StringUtils;
 
 
 public class SecurityConfigValidator extends AbstractSecurityValidator{
@@ -65,11 +68,6 @@ public class SecurityConfigValidator extends AbstractSecurityValidator{
         String encrypterName =config.getConfigPasswordEncrypterName();
         if (isNotEmpty(encrypterName)==false) {
             throw createSecurityException(SEC_ERR_07);
-        }
-
-        if (config.isIncludingRolesInResponse()) {
-            if (isNotEmpty(config.getHttpResponseHeaderAttrForIncludedRoles())==false)
-                throw createSecurityException(HEADER_ATTRIBUTE_NAME_REQUIRED);
         }
         
         GeoServerPasswordEncoder encoder = null;
@@ -158,7 +156,7 @@ public class SecurityConfigValidator extends AbstractSecurityValidator{
                 return manager.listAuthenticationProviders();
             if (extensionPoint==AuthenticationProvider.class)
                 return manager.listAuthenticationProviders();
-            if (extensionPoint==GeoServerAuthenticationProcessingFilter.class)
+            if (extensionPoint==GeoServerSecurityFilter.class)
                 return manager.listFilters();
             if (extensionPoint==PasswordValidator.class)
                 return manager.listPasswordValidators();
@@ -216,7 +214,7 @@ public class SecurityConfigValidator extends AbstractSecurityValidator{
     }
 
     public void validateAddFilter(SecurityNamedServiceConfig config) throws SecurityConfigException{
-        validateAddNamedService(GeoServerAuthenticationProcessingFilter.class, config);        
+        validateAddNamedService(GeoServerSecurityFilter.class, config);        
     }
 
     public void validateAddMasterPasswordProvider(MasterPasswordProviderConfig config) throws SecurityConfigException {
@@ -245,7 +243,7 @@ public class SecurityConfigValidator extends AbstractSecurityValidator{
     }
 
     public void validateModifiedFilter(SecurityNamedServiceConfig config,SecurityNamedServiceConfig oldConfig) throws SecurityConfigException{
-        validateModifiedNamedService(GeoServerAuthenticationProcessingFilter.class, config);        
+        validateModifiedNamedService(GeoServerSecurityFilter.class, config);        
     }
 
     public void validateModifiedMasterPasswordProvider(MasterPasswordProviderConfig config, 
@@ -306,7 +304,15 @@ public class SecurityConfigValidator extends AbstractSecurityValidator{
     }
 
     public void validateRemoveFilter(SecurityNamedServiceConfig config) throws SecurityConfigException{
-        validateRemoveNamedService(GeoServerAuthenticationProcessingFilter.class, config);        
+        validateRemoveNamedService(GeoServerSecurityFilter.class, config);
+        
+        List<String> patterns = manager.getSecurityConfig().getFilterChain().
+            patternsContainingFilter(config.getClassName());
+        if (patterns.isEmpty()==false) {
+            throw createSecurityException(SecurityConfigException.FILTER_STILL_USED, 
+                    config.getName(), 
+                    StringUtils.arrayToCommaDelimitedString(patterns.toArray()));
+        }        
     }
 
     public void validateRemoveMasterPasswordProvider(MasterPasswordProviderConfig config) 
@@ -382,7 +388,7 @@ public class SecurityConfigValidator extends AbstractSecurityValidator{
             return ROLE_SERVICE_ALREADY_EXISTS_$1;
         if (GeoServerUserGroupService.class==extPoint)
             return USERGROUP_SERVICE_ALREADY_EXISTS_$1;
-        if (GeoServerAuthenticationProcessingFilter.class==extPoint)
+        if (GeoServerSecurityFilter.class==extPoint)
             return AUTH_FILTER_ALREADY_EXISTS_$1;
         throw new RuntimeException("Unkonw extension point: "+extPoint.getName());
     }
@@ -396,7 +402,7 @@ public class SecurityConfigValidator extends AbstractSecurityValidator{
             return ROLE_SERVICE_NOT_FOUND_$1;
         if (GeoServerUserGroupService.class==extPoint)
             return USERGROUP_SERVICE_NOT_FOUND_$1;
-        if (GeoServerAuthenticationProcessingFilter.class==extPoint)
+        if (GeoServerSecurityFilter.class==extPoint)
             return AUTH_FILTER_NOT_FOUND_$1;
         throw new RuntimeException("Unkonw extension point: "+extPoint.getName());
     }

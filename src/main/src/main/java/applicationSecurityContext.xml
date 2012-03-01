@@ -197,7 +197,7 @@
   
   
   <bean id="anonymousFilter"
-    class="org.geoserver.security.impl.GeoServerAnonymousAuthFilter">
+    class="org.geoserver.security.filter.GeoServerAnonymousAuthenticationFilter">
     <property name="key" value="geoserver" />
     <property name="userAttribute" value="anonymousUser,dummy" />
   </bean>
@@ -318,19 +318,13 @@
   	<property name="roleParameterAssignmentString" value="="/>  
   </bean>
   
-  <!-- filter for returning the roles of the authenticated principal. This filter
-    uses a GeoServerRoleConverter bean for string conversion
-   --> 
-  <bean id="roleFilter" class="org.geoserver.security.impl.GeoServerRoleFilter">
-    <property name="converter">
-      <ref bean="roleConverter" />
-    </property>   
-  </bean>
    
 
   <bean id="xmlSecurityProvider" class="org.geoserver.security.xml.XMLSecurityProvider"/>
   <bean id="basicAuthSecurityProvider" class="org.geoserver.security.filter.GeoServerBasicAuthenticationProvider"/>
   <bean id="digestAuthSecurityProvider" class="org.geoserver.security.filter.GeoServerDigestAuthenticationProvider"/>
+  <bean id="roleFilterProvider" class="org.geoserver.security.filter.GeoServerRoleProvider"/>
+  
     	
   <bean id="urlMasterPasswordProvider" 
     class="org.geoserver.security.password.URLMasterPasswordProvider$SecurityProvider"/>

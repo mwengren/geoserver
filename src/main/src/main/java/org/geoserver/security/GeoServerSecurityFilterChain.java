@@ -7,6 +7,7 @@ package org.geoserver.security;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 
 /**
  * The security filter filter chain
@@ -49,8 +50,6 @@ public class GeoServerSecurityFilterChain  {
     public static final String FILTER_SECURITY_INTERCEPTOR = "filterSecurityInterceptor";
     public static final String FILTER_SECURITY_REST_INTERCEPTOR = "filterSecurityRestInterceptor";
     
-    public static final String ROLE_FILTER ="roleFilter";
-
     public GeoServerSecurityFilterChain() {
         antPatterns = new ArrayList<String>();
         filterMap = new HashMap<String,ArrayList<String>>();   
@@ -110,7 +109,7 @@ public class GeoServerSecurityFilterChain  {
                 FILTER_SECURITY_REST_INTERCEPTOR));
 
          chain.filterMap.put("/**", 
-                 createListFromStrings(SECURITY_CONTEXT_NO_ASC_FILTER, ROLE_FILTER,BASIC_AUTH_FILTER, 
+                 createListFromStrings(SECURITY_CONTEXT_NO_ASC_FILTER, BASIC_AUTH_FILTER, 
                 ANONYMOUS_FILTER, EXCEPTION_TRANSLATION_OWS_FILTER, FILTER_SECURITY_INTERCEPTOR));        
          
         return chain;
@@ -217,6 +216,19 @@ public class GeoServerSecurityFilterChain  {
         return true;
     }
 
-
-    
+    /**
+     * Get a list of patterns having the filter in their chain
+     * 
+     * @param filterName
+     * @return
+     */
+    public List<String> patternsContainingFilter(String filterName) {
+        List<String> result = new ArrayList<String>();
+        for (String pattern: antPatterns) {
+            if (filterMap.get(pattern).contains(filterName)) {
+                result.add(pattern);
+            }
+        }
+        return result;
+    }    
 }

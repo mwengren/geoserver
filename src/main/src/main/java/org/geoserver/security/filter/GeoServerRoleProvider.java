@@ -4,26 +4,26 @@ import org.geoserver.config.util.XStreamPersister;
 import org.geoserver.security.config.SecurityNamedServiceConfig;
 
 /**
- * Security provider for basic auth
+ * Security provider for {@link GeoServerRoleFilter}
  * 
  * @author mcr
  */
-public class GeoServerBasicAuthenticationProvider extends AbstractFilterProvider {
+public class GeoServerRoleProvider extends AbstractFilterProvider {
 
     @Override
     public void configure(XStreamPersister xp) {
         super.configure(xp);
-        xp.getXStream().alias("basicAuthentication", GeoServerBasicAuthenticationFilter.class);
+        xp.getXStream().alias("roleFilter", GeoServerRoleFilter.class);
     }
 
     @Override
     public Class<? extends GeoServerSecurityFilter> getFilterClass() {
-        return GeoServerBasicAuthenticationFilter.class;
+        return GeoServerRoleFilter.class;
     }
 
     @Override
     public GeoServerSecurityFilter createFilter(SecurityNamedServiceConfig config) {
-        return new GeoServerBasicAuthenticationFilter();
+        return new GeoServerRoleFilter();
     }
 
 }

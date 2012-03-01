@@ -1073,21 +1073,29 @@ public class GeoServerSecurityManager extends ProviderManager implements Applica
     
     public void saveFilter(SecurityNamedServiceConfig config) 
             throws IOException,SecurityConfigException {
-        // TODO
-//        SecurityConfigValidator validator = 
-//                SecurityConfigValidator.getConfigurationValiator(
-//                        GeoserverAuthenticationProcessingFilter.class,
-//                        config.getClassName());
-//        if (isNew)
-//            validator.validateAddFilter(config);
-//        else
-//            validator.validateModifiedFilter(config,
-//                    filterHelper.loadConfig(config.getName()));
-
+        
+        SecurityConfigValidator validator = 
+                SecurityConfigValidator.getConfigurationValiator(
+                        GeoServerSecurityFilter.class,
+                        config.getClassName());
+        
+        boolean fireChanged = false;
         if (config.getId() == null) {
             config.initBeforeSave();
+            validator.validateAddFilter(config);
         }
+        else { 
+            validator.validateModifiedFilter(config,
+                    filterHelper.loadConfig(config.getName()));
+            if (securityConfig.getFilterChain().
+                    patternsContainingFilter(config.getName()).isEmpty()==false)
+                fireChanged=true;
+            
+        }                
+        
         filterHelper.saveConfig(config);
+        if (fireChanged)
+            fireChanged();
     }
     
     /**
@@ -1104,13 +1112,12 @@ public class GeoServerSecurityManager extends ProviderManager implements Applica
     }
     
 
-    public void removeAuthenticationFilter(SecurityNamedServiceConfig config) throws IOException,SecurityConfigException {
-        // TODO
-//        SecurityConfigValidator validator = 
-//                SecurityConfigValidator.getConfigurationValiator(
-//                        GeoserverAuthenticationProcessingFilter.class,
-//                        config.getClassName());
-//        validator.validateRemoveFilter(config);        
+    public void removeFilter(SecurityNamedServiceConfig config) throws IOException,SecurityConfigException {
+        SecurityConfigValidator validator = 
+                SecurityConfigValidator.getConfigurationValiator(
+                        GeoServerSecurityFilter.class,
+                        config.getClassName());
+        validator.validateRemoveFilter(config);        
         filterHelper.removeConfig(config.getName());
     }
 
