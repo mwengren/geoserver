@@ -16,7 +16,7 @@ import org.springframework.security.web.authentication.www.BasicAuthenticationEn
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
 
 /**
- * Named Basice Authentication Filter
+ * Named Basic Authentication Filter
  * 
  * @author mcr
  *

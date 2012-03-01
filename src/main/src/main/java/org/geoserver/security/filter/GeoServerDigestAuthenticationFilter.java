@@ -1,0 +1,52 @@
+/* Copyright (c) 2001 - 2011 TOPP - www.openplans.org. All rights reserved.
+ * This code is licensed under the GPL 2.0 license, available at the root
+ * application directory.
+ */
+
+package org.geoserver.security.filter;
+
+import java.io.IOException;
+import java.nio.charset.Charset;
+
+import org.geoserver.security.GeoServerSecurityManager;
+import org.geoserver.security.HttpDigestUserDetailsServiceWrapper;
+import org.geoserver.security.config.DigestAuthenticationFilterConfig;
+import org.geoserver.security.config.SecurityNamedServiceConfig;
+import org.springframework.security.web.authentication.www.DigestAuthenticationEntryPoint;
+import org.springframework.security.web.authentication.www.DigestAuthenticationFilter;
+
+/**
+ * Named Digest Authentication Filter
+ * 
+ * @author mcr
+ *
+ */
+public class GeoServerDigestAuthenticationFilter extends GeoServerComplexFilter {
+    @Override
+    public void initializeFromConfig(SecurityNamedServiceConfig config) throws IOException {
+        super.initializeFromConfig(config);
+        
+        DigestAuthenticationFilterConfig authConfig = 
+                (DigestAuthenticationFilterConfig) config;
+        
+        DigestAuthenticationFilter filter = new DigestAuthenticationFilter();
+        filter.setCreateAuthenticatedToken(true);
+        filter.setPasswordAlreadyEncoded(true);
+        DigestAuthenticationEntryPoint ep = new DigestAuthenticationEntryPoint();
+        ep.setRealmName(GeoServerSecurityManager.REALM);
+        ep.setNonceValiditySeconds(authConfig.getNonceValiditySeconds());
+        ep.setKey(authConfig.getName());
+        filter.setAuthenticationEntryPoint(ep);
+        
+        
+        HttpDigestUserDetailsServiceWrapper wrapper = 
+                new HttpDigestUserDetailsServiceWrapper(
+                        getSecurityManager().loadUserGroupService(authConfig.getUserGroupServiceName()),
+                        Charset.defaultCharset()); 
+        filter.setUserDetailsService(wrapper);
+        
+        filter.afterPropertiesSet();
+        getNestedFilters().add(filter);        
+    }
+    
+}

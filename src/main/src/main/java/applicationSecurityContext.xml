@@ -328,7 +328,10 @@
   </bean>
    
 
-  <bean id="xmlSecurityProvider" class="org.geoserver.security.xml.XMLSecurityProvider"/>  	
+  <bean id="xmlSecurityProvider" class="org.geoserver.security.xml.XMLSecurityProvider"/>
+  <bean id="basicAuthSecurityProvider" class="org.geoserver.security.filter.GeoServerBasicAuthenticationProvider"/>
+  <bean id="digestAuthSecurityProvider" class="org.geoserver.security.filter.GeoServerDigestAuthenticationProvider"/>
+    	
   <bean id="urlMasterPasswordProvider" 
     class="org.geoserver.security.password.URLMasterPasswordProvider$SecurityProvider"/>
   

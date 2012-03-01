@@ -32,7 +32,6 @@ public class XMLSecurityProvider extends GeoServerSecurityProvider {
         xp.getXStream().alias("roleService", XMLRoleServiceConfig.class);
         xp.getXStream().alias("passwordPolicy", PasswordPolicyConfig.class);
         xp.getXStream().alias("usernamePassword", UsernamePasswordAuthenticationProviderConfig.class);
-        xp.getXStream().alias("basicAuthentication", GeoServerBasicAuthenticationFilter.class);
     }
 
     @Override
@@ -117,15 +116,5 @@ public class XMLSecurityProvider extends GeoServerSecurityProvider {
     public SecurityConfigValidator createConfigurationValidator(GeoServerSecurityManager securityManager) {
         return new XMLSecurityConfigValidator(securityManager); 
      }
-
-    @Override
-    public Class<? extends GeoServerSecurityFilter> getFilterClass() {
-        return GeoServerBasicAuthenticationFilter.class;
-    }
-
-    @Override
-    public GeoServerSecurityFilter createFilter(SecurityNamedServiceConfig config) {
-        return new GeoServerBasicAuthenticationFilter();
-    }
 
 }

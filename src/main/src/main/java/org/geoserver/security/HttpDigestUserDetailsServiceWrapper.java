@@ -4,6 +4,7 @@
  */
 package org.geoserver.security;
 
+import java.nio.charset.Charset;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
@@ -35,12 +36,12 @@ public class HttpDigestUserDetailsServiceWrapper implements UserDetailsService {
     
     private GeoServerSecurityManager manager;
     protected GeoServerUserGroupService service;
-    protected String charSet;
+    protected Charset charSet;
     protected final char[] delimArray= new char[] {':' };
     protected MessageDigest digest;
     protected GeoServerPasswordEncoder enc;
     
-    public HttpDigestUserDetailsServiceWrapper(GeoServerUserGroupService service,String charSet) {
+    public HttpDigestUserDetailsServiceWrapper(GeoServerUserGroupService service,Charset charSet) {
        this.service= service;
        this.charSet=charSet;
        manager = service.getSecurityManager();
