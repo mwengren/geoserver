@@ -7,6 +7,7 @@
 package org.geoserver.security.auth;
 
 import org.geoserver.security.GeoServerSecurityTestSupport;
+import org.geoserver.security.impl.GeoServerUser;
 import org.geoserver.security.password.GeoServerDigestPasswordEncoder;
 import org.geoserver.test.GeoServerTestSupport;
 import org.springframework.security.authentication.AuthenticationProvider;
@@ -32,21 +33,21 @@ public class GeoServerRootAuthenticationProviderTest extends GeoServerSecurityTe
         
         assertNull(provider.authenticate(token));
         
-        token = new UsernamePasswordAuthenticationToken(GeoServerRootAuthenticationProvider.ROOT_USERNAME, null);
+        token = new UsernamePasswordAuthenticationToken(GeoServerUser.ROOT_USERNAME, null);
         assertNull(provider.authenticate(token));
         
-        token = new UsernamePasswordAuthenticationToken(GeoServerRootAuthenticationProvider.ROOT_USERNAME, "abc");
+        token = new UsernamePasswordAuthenticationToken(GeoServerUser.ROOT_USERNAME, "abc");
         assertNull(provider.authenticate(token));
 
         String masterPassword = getMasterPassword();
-        token = new UsernamePasswordAuthenticationToken(GeoServerRootAuthenticationProvider.ROOT_USERNAME, masterPassword);
+        token = new UsernamePasswordAuthenticationToken(GeoServerUser.ROOT_USERNAME, masterPassword);
         token.setDetails("hallo");
         UsernamePasswordAuthenticationToken result = (UsernamePasswordAuthenticationToken)
                 provider.authenticate(token);
         
         assertNotNull(result);
         assertNull(result.getCredentials());
-        assertEquals(GeoServerRootAuthenticationProvider.ROOT_USERNAME,result.getPrincipal());
+        assertEquals(GeoServerUser.ROOT_USERNAME,result.getPrincipal());
         assertEquals("hallo",result.getDetails());        
     }
         

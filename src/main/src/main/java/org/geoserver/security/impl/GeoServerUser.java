@@ -12,7 +12,6 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.TreeSet;
 
-import org.geoserver.security.auth.GeoServerRootAuthenticationProvider;
 import org.springframework.security.core.CredentialsContainer;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -42,7 +41,7 @@ public class GeoServerUser implements UserDetails, CredentialsContainer, Compara
     }
     
     public static GeoServerUser createRoot() {
-        GeoServerUser root = new GeoServerUser(GeoServerRootAuthenticationProvider.ROOT_USERNAME);
+        GeoServerUser root = new GeoServerUser(GeoServerUser.ROOT_USERNAME);
         root.setPassword(null);
         root.setEnabled(true);
         Set<GrantedAuthority> roles = new HashSet<GrantedAuthority>();
@@ -60,7 +59,9 @@ public class GeoServerUser implements UserDetails, CredentialsContainer, Compara
     private boolean enabled;
     
     protected Properties properties;
-    protected Collection<GrantedAuthority> authorities; 
+    protected Collection<GrantedAuthority> authorities;
+
+    final public static String ROOT_USERNAME="root"; 
 
     public GeoServerUser(String username) {
         this.username=username;

@@ -117,7 +117,7 @@ public class GeoServerRoleConverterImpl implements GeoServerRoleConverter {
      * @see org.geoserver.security.impl.GeoServerRoleConverter#convertRolesToString(java.util.Collection)
      */
     @Override
-    public String convertRolesToString(Collection<GrantedAuthority> roles) {
+    public String convertRolesToString(Collection<? extends GrantedAuthority> roles) {
         
         checkDelimiters();
         
@@ -164,10 +164,10 @@ public class GeoServerRoleConverterImpl implements GeoServerRoleConverter {
      * @see org.geoserver.security.impl.GeoServerRoleConverter#convertRolesFromString(java.lang.String, java.lang.String)
      */
     @Override
-    public Collection<GrantedAuthority> convertRolesFromString(String rolesString, String userName) {
+    public Collection<GeoServerRole> convertRolesFromString(String rolesString, String userName) {
         
         checkDelimiters();
-        List<GrantedAuthority> roles = new ArrayList<GrantedAuthority>();
+        List<GeoServerRole> roles = new ArrayList<GeoServerRole>();
         List<String> working = splitString(rolesString,getRoleDelimiterString());
         for (String roleString: working) {
             GeoServerRole role = convertRoleFromString(roleString, userName);

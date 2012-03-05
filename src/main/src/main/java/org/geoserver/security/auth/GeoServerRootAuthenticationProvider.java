@@ -15,6 +15,7 @@ import org.geoserver.security.GeoServerSecurityManager;
 import org.geoserver.security.GeoServerUserGroupService;
 import org.geoserver.security.config.SecurityNamedServiceConfig;
 import org.geoserver.security.impl.GeoServerRole;
+import org.geoserver.security.impl.GeoServerUser;
 import org.geoserver.security.password.GeoServerDigestPasswordEncoder;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -39,8 +40,6 @@ import org.springframework.security.core.GrantedAuthority;
 public class GeoServerRootAuthenticationProvider extends GeoServerAuthenticationProvider {
 
 
-    final public static String ROOT_USERNAME="root";
-
     public GeoServerRootAuthenticationProvider() {
         super();
         setName("root");
@@ -58,7 +57,7 @@ public class GeoServerRootAuthenticationProvider extends GeoServerAuthentication
         UsernamePasswordAuthenticationToken token = (UsernamePasswordAuthenticationToken) authentication;
 
         // check if name is root
-        if (ROOT_USERNAME.equals(token.getPrincipal())==false) return null;
+        if (GeoServerUser.ROOT_USERNAME.equals(token.getPrincipal())==false) return null;
 
         //check password
         if (token.getCredentials() !=null) {
@@ -66,7 +65,7 @@ public class GeoServerRootAuthenticationProvider extends GeoServerAuthentication
                 Collection<GrantedAuthority> roles = new ArrayList<GrantedAuthority>();
                 roles.add(GeoServerRole.ADMIN_ROLE);
                 UsernamePasswordAuthenticationToken result = 
-                    new UsernamePasswordAuthenticationToken(ROOT_USERNAME, null,roles);
+                    new UsernamePasswordAuthenticationToken(GeoServerUser.ROOT_USERNAME, null,roles);
                 result.setDetails(token.getDetails());
                 return result;        
             }

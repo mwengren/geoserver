@@ -16,11 +16,15 @@ package org.geoserver.security.config;
  * @author mcr
  *
  */
-public class DigestAuthenticationFilterConfig extends BaseSecurityNamedServiceConfig {
+public class DigestAuthenticationFilterConfig extends BaseAuthenticationFilterConfig{
 
     private static final long serialVersionUID = 1L;
     private String userGroupServiceName;
     private int nonceValiditySeconds =300;
+    
+    public boolean isAuthenticationRequired() {
+        return true;
+    }
     
     public int getNonceValiditySeconds() {
         return nonceValiditySeconds;

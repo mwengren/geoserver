@@ -8,7 +8,6 @@ import java.nio.charset.Charset;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
-import org.geoserver.security.auth.GeoServerRootAuthenticationProvider;
 import org.geoserver.security.impl.GeoServerUser;
 import org.geoserver.security.password.GeoServerPasswordEncoder;
 import org.geoserver.security.password.PasswordEncodingType;
@@ -62,7 +61,7 @@ public class HttpDigestUserDetailsServiceWrapper implements UserDetailsService {
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException,
             DataAccessException {
         
-        if (GeoServerRootAuthenticationProvider.ROOT_USERNAME.equals(username))
+        if (GeoServerUser.ROOT_USERNAME.equals(username))
             return prepareForRootUser ();
         
         GeoServerUser user = (GeoServerUser) service.loadUserByUsername(username);            
@@ -86,7 +85,7 @@ public class HttpDigestUserDetailsServiceWrapper implements UserDetailsService {
         char[] mpw = null;
         try {
             mpw= manager.getMasterPassword();
-            String a1 = encodePasswordInA1Format(GeoServerRootAuthenticationProvider.ROOT_USERNAME, 
+            String a1 = encodePasswordInA1Format(GeoServerUser.ROOT_USERNAME, 
                     GeoServerSecurityManager.REALM, mpw);
             
             return new UserDetailsPasswordWrapper(

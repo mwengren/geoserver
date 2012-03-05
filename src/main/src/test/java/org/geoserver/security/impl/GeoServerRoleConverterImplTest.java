@@ -36,13 +36,13 @@ public class GeoServerRoleConverterImplTest extends TestCase {
         assertEquals("r1_v2" ,r.getProperties().get("r1_p2"));
         assertEquals("testuser",r.getUserName());
         
-        List<GrantedAuthority> list = new ArrayList<GrantedAuthority>();
+        List<GeoServerRole> list = new ArrayList<GeoServerRole>();
         
         list.add(r1);
         list.add(r2);
         list.add(r3);
         
-        Collection<GrantedAuthority> resColl = 
+        Collection<GeoServerRole> resColl = 
                 converter.convertRolesFromString(converter.convertRolesToString(list),null);
         
         assertEquals(3,resColl.size());

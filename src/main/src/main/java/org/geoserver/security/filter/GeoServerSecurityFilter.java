@@ -12,6 +12,7 @@ import org.geoserver.security.GeoServerSecurityManager;
 import org.geoserver.security.GeoServerSecurityProvider;
 import org.geoserver.security.config.SecurityManagerConfig;
 import org.geoserver.security.impl.AbstractGeoServerSecurityService;
+import org.springframework.beans.factory.BeanNameAware;
 
 /**
  * Extension of {@link Filter} for the geoserver security subsystem.
@@ -27,7 +28,17 @@ import org.geoserver.security.impl.AbstractGeoServerSecurityService;
  * 
  */
 public abstract class GeoServerSecurityFilter extends AbstractGeoServerSecurityService 
-    implements Filter {
+    implements Filter,BeanNameAware {
+
+    private String beanName;
+
+    public String getBeanName() {
+        return beanName;
+    }
+
+    public void setBeanName(String beanName) {
+        this.beanName = beanName;
+    }
 
     /**
      * Not used, these filters are not plugged in via web.xml
