@@ -33,6 +33,7 @@ import org.geoserver.security.password.DecodingUserDetailsService;
 import org.geoserver.security.password.PasswordValidator;
 import org.geotools.data.DataStore;
 import org.geotools.data.DataStoreFinder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
@@ -99,9 +100,9 @@ public class MemoryUserDetailsServiceTest extends AbstractUserDetailsServiceTest
         store.store();
         
         String plainpassword = "geoserver";
-        GeoServerUser admin = (GeoServerUser) service.loadUserByUsername(GeoServerUser.AdminName);        
+        UserDetails admin =  service.loadUserByUsername(GeoServerUser.AdminName);        
         assertFalse(plainpassword.equals(admin.getPassword()));
-        GeoServerUser admin2 = (GeoServerUser) decService.loadUserByUsername(GeoServerUser.AdminName);
+        UserDetails admin2 =  decService.loadUserByUsername(GeoServerUser.AdminName);
         assertTrue(plainpassword.equals(admin2.getPassword()));
     }
 
