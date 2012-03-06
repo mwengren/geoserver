@@ -21,7 +21,7 @@ import org.springframework.security.web.authentication.www.BasicAuthenticationFi
  * @author mcr
  *
  */
-public class GeoServerBasicAuthenticationFilter extends GeoServerComplexFilter {
+public class GeoServerBasicAuthenticationFilter extends GeoServerCompositeFilter {
     @Override
     public void initializeFromConfig(SecurityNamedServiceConfig config) throws IOException {
         super.initializeFromConfig(config);

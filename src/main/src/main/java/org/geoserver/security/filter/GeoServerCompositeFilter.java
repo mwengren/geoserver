@@ -21,7 +21,7 @@ import javax.servlet.ServletResponse;
  * @author mcr
  *
  */
-public class GeoServerComplexFilter extends GeoServerSecurityFilter {
+public class GeoServerCompositeFilter extends GeoServerSecurityFilter {
     
     protected  class NestedFilterChain implements FilterChain {
         private final FilterChain originalChain;

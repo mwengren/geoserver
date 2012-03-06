@@ -21,7 +21,7 @@ import org.springframework.security.web.authentication.www.DigestAuthenticationF
  * @author mcr
  *
  */
-public class GeoServerDigestAuthenticationFilter extends GeoServerComplexFilter {
+public class GeoServerDigestAuthenticationFilter extends GeoServerCompositeFilter {
     @Override
     public void initializeFromConfig(SecurityNamedServiceConfig config) throws IOException {
         super.initializeFromConfig(config);
