@@ -4,7 +4,7 @@
  */
 package org.geoserver.security.web.auth;
 
-import org.geoserver.security.UsernamePasswordAuthenticationProvider;
+import org.geoserver.security.auth.UsernamePasswordAuthenticationProvider;
 import org.geoserver.security.config.UsernamePasswordAuthenticationProviderConfig;
 
 /**

@@ -36,7 +36,7 @@ import org.geoserver.security.GeoServerAuthenticationProvider;
 import org.geoserver.security.GeoServerRoleService;
 import org.geoserver.security.GeoServerSecurityTestSupport;
 import org.geoserver.security.GeoServerUserGroupService;
-import org.geoserver.security.UsernamePasswordAuthenticationProvider;
+import org.geoserver.security.auth.UsernamePasswordAuthenticationProvider;
 import org.geoserver.security.config.BaseSecurityNamedServiceConfig;
 import org.geoserver.security.config.PasswordPolicyConfig;
 import org.geoserver.security.config.SecurityAuthProviderConfig;

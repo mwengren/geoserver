@@ -5,7 +5,7 @@ import java.util.List;
 import org.apache.wicket.extensions.markup.html.form.palette.component.Recorder;
 import org.apache.wicket.util.tester.FormTester;
 import org.geoserver.security.GeoServerAuthenticationProvider;
-import org.geoserver.security.UsernamePasswordAuthenticationProvider;
+import org.geoserver.security.auth.UsernamePasswordAuthenticationProvider;
 import org.geoserver.security.config.SecurityManagerConfig;
 import org.geoserver.security.web.AbstractSecurityWicketTestSupport;
 import org.geoserver.security.web.SecuritySettingsPage;

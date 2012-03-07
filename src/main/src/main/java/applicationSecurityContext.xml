@@ -271,7 +271,7 @@
   -->
   <bean id="authenticationManager" class="org.geoserver.security.GeoServerSecurityManager"
      depends-on="extensions">
-    <constructor-arg ref="dataDirectory"/>
+    <constructor-arg ref="dataDirectory"/>  	  
   </bean>
   <alias name="authenticationManager" alias="geoServerSecurityManager"/>
 

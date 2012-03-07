@@ -46,6 +46,7 @@ import org.geoserver.config.util.XStreamPersisterFactory;
 import org.geoserver.platform.ContextLoadedEvent;
 import org.geoserver.platform.GeoServerExtensions;
 import org.geoserver.security.auth.GeoServerRootAuthenticationProvider;
+import org.geoserver.security.auth.UsernamePasswordAuthenticationProvider;
 import org.geoserver.security.concurrent.LockingKeyStoreProvider;
 import org.geoserver.security.concurrent.LockingRoleService;
 import org.geoserver.security.concurrent.LockingUserGroupService;

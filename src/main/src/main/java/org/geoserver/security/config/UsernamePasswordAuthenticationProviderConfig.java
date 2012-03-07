@@ -4,7 +4,7 @@
  */
 package org.geoserver.security.config;
 
-import org.geoserver.security.UsernamePasswordAuthenticationProvider;
+import org.geoserver.security.auth.UsernamePasswordAuthenticationProvider;
 
 /**
  * Config object for {@link UsernamePasswordAuthenticationProvider}.
