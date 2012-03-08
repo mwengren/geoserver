@@ -1,6 +1,5 @@
 package org.geoserver.security.password;
 
-import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -69,6 +68,10 @@ public class GeoserverPasswordEncoderTest extends GeoServerSecurityTestSupport {
         
         enc = encoder.encodePassword("", null);
         assertTrue(encoder.isPasswordValid(enc, "", null));
+        
+        String enc2 = encoder.encodePassword(testPassword.toCharArray(), null);
+        String plain2 = new String(encoder.decodeToCharArray(enc2));
+        assertEquals(testPassword, plain2);
         
     }
 
@@ -231,12 +234,18 @@ public class GeoserverPasswordEncoderTest extends GeoServerSecurityTestSupport {
         
             assertFalse(encoder==encoder2);        
             String enc = encoder.encodePassword(password , null);
+            
+            
             assertTrue(enc.
                     startsWith(encoder.getPrefix()+AbstractGeoserverPasswordEncoder.PREFIX_DELIMTER));
             assertFalse(enc.equals(password ));
             assertTrue(encoder2.isPasswordValid(enc, password , null));
             assertEquals(password ,encoder2.decode(enc));
             assertEquals(password ,encoder.decode(enc));
+            
+            String enc2 = encoder.encodePassword(password.toCharArray(), null);
+            String plain2 = new String(encoder.decodeToCharArray(enc2));
+            assertEquals(password, plain2);
         }
     }
     

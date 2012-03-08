@@ -177,7 +177,7 @@ public class GeoServerPBEPasswordEncoder extends AbstractGeoserverPasswordEncode
             throws UnsupportedOperationException {
         if (byteEncrypter == null) {
             //not initialized
-            getStringEncoder();
+            getCharEncoder();
         }
 
         byte[] bytes = byteEncrypter.decrypt(removePrefix(encPass).getBytes());

@@ -108,6 +108,7 @@ public class SecurityUtils {
      * scrambling plain text passwords after usage to avoid keeping them around in memory.
      */
     public static void scramble(char[] ch) {
+        if (ch==null) return;
         RandomPasswordProvider rpp = new RandomPasswordProvider();
         rpp.getRandomPassword(ch);
     }
@@ -117,6 +118,7 @@ public class SecurityUtils {
      * scrambling plain text passwords after usage to avoid keeping them around in memory.
      */
     public static void scramble(byte[] ch) {
+        if (ch==null) return;
         RandomPasswordProvider rpp = new RandomPasswordProvider();
         rpp.getRandomPassword(ch);
     }

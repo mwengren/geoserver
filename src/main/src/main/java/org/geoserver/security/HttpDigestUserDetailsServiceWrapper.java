@@ -70,10 +70,12 @@ public class HttpDigestUserDetailsServiceWrapper implements UserDetailsService {
 
     UserDetails prepareForUser (GeoServerUser user) {
         char[] pw = null;
-        try {
-            pw = enc.decodeToCharArray(user.getPassword());
+        try {            
+             pw = enc.decodeToCharArray(user.getPassword());
+            //pw = enc.decode(user.getPassword()).toCharArray();
             String a1 = encodePasswordInA1Format(user.getUsername(), 
                     GeoServerSecurityManager.REALM, pw);
+            
             return new UserDetailsPasswordWrapper(user, a1);
         } finally {
             manager.disposePassword(pw);

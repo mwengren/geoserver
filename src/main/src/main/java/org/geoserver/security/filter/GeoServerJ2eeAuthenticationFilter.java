@@ -55,7 +55,8 @@ public class GeoServerJ2eeAuthenticationFilter extends GeoServerAbstractPreAuthe
     @Override
     protected Collection<GeoServerRole> getRoles(HttpServletRequest request, String principal) throws IOException{
         Collection<GeoServerRole> roles = new ArrayList<GeoServerRole>();
-        boolean useActiveService = getRoleServiceName()==null || getRoleServiceName().length()==0;
+        boolean useActiveService = getRoleServiceName()==null || 
+                getRoleServiceName().trim().length()==0;
       
         GeoServerRoleService service = useActiveService ?
               getSecurityManager().getActiveRoleService() :
