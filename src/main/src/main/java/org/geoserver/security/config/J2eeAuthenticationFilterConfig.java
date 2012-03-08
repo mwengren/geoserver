@@ -16,20 +16,12 @@ import org.geoserver.security.GeoServerSecurityManager;
  * @author christian
  *
  */
-public class J2eeAuthenticationFilterConfig extends BaseAuthenticationFilterConfig {
+public class J2eeAuthenticationFilterConfig extends BaseSecurityNamedServiceConfig {
 
     private static final long serialVersionUID = 1L;
     
     private String roleServiceName;
-    private boolean authenticationRequired;
 
-    public boolean isAuthenticationRequired() {
-        return authenticationRequired;
-    }
-
-    public void setAuthenticationRequired(boolean authenticationRequired) {
-        this.authenticationRequired = authenticationRequired;
-    }
 
     public String getRoleServiceName() {
         return roleServiceName;

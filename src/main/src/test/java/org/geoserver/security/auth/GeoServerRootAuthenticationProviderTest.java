@@ -8,8 +8,6 @@ package org.geoserver.security.auth;
 
 import org.geoserver.security.GeoServerSecurityTestSupport;
 import org.geoserver.security.impl.GeoServerUser;
-import org.geoserver.security.password.GeoServerDigestPasswordEncoder;
-import org.geoserver.test.GeoServerTestSupport;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.RememberMeAuthenticationToken;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;

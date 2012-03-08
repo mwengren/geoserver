@@ -8,11 +8,10 @@ package org.geoserver.security.filter;
 import java.io.IOException;
 
 import org.geoserver.platform.GeoServerExtensions;
-import org.geoserver.security.GeoServerSecurityManager;
 import org.geoserver.security.config.BasicAuthenticationFilterConfig;
 import org.geoserver.security.config.SecurityNamedServiceConfig;
+import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.authentication.RememberMeServices;
-import org.springframework.security.web.authentication.www.BasicAuthenticationEntryPoint;
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
 
 /**
@@ -31,12 +30,14 @@ public class GeoServerBasicAuthenticationFilter extends GeoServerCompositeFilter
         
         BasicAuthenticationFilter filter = new BasicAuthenticationFilter();
         filter.setAuthenticationManager(getSecurityManager());
-        filter.setIgnoreFailure(authConfig.isIgnoreFailure());
-        if (authConfig.isIgnoreFailure()==false) {
-            BasicAuthenticationEntryPoint ep = new BasicAuthenticationEntryPoint();
-            ep.setRealmName(GeoServerSecurityManager.REALM);
-            filter.setAuthenticationEntryPoint(ep);
-        }
+        filter.setIgnoreFailure(false);
+     // TODO, Justin, is this correct
+        AuthenticationEntryPoint ep = (AuthenticationEntryPoint) 
+                GeoServerExtensions.bean("basicProcessingFilterEntryPoint");
+        filter.setAuthenticationEntryPoint(ep);
+
+        
+      
         String rememberMeServiceName = authConfig.getRememberMeServiceName();
         if (rememberMeServiceName !=null && rememberMeServiceName.length() >0) {
             // TODO, this is not correct

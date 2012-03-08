@@ -203,9 +203,8 @@
   </bean>
 
   <!-- 
-    This entry point gets called when basic authentication is needed 
-    (or a previous attempt fail) to commence authentication 
-    with the basic processing filter 
+    Entry points for basic, digest, form based login. 
+    A http 403, access denied entry point is needed for proxy authentication 
   -->
   <bean id="basicProcessingFilterEntryPoint"
     class="org.springframework.security.web.authentication.www.BasicAuthenticationEntryPoint">
@@ -213,21 +212,34 @@
       <value>GeoServer Realm</value>
     </property>
   </bean>
+   <bean id="digestProcessingFilterEntryPoint"
+    class="org.springframework.security.web.authentication.www.DigestAuthenticationEntryPoint">
+    <property name="realmName">
+      <value>GeoServer Realm</value>
+    </property>
+    <property name="key" value="geoserver"/>
+    <property name="nonceValiditySeconds" value="300"/>
+  </bean>
+     <bean id="accessDeniedEntryPoint"
+    class="org.springframework.security.web.authentication.Http403ForbiddenEntryPoint">
+  </bean>
+  <bean id="loingFormFilterEntryPoint"
+    class="org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint">
+    <property name="loginFormUrl" value="/admin/login.do" />
+    <property name="forceHttps" value="false" />
+   </bean>
+  
+  
 
   <!-- 
     During the request execution security exceptions may be thrown, either during the
     authentication or authorization phase. This filter redirects authentication failures
     to the login form, whilst returns the user to an access denied page if the authorization
     levels are not enough
-  -->
   <bean id="exceptionTranslationFilter"
     class="org.springframework.security.web.access.ExceptionTranslationFilter">
     <property name="authenticationEntryPoint">
-      <bean
-        class="org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint">
-        <property name="loginFormUrl" value="/admin/login.do" />
-        <property name="forceHttps" value="false" />
-      </bean>
+    	<ref bean="loingFormFilterEntryPoint"/>
     </property>
     <property name="accessDeniedHandler">
       <bean class="org.springframework.security.web.access.AccessDeniedHandlerImpl">
@@ -235,26 +247,25 @@
       </bean>
     </property>
   </bean>
+  -->
 
   <!-- 
     During the request execution security exceptions may be thrown, either during the
     authentication or authorization phase. This filter redirects authentication failures
     to the login form, whilst returns the user to an access denied page if the authorization
     levels are not enough
-  -->
   <bean id="exceptionTranslationOwsFilter"
     class="org.springframework.security.web.access.ExceptionTranslationFilter">
     <property name="authenticationEntryPoint">
       <ref bean="basicProcessingFilterEntryPoint" />
     </property>
-    <!-- disappeared in spring 3.x 
-    <property name="createSessionAllowed" value="false" />  -->
     <property name="accessDeniedHandler">
       <bean class="org.springframework.security.web.access.AccessDeniedHandlerImpl">
         <property name="errorPage" value="/accessDenied.jsp" />
       </bean>
     </property>
   </bean>
+  -->
 
   <!--
     The actual remember-me cookie handler
@@ -326,7 +337,9 @@
   <bean id="roleFilterProvider" class="org.geoserver.security.filter.GeoServerRoleProvider"/>
   <bean id="j2eeAuthSecurityProvider" class="org.geoserver.security.filter.GeoServerJ2eeAuthenticationProvider"/>
   <bean id="requestHeaderFilterProvider" class="org.geoserver.security.filter.GeoServerRequestHeaderAuthenticationProvider"/>
+  <bean id="exceptionTranslationFilterProvider" class="org.geoserver.security.filter.GeoServerExceptionTranslationProvider"/>
   
+    	
     	
   <bean id="urlMasterPasswordProvider" 
     class="org.geoserver.security.password.URLMasterPasswordProvider$SecurityProvider"/>

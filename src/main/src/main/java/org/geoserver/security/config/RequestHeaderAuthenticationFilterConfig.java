@@ -34,7 +34,7 @@ import org.geoserver.security.GeoServerSecurityManager;
  * @author christian
  *
  */
-public class RequestHeaderAuthenticationFilterConfig extends BaseAuthenticationFilterConfig {
+public class RequestHeaderAuthenticationFilterConfig extends BaseSecurityNamedServiceConfig {
 
     private RoleSource roleSource;
     private String principalHeaderAttribute;
@@ -42,7 +42,6 @@ public class RequestHeaderAuthenticationFilterConfig extends BaseAuthenticationF
     private String userGroupServiceName;
     private String roleConverterName;
     private String roleServiceName;
-    private boolean authenticationRequired;
 
     
     public static enum  RoleSource{
@@ -91,14 +90,6 @@ public class RequestHeaderAuthenticationFilterConfig extends BaseAuthenticationF
         this.roleConverterName = roleConverterName;
     }
 
-
-    public boolean isAuthenticationRequired() {
-        return authenticationRequired;
-    }
-
-    public void setAuthenticationRequired(boolean authenticationRequired) {
-        this.authenticationRequired = authenticationRequired;
-    }
 
     public String getRoleServiceName() {
         return roleServiceName;

@@ -16,16 +16,16 @@ import org.geoserver.security.GeoServerSecurityManager;
 import org.geoserver.security.GeoServerUserGroupService;
 import org.geoserver.security.GeoServerUserGroupStore;
 import org.geoserver.security.config.BasicAuthenticationFilterConfig;
-import org.geoserver.security.config.DigestAuthenticationFilterConfig;
 import org.geoserver.security.config.SecurityManagerConfig;
 import org.geoserver.security.filter.GeoServerBasicAuthenticationFilter;
-import org.geoserver.security.filter.GeoServerDigestAuthenticationFilter;
 import org.geoserver.security.impl.GeoServerRole;
 import org.geoserver.security.impl.GeoServerUser;
 import org.geotools.data.Base64;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 
 import com.mockrunner.mock.web.MockFilterChain;
 import com.mockrunner.mock.web.MockHttpServletRequest;
@@ -80,44 +80,52 @@ public class BasicAuthenticationTest extends AbstractAuthenticationProviderTest 
                 
         BasicAuthenticationFilterConfig config = new BasicAuthenticationFilterConfig();
         config.setClassName(GeoServerBasicAuthenticationFilter.class.getName());
-        config.setIgnoreFailure(false);
         config.setRememberMeServiceName(null);
         config.setName(testFilterName);
         
         getSecurityManager().saveFilter(config);
-        prepareFiterChain(pattern, testFilterName);
-//            GeoServerSecurityFilterChain.EXCEPTION_TRANSLATION_OWS_FILTER,
-//            GeoServerSecurityFilterChain.FILTER_SECURITY_INTERCEPTOR);
+        prepareFiterChain(pattern,
+            GeoServerSecurityFilterChain.SECURITY_CONTEXT_ASC_FILTER,    
+            testFilterName,
+            GeoServerSecurityFilterChain.EXCEPTION_TRANSLATION_OWS_FILTER,
+            GeoServerSecurityFilterChain.FILTER_SECURITY_INTERCEPTOR);
 
 
+        SecurityContextHolder.getContext().setAuthentication(null);
         
         // Test entry point                
-//        MockHttpServletRequest request= createRequest("/foo/bar");
-//        MockHttpServletResponse response= new MockHttpServletResponse();
-//        MockFilterChain chain = new MockFilterChain();        
-//        SecurityContextHolder.getContext().setAuthentication(null);
-//        
-//        getProxy().doFilter(request, response, chain);
-//        String tmp = response.getHeader("WWW-Authenticate");
-//        assertNotNull(tmp);
-//        assert(tmp.indexOf(GeoServerSecurityManager.REALM) !=-1 );
-//        assert(tmp.indexOf("Basic") !=-1 );
-//        assertEquals(HttpServletResponse.SC_UNAUTHORIZED, response.getErrorCode());
-//        assertNull(SecurityContextHolder.getContext().getAuthentication());
-
-        
-        // check success
         MockHttpServletRequest request= createRequest("/foo/bar");
         MockHttpServletResponse response= new MockHttpServletResponse();
         MockFilterChain chain = new MockFilterChain();        
-        SecurityContextHolder.getContext().setAuthentication(null);
+        
+        
+        getProxy().doFilter(request, response, chain);
+        String tmp = response.getHeader("WWW-Authenticate");
+        assertNotNull(tmp);
+        assert(tmp.indexOf(GeoServerSecurityManager.REALM) !=-1 );
+        assert(tmp.indexOf("Basic") !=-1 );
+        assertEquals(HttpServletResponse.SC_UNAUTHORIZED, response.getErrorCode());
+        SecurityContext ctx = (SecurityContext)request.getSession(true).getAttribute(
+                HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY);        
+        assertNull(ctx);
+        assertNull(SecurityContextHolder.getContext().getAuthentication());
+
+        
+        // check success
+        request= createRequest("/foo/bar");
+        response= new MockHttpServletResponse();
+        chain = new MockFilterChain();        
 
         request.addHeader("Authorization",  "Basic " + 
                 new String(Base64.encodeBytes((testUserName+":"+testPassword).getBytes())));
         getProxy().doFilter(request, response, chain);
         assertEquals(HttpServletResponse.SC_OK, response.getErrorCode());
-        Authentication auth =SecurityContextHolder.getContext().getAuthentication(); 
+        ctx = (SecurityContext)request.getSession(true).getAttribute(
+                HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY);        
+        assertNotNull(ctx);
+        Authentication auth = ctx.getAuthentication();
         assertNotNull(auth);
+        assertNull(SecurityContextHolder.getContext().getAuthentication());
         checkForAuthenticatedRole(auth);
         assertEquals(testUserName, ((UserDetails) auth.getPrincipal()).getUsername());
         assertTrue(auth.getAuthorities().contains(new GeoServerRole(rootRole)));
@@ -127,23 +135,24 @@ public class BasicAuthenticationTest extends AbstractAuthenticationProviderTest 
         request= createRequest("/foo/bar");
         response= new MockHttpServletResponse();
         chain = new MockFilterChain();
-        SecurityContextHolder.getContext().setAuthentication(null);
 
         request.addHeader("Authorization",  "Basic " + 
                 new String(Base64.encodeBytes((testUserName+":wrongpass").getBytes())));
         getProxy().doFilter(request, response, chain);
-        String tmp = response.getHeader("WWW-Authenticate");
+        tmp = response.getHeader("WWW-Authenticate");
         assertNotNull(tmp);
         assert(tmp.indexOf(GeoServerSecurityManager.REALM) !=-1 );
         assert(tmp.indexOf("Basic") !=-1 );
         assertEquals(HttpServletResponse.SC_UNAUTHORIZED, response.getErrorCode());
+        ctx = (SecurityContext)request.getSession(true).getAttribute(
+                HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY);        
+        assertNull(ctx);
         assertNull(SecurityContextHolder.getContext().getAuthentication());
         
         // check unknown user
         request= createRequest("/foo/bar");
         response= new MockHttpServletResponse();
         chain = new MockFilterChain();
-        SecurityContextHolder.getContext().setAuthentication(null);
 
         request.addHeader("Authorization",  "Basic " + 
                 new String(Base64.encodeBytes(("unknwon:"+testPassword).getBytes())));
@@ -153,54 +162,55 @@ public class BasicAuthenticationTest extends AbstractAuthenticationProviderTest 
         assert(tmp.indexOf(GeoServerSecurityManager.REALM) !=-1 );
         assert(tmp.indexOf("Basic") !=-1 );
         assertEquals(HttpServletResponse.SC_UNAUTHORIZED, response.getErrorCode());
+        ctx = (SecurityContext)request.getSession(true).getAttribute(
+                HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY);        
+        assertNull(ctx);
         assertNull(SecurityContextHolder.getContext().getAuthentication());
 
         // check root user
         request= createRequest("/foo/bar");
         response= new MockHttpServletResponse();
         chain = new MockFilterChain();        
-        SecurityContextHolder.getContext().setAuthentication(null);
         
         request.addHeader("Authorization",  "Basic " + 
                 new String(Base64.encodeBytes((GeoServerUser.ROOT_USERNAME+":geoserver").getBytes())));
         getProxy().doFilter(request, response, chain);
         assertEquals(HttpServletResponse.SC_OK, response.getErrorCode());
-        auth =SecurityContextHolder.getContext().getAuthentication(); 
+        ctx = (SecurityContext)request.getSession(true).getAttribute(
+                HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY);        
+        auth = ctx.getAuthentication();
         assertNotNull(auth);
+        assertNull(SecurityContextHolder.getContext().getAuthentication());
         //checkForAuthenticatedRole(auth);
         assertEquals(GeoServerUser.ROOT_USERNAME, auth.getPrincipal());
-
-        // step 2, allow ignore failures
-        config.setIgnoreFailure(true);
-        getSecurityManager().saveFilter(config);
-
-        // check wrong password
+        assertTrue(auth.getAuthorities().size()==1);
+        assertTrue(auth.getAuthorities().contains(GeoServerRole.ADMIN_ROLE));
+        
+        // check disabled user
+        updateUser("ug1", testUserName, false);
         request= createRequest("/foo/bar");
         response= new MockHttpServletResponse();
-        chain = new MockFilterChain();
-        SecurityContextHolder.getContext().setAuthentication(null);
+        chain = new MockFilterChain();        
 
         request.addHeader("Authorization",  "Basic " + 
-                new String(Base64.encodeBytes((testUserName+":wrongpass").getBytes())));
+                new String(Base64.encodeBytes((testUserName+":"+testPassword).getBytes())));
         getProxy().doFilter(request, response, chain);
-        assertEquals(HttpServletResponse.SC_OK, response.getErrorCode());
-        assertNull(SecurityContextHolder.getContext().getAuthentication()); 
-
-        // check unknown user
-        request= createRequest("/foo/bar");
-        response= new MockHttpServletResponse();
-        chain = new MockFilterChain();
-        SecurityContextHolder.getContext().setAuthentication(null);
-
-        request.addHeader("Authorization",  "Basic " + 
-                new String(Base64.encodeBytes(("unknwon:"+testPassword).getBytes())));
-        getProxy().doFilter(request, response, chain);
-        assertEquals(HttpServletResponse.SC_OK, response.getErrorCode());
-        assertNull(SecurityContextHolder.getContext().getAuthentication()); 
+        tmp = response.getHeader("WWW-Authenticate");
+        assertNotNull(tmp);
+        assert(tmp.indexOf(GeoServerSecurityManager.REALM) !=-1 );
+        assert(tmp.indexOf("Basic") !=-1 );
+        assertEquals(HttpServletResponse.SC_UNAUTHORIZED, response.getErrorCode());
+        ctx = (SecurityContext)request.getSession(true).getAttribute(
+                HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY);        
+        assertNull(ctx);
+        assertNull(SecurityContextHolder.getContext().getAuthentication());
+        
+        updateUser("ug1", testUserName, true);
+        
 
     }
 
-
+/*
     public void testDigestAuth() throws Exception{
 
         DigestAuthenticationFilterConfig config = new DigestAuthenticationFilterConfig();
@@ -215,7 +225,6 @@ public class BasicAuthenticationTest extends AbstractAuthenticationProviderTest 
         MockHttpServletRequest request= createRequest("/foo/bar");
         MockHttpServletResponse response= new MockHttpServletResponse();
         MockFilterChain chain = new MockFilterChain();        
-        SecurityContextHolder.getContext().setAuthentication(null);
       
         getProxy().doFilter(request, response, chain);
         String tmp = response.getHeader("WWW-Authenticate");
@@ -226,4 +235,5 @@ public class BasicAuthenticationTest extends AbstractAuthenticationProviderTest 
         assertNull(SecurityContextHolder.getContext().getAuthentication());
 
     }
+    */
 }

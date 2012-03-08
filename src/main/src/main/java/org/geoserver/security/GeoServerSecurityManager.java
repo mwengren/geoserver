@@ -51,6 +51,7 @@ import org.geoserver.security.concurrent.LockingKeyStoreProvider;
 import org.geoserver.security.concurrent.LockingRoleService;
 import org.geoserver.security.concurrent.LockingUserGroupService;
 import org.geoserver.security.config.BasicAuthenticationFilterConfig;
+import org.geoserver.security.config.ExceptionTranslationFilterConfig;
 import org.geoserver.security.config.FileBasedSecurityServiceConfig;
 import org.geoserver.security.config.PasswordPolicyConfig;
 import org.geoserver.security.config.SecurityAuthProviderConfig;
@@ -64,6 +65,7 @@ import org.geoserver.security.file.FileWatcher;
 import org.geoserver.security.file.RoleFileWatcher;
 import org.geoserver.security.file.UserGroupFileWatcher;
 import org.geoserver.security.filter.GeoServerBasicAuthenticationFilter;
+import org.geoserver.security.filter.GeoServerExceptionTranslationFilter;
 import org.geoserver.security.filter.GeoServerSecurityFilter;
 import org.geoserver.security.impl.GeoServerRole;
 import org.geoserver.security.impl.GeoServerUser;
@@ -1599,8 +1601,7 @@ public class GeoServerSecurityManager extends ProviderManager implements Applica
             roleService = loadRoleService(XMLRoleService.DEFAULT_NAME);
         }
         
-        GeoServerSecurityFilter filter =  
-                loadFilter("basicAuthFilter");
+        GeoServerSecurityFilter filter = loadFilter("basicAuthFilter");                  
         if (filter==null) {
             BasicAuthenticationFilterConfig bfConfig = new BasicAuthenticationFilterConfig();
             bfConfig.setName("basicAuthFilter");
@@ -1608,14 +1609,33 @@ public class GeoServerSecurityManager extends ProviderManager implements Applica
             bfConfig.setRememberMeServiceName("rememberMeServices");
             saveFilter(bfConfig);
         }
-        filter =  
-                loadFilter("basicAuthNoRememberMeFilter");
+        filter = loadFilter("basicAuthNoRememberMeFilter");                  
         if (filter==null) {
             BasicAuthenticationFilterConfig bfConfig = new BasicAuthenticationFilterConfig();
             bfConfig.setClassName(GeoServerBasicAuthenticationFilter.class.getName());
             bfConfig.setName("basicAuthNoRememberMeFilter");
             saveFilter(bfConfig);
         }
+        filter = loadFilter("exceptionTranslationFilter");
+        if (filter==null) {
+            ExceptionTranslationFilterConfig bfConfig= new ExceptionTranslationFilterConfig();
+            bfConfig.setClassName(GeoServerExceptionTranslationFilter.class.getName());
+            bfConfig.setName("exceptionTranslationFilter");
+            bfConfig.setAuthenticationEntryPointName("loingFormFilterEntryPoint");
+            bfConfig.setAccessDeniedErrorPage("/accessDenied.jsp");
+            saveFilter(bfConfig);
+        }
+        filter = loadFilter("exceptionTranslationOwsFilter");
+        if (filter==null) {
+            ExceptionTranslationFilterConfig bfConfig= new ExceptionTranslationFilterConfig();
+            bfConfig.setClassName(GeoServerExceptionTranslationFilter.class.getName());
+            bfConfig.setName("exceptionTranslationOwsFilter");
+            bfConfig.setAuthenticationEntryPointName("basicProcessingFilterEntryPoint");
+            bfConfig.setAccessDeniedErrorPage("/accessDenied.jsp");
+            saveFilter(bfConfig);
+        }
+
+
 
 
         //check for the default auth provider, create if necessary

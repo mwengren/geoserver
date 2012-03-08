@@ -70,8 +70,5 @@ public class GeoServerJ2eeAuthenticationFilter extends GeoServerAbstractPreAuthe
         return roles;        
     }
     
-    protected NoPrincipalException createNoPrincipalException(HttpServletRequest request) {
-        throw new NoPrincipalException ("No principal found in http request");            
-    }
-
+    
 }

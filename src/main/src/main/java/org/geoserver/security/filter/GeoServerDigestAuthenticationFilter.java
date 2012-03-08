@@ -8,7 +8,7 @@ package org.geoserver.security.filter;
 import java.io.IOException;
 import java.nio.charset.Charset;
 
-import org.geoserver.security.GeoServerSecurityManager;
+import org.geoserver.platform.GeoServerExtensions;
 import org.geoserver.security.HttpDigestUserDetailsServiceWrapper;
 import org.geoserver.security.config.DigestAuthenticationFilterConfig;
 import org.geoserver.security.config.SecurityNamedServiceConfig;
@@ -32,10 +32,10 @@ public class GeoServerDigestAuthenticationFilter extends GeoServerCompositeFilte
         DigestAuthenticationFilter filter = new DigestAuthenticationFilter();
         filter.setCreateAuthenticatedToken(true);
         filter.setPasswordAlreadyEncoded(true);
-        DigestAuthenticationEntryPoint ep = new DigestAuthenticationEntryPoint();
-        ep.setRealmName(GeoServerSecurityManager.REALM);
-        ep.setNonceValiditySeconds(authConfig.getNonceValiditySeconds());
-        ep.setKey(authConfig.getName());
+        // TODO, Justin, is this correct
+        DigestAuthenticationEntryPoint ep = (DigestAuthenticationEntryPoint) 
+                GeoServerExtensions.bean("digestProcessingFilterEntryPoint");
+        
         filter.setAuthenticationEntryPoint(ep);
         
         

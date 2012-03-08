@@ -18,12 +18,10 @@ import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.geoserver.security.config.BasicAuthenticationFilterConfig;
 import org.geoserver.security.config.SecurityNamedServiceConfig;
 import org.geoserver.security.impl.GeoServerRole;
 import org.geoserver.security.impl.GeoServerUser;
 import org.springframework.security.authentication.AuthenticationDetailsSource;
-import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.security.web.authentication.preauth.PreAuthenticatedAuthenticationToken;
@@ -36,39 +34,13 @@ import org.springframework.security.web.authentication.preauth.PreAuthenticatedA
  */
 public abstract class GeoServerAbstractPreAuthenticationFilter extends GeoServerSecurityFilter {
 
-    static public class NoPrincipalException extends AuthenticationException {
-
-        private static final long serialVersionUID = 1L;
-
-        public NoPrincipalException(String msg, Object extraInformation) {
-            super(msg, extraInformation);
-            
-        }
-
-        public NoPrincipalException(String msg, Throwable t) {
-            super(msg, t);
-            
-        }
-
-        public NoPrincipalException(String msg) {
-            super(msg);
-            
-        }        
-    };
     
     private AuthenticationDetailsSource authenticationDetailsSource = new WebAuthenticationDetailsSource();
-    private boolean authenticationRequired;
     
     
     @Override
     public void initializeFromConfig(SecurityNamedServiceConfig config) throws IOException {
-        super.initializeFromConfig(config);
-                        
-        BasicAuthenticationFilterConfig authConfig = 
-                (BasicAuthenticationFilterConfig) config;
-        
-        authenticationRequired=authConfig.isAuthenticationRequired();
-                
+        super.initializeFromConfig(config);                                                
     }
 
     
@@ -106,14 +78,6 @@ public abstract class GeoServerAbstractPreAuthenticationFilter extends GeoServer
      */
     abstract protected Collection<GeoServerRole> getRoles(HttpServletRequest request, String principal) throws IOException;
     
-    /**
-     * Used if {@link #isAuthenticationRequired()} is <code>true</code>
-     * and no principal is set.
-     * 
-     * @return
-     */
-    abstract protected NoPrincipalException createNoPrincipalException(HttpServletRequest request);
-
     
     /**
      * Try to authenticate and adds {@link GeoServerRole#AUTHENTICATED_ROLE}
@@ -126,13 +90,6 @@ public abstract class GeoServerAbstractPreAuthenticationFilter extends GeoServer
 
         String principal = getPreAuthenticatedPrincipal(request);
         
-
-        if (principal == null) {            
-            LOGGER.log(Level.FINE,"No pre-authenticated principal found in request");
-            if (isAuthenticationRequired())
-                throw createNoPrincipalException(request);
-            return;
-        }
         
         LOGGER.log(Level.FINE,"preAuthenticatedPrincipal = " + principal + ", trying to authenticate");
         
@@ -163,14 +120,6 @@ public abstract class GeoServerAbstractPreAuthenticationFilter extends GeoServer
 
     public void setAuthenticationDetailsSource(AuthenticationDetailsSource authenticationDetailsSource) {
         this.authenticationDetailsSource = authenticationDetailsSource;
-    }
-
-    public boolean isAuthenticationRequired() {
-        return authenticationRequired;
-    }
-
-    public void setAuthenticationRequired(boolean authenticationRequired) {
-        this.authenticationRequired = authenticationRequired;
     }
     
     

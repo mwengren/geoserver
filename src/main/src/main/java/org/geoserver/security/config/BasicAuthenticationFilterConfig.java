@@ -11,11 +11,10 @@ package org.geoserver.security.config;
  * @author mcr
  *
  */
-public class BasicAuthenticationFilterConfig extends BaseAuthenticationFilterConfig {
+public class BasicAuthenticationFilterConfig extends BaseSecurityNamedServiceConfig {
 
     private static final long serialVersionUID = 1L;
     private String rememberMeServiceName;
-    private boolean ignoreFailure = false;
     
     public String getRememberMeServiceName() {
         return rememberMeServiceName;
@@ -23,15 +22,5 @@ public class BasicAuthenticationFilterConfig extends BaseAuthenticationFilterCon
     public void setRememberMeServiceName(String rememberMeServiceName) {
         this.rememberMeServiceName = rememberMeServiceName;
     }
-    public boolean isIgnoreFailure() {
-        return ignoreFailure;
-    }
-    public void setIgnoreFailure(boolean ignoreFailure) {
-        this.ignoreFailure = ignoreFailure;
-    }
-    
-    public boolean isAuthenticationRequired() {
-        return isIgnoreFailure()==false;
-    }
-    
+        
 }

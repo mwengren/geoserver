@@ -221,10 +221,6 @@ public class GeoServerRequestHeaderAuthenticationFilter extends GeoServerAbstrac
 
 
     
-    protected NoPrincipalException createNoPrincipalException(HttpServletRequest request) {
-        throw new NoPrincipalException ("No principal found in http request header: "+getPrincipalHeaderAttribute());            
-    }
-
     public GeoServerRoleConverter getConverter() {
         return converter;
     }

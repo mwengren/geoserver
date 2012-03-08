@@ -10,9 +10,9 @@ import java.util.ArrayList;
 import org.geoserver.platform.GeoServerExtensions;
 import org.geoserver.security.GeoServerAuthenticationProvider;
 import org.geoserver.security.GeoServerRoleService;
-import org.geoserver.security.GeoServerSecurityFilterChain;
 import org.geoserver.security.GeoServerSecurityFilterChainProxy;
 import org.geoserver.security.GeoServerUserGroupService;
+import org.geoserver.security.GeoServerUserGroupStore;
 import org.geoserver.security.config.SecurityManagerConfig;
 import org.geoserver.security.config.SecurityRoleServiceConfig;
 import org.geoserver.security.config.SecurityUserGroupServiceConfig;
@@ -21,6 +21,7 @@ import org.geoserver.security.config.impl.MemoryRoleServiceConfigImpl;
 import org.geoserver.security.config.impl.MemoryUserGroupServiceConfigImpl;
 import org.geoserver.security.impl.AbstractSecurityServiceTest;
 import org.geoserver.security.impl.GeoServerRole;
+import org.geoserver.security.impl.GeoServerUser;
 import org.geoserver.security.impl.MemoryRoleService;
 import org.geoserver.security.impl.MemoryUserGroupService;
 import org.geoserver.security.password.PasswordValidator;
@@ -110,6 +111,15 @@ public abstract class AbstractAuthenticationProviderTest extends AbstractSecurit
        config.getFilterChain().getFilterMap().put(pattern,filters);
        getSecurityManager().saveSecurityConfig(config);
                            
+    }
+    
+    protected void updateUser(String ugService, String userName,boolean enabled) throws Exception {
+        GeoServerUserGroupService ugservice = getSecurityManager().loadUserGroupService(ugService);
+        GeoServerUserGroupStore ugstore = ugservice.createStore();
+        GeoServerUser u1 = ugstore.getUserByUsername(userName);
+        u1.setEnabled(enabled);
+        ugstore.updateUser(u1);
+        ugstore.store();
     }
     
     GeoServerSecurityFilterChainProxy getProxy() {
