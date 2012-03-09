@@ -15,6 +15,9 @@ import org.jasypt.encryption.pbe.StandardPBEByteEncryptor;
 import org.jasypt.encryption.pbe.StandardPBEStringEncryptor;
 import org.jasypt.spring.security3.PBEPasswordEncoder;
 import org.springframework.security.authentication.encoding.PasswordEncoder;
+
+import com.ibm.xml.enc.dom.Base64;
+
 import static org.geoserver.security.SecurityUtils.scramble;
 import static org.geoserver.security.SecurityUtils.toBytes;
 import static org.geoserver.security.SecurityUtils.toChars;
@@ -119,7 +122,9 @@ public class GeoServerPBEPasswordEncoder extends AbstractGeoserverPasswordEncode
         return new CharArrayPasswordEncoder() {
             @Override
             public boolean isPasswordValid(String encPass, char[] rawPass, Object salt) {
-                byte[] decrypted = byteEncrypter.decrypt(encPass.getBytes());
+                byte [] decoded = Base64.decode(encPass.getBytes());
+                byte[] decrypted = byteEncrypter.decrypt(decoded);
+                
                 char[] chars = toChars(decrypted);
                 try {
                     return Arrays.equals(chars, rawPass);
@@ -134,7 +139,7 @@ public class GeoServerPBEPasswordEncoder extends AbstractGeoserverPasswordEncode
             public String encodePassword(char[] rawPass, Object salt) {
                 byte[] bytes = toBytes(rawPass);
                 try {
-                    return new String(byteEncrypter.encrypt(bytes));
+                    return new String(Base64.encode(byteEncrypter.encrypt(bytes)));
                 }
                 finally {
                     scramble(bytes);
@@ -180,7 +185,8 @@ public class GeoServerPBEPasswordEncoder extends AbstractGeoserverPasswordEncode
             getCharEncoder();
         }
 
-        byte[] bytes = byteEncrypter.decrypt(removePrefix(encPass).getBytes());
+        byte[] decoded = Base64.decode(removePrefix(encPass));
+        byte[] bytes = byteEncrypter.decrypt(decoded);
         try {
             return toChars(bytes);
         }

@@ -35,6 +35,7 @@ import org.geoserver.security.impl.DigestAuthUtils;
 import org.geoserver.security.impl.GeoServerRole;
 import org.geoserver.security.impl.GeoServerUser;
 import org.geotools.data.Base64;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -105,6 +106,18 @@ public class AuthenticationFilterTest extends AbstractAuthenticationProviderTest
 
     }
     
+    protected void insertAnonymousFilter(String beforName) throws Exception{
+        SecurityManagerConfig mconfig = getSecurityManager().loadSecurityConfig();
+        mconfig.getFilterChain().insertBefore(pattern,GeoServerSecurityFilterChain.ANONYMOUS_FILTER,beforName);
+        getSecurityManager().saveSecurityConfig(mconfig);        
+    }
+    
+    protected void removeAnonymousFilter() throws Exception{
+        SecurityManagerConfig mconfig = getSecurityManager().loadSecurityConfig();
+        mconfig.getFilterChain().getFilterMap().get(pattern).remove(GeoServerSecurityFilterChain.ANONYMOUS_FILTER);
+        getSecurityManager().saveSecurityConfig(mconfig);        
+    }
+
     
     public void testBasicAuth() throws Exception{
         
@@ -217,6 +230,25 @@ public class AuthenticationFilterTest extends AbstractAuthenticationProviderTest
         assertTrue(auth.getAuthorities().size()==1);
         assertTrue(auth.getAuthorities().contains(GeoServerRole.ADMIN_ROLE));
         
+        // check root user with wrong password
+        request= createRequest("/foo/bar");
+        response= new MockHttpServletResponse();
+        chain = new MockFilterChain();        
+        
+        request.addHeader("Authorization",  "Basic " + 
+                new String(Base64.encodeBytes((GeoServerUser.ROOT_USERNAME+":geoserver1").getBytes())));
+        getProxy().doFilter(request, response, chain);
+        tmp = response.getHeader("WWW-Authenticate");
+        assertNotNull(tmp);
+        assert(tmp.indexOf(GeoServerSecurityManager.REALM) !=-1 );
+        assert(tmp.indexOf("Basic") !=-1 );
+        assertEquals(HttpServletResponse.SC_UNAUTHORIZED, response.getErrorCode());
+        ctx = (SecurityContext)request.getSession(true).getAttribute(
+                HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY);        
+        assertNull(ctx);
+        assertNull(SecurityContextHolder.getContext().getAuthentication());
+
+        
         // check disabled user
         updateUser("ug1", testUserName, false);
         request= createRequest("/foo/bar");
@@ -236,7 +268,18 @@ public class AuthenticationFilterTest extends AbstractAuthenticationProviderTest
         assertNull(ctx);
         assertNull(SecurityContextHolder.getContext().getAuthentication());
         
-        updateUser("ug1", testUserName, true);        
+        updateUser("ug1", testUserName, true);
+        
+        // Test anonymous
+        insertAnonymousFilter(GeoServerSecurityFilterChain.EXCEPTION_TRANSLATION_OWS_FILTER);
+        request= createRequest("/foo/bar");
+        response= new MockHttpServletResponse();
+        chain = new MockFilterChain();                        
+        getProxy().doFilter(request, response, chain);
+        assertEquals(HttpServletResponse.SC_OK, response.getErrorCode());
+        // Anonymous context is not stored in http session, no further testing
+        removeAnonymousFilter();
+
     }
     
     public void testJ2eeProxy() throws Exception{
@@ -347,6 +390,17 @@ public class AuthenticationFilterTest extends AbstractAuthenticationProviderTest
         assertEquals(testUserName, auth.getPrincipal());
         assertTrue(auth.getAuthorities().contains(new GeoServerRole(rootRole)));
         assertTrue(auth.getAuthorities().contains(new GeoServerRole(derivedRole)));
+        
+        // Test anonymous
+        insertAnonymousFilter(accessDeniedFilter);
+        request= createRequest("/foo/bar");
+        response= new MockHttpServletResponse();
+        chain = new MockFilterChain();                        
+        getProxy().doFilter(request, response, chain);
+        assertEquals(HttpServletResponse.SC_OK, response.getErrorCode());
+        // Anonymous context is not stored in http session, no further testing
+        removeAnonymousFilter();
+
                 
     }
     
@@ -445,10 +499,50 @@ public class AuthenticationFilterTest extends AbstractAuthenticationProviderTest
                 HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY);        
         assertNull(ctx);
         assertNull(SecurityContextHolder.getContext().getAuthentication());
+        
+        // Test anonymous
+        insertAnonymousFilter(accessDeniedFilter);
+        request= createRequest("/foo/bar");
+        response= new MockHttpServletResponse();
+        chain = new MockFilterChain();                        
+        getProxy().doFilter(request, response, chain);
+        assertEquals(HttpServletResponse.SC_OK, response.getErrorCode());
+        // Anonymous context is not stored in http session, no further testing
+        removeAnonymousFilter();
+
                 
     }        
 
 
+    protected String clientDigestString(String serverDigestString, String username, String password, String method) {
+        String section212response = serverDigestString.substring(7);
+        String[] headerEntries = DigestAuthUtils.splitIgnoringQuotes(section212response, ',');
+        Map<String,String> headerMap = DigestAuthUtils.splitEachArrayElementAndCreateMap(headerEntries, "=", "\"");
+
+        String realm = headerMap.get("realm");
+        String qop= headerMap.get("qop");
+        String nonce= headerMap.get("nonce");
+        
+        String uri="/foo/bar";
+        String nc="00000001";
+        String cnonce="0a4f113b";
+        String  opaque="5ccc069c403ebaf9f0171e9517f40e41";
+        
+        String responseString = DigestAuthUtils.generateDigest(
+                false, username, realm, password, method, 
+                uri, qop, nonce, nc, cnonce);
+        
+        String template = "Digest username=\"{0}\",realm=\"{1}\"";
+        template+=",nonce=\"{2}\",uri=\"{3}\"";
+        template+=",qop=\"{4}\",nc=\"{5}\"";
+        template+=",cnonce=\"{6}\",response=\"{7}\"";
+        template+=",opaque=\"{8}\"";
+                
+        return MessageFormat.format(template, 
+                username,realm,nonce,uri,qop,nc,cnonce,responseString,opaque);
+        
+    }
+    
     public void testDigestAuth() throws Exception{
 
         DigestAuthenticationFilterConfig config = new DigestAuthenticationFilterConfig();
@@ -482,36 +576,13 @@ public class AuthenticationFilterTest extends AbstractAuthenticationProviderTest
         assertNull(ctx);
         assertNull(SecurityContextHolder.getContext().getAuthentication());
         
-        String section212response = tmp.substring(7);
-        String[] headerEntries = DigestAuthUtils.splitIgnoringQuotes(section212response, ',');
-        Map<String,String> headerMap = DigestAuthUtils.splitEachArrayElementAndCreateMap(headerEntries, "=", "\"");
-
-        String realm = headerMap.get("realm");
-        String qop= headerMap.get("qop");
-        String nonce= headerMap.get("nonce");
         
-        String uri="/foo/bar";
-        String nc="00000001";
-        String cnonce="0a4f113b";
-        String  opaque="5ccc069c403ebaf9f0171e9517f40e41";
-        
-        String responseString = DigestAuthUtils.generateDigest(
-                false, testUserName, realm, testPassword, request.getMethod(), 
-                uri, qop, nonce, nc, cnonce);
-        
-        String template = "Digest username=\"{0}\",realm=\"{1}\"";
-        template+=",nonce=\"{2}\",uri=\"{3}\"";
-        template+=",qop=\"{4}\",nc=\"{5}\"";
-        template+=",cnonce=\"{6}\",response=\"{7}\"";
-        template+=",opaque=\"{8}\"";
-                
-        String headerValue = MessageFormat.format(template, 
-                testUserName,realm,nonce,uri,qop,nc,cnonce,responseString,opaque);
-
+        // test successful login
         request= createRequest("/foo/bar");
         response= new MockHttpServletResponse();
         chain = new MockFilterChain();        
 
+        String headerValue=clientDigestString(tmp, testUserName, testPassword, request.getMethod());
         request.addHeader("Authorization",  headerValue);
         getProxy().doFilter(request, response, chain);
         assertEquals(HttpServletResponse.SC_OK, response.getErrorCode());
@@ -525,5 +596,113 @@ public class AuthenticationFilterTest extends AbstractAuthenticationProviderTest
         assertEquals(testUserName, ((UserDetails) auth.getPrincipal()).getUsername());
         assertTrue(auth.getAuthorities().contains(new GeoServerRole(rootRole)));
         assertTrue(auth.getAuthorities().contains(new GeoServerRole(derivedRole)));
+        
+        
+        // check wrong password
+        request= createRequest("/foo/bar");
+        response= new MockHttpServletResponse();
+        chain = new MockFilterChain();
+
+        headerValue=clientDigestString(tmp, testUserName, "wrongpass", request.getMethod());
+        request.addHeader("Authorization",  headerValue);        
+        getProxy().doFilter(request, response, chain);
+        tmp = response.getHeader("WWW-Authenticate");
+        assertNotNull(tmp);
+        assert(tmp.indexOf(GeoServerSecurityManager.REALM) !=-1 );
+        assert(tmp.indexOf("Digest") !=-1 );
+        assertEquals(HttpServletResponse.SC_UNAUTHORIZED, response.getErrorCode());
+        ctx = (SecurityContext)request.getSession(true).getAttribute(
+                HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY);        
+        assertNull(ctx);
+        assertNull(SecurityContextHolder.getContext().getAuthentication());
+        
+        // check unknown user
+        request= createRequest("/foo/bar");
+        response= new MockHttpServletResponse();
+        chain = new MockFilterChain();
+
+        headerValue=clientDigestString(tmp, "unknown", testPassword, request.getMethod());
+        request.addHeader("Authorization",  headerValue);        
+        getProxy().doFilter(request, response, chain);
+        tmp = response.getHeader("WWW-Authenticate");
+        assertNotNull(tmp);
+        assert(tmp.indexOf(GeoServerSecurityManager.REALM) !=-1 );
+        assert(tmp.indexOf("Digest") !=-1 );
+        assertEquals(HttpServletResponse.SC_UNAUTHORIZED, response.getErrorCode());
+        ctx = (SecurityContext)request.getSession(true).getAttribute(
+                HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY);        
+        assertNull(ctx);
+        assertNull(SecurityContextHolder.getContext().getAuthentication());
+
+        // check root user
+        request= createRequest("/foo/bar");
+        response= new MockHttpServletResponse();
+        chain = new MockFilterChain();        
+        
+        headerValue=clientDigestString(tmp, GeoServerUser.ROOT_USERNAME, "geoserver", request.getMethod());
+        request.addHeader("Authorization",  headerValue);        
+        getProxy().doFilter(request, response, chain);
+        assertEquals(HttpServletResponse.SC_OK, response.getErrorCode());
+        ctx = (SecurityContext)request.getSession(true).getAttribute(
+                HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY);        
+        auth = ctx.getAuthentication();
+        assertNotNull(auth);
+        assertNull(SecurityContextHolder.getContext().getAuthentication());
+        //checkForAuthenticatedRole(auth);
+        assertEquals(GeoServerUser.ROOT_USERNAME, ((UserDetails) auth.getPrincipal()).getUsername());
+        assertTrue(auth.getAuthorities().size()==1);
+        assertTrue(auth.getAuthorities().contains(GeoServerRole.ADMIN_ROLE));
+        
+        // check root user with wrong password
+        request= createRequest("/foo/bar");
+        response= new MockHttpServletResponse();
+        chain = new MockFilterChain();        
+        
+        headerValue=clientDigestString(tmp, GeoServerUser.ROOT_USERNAME, "geoserver1", request.getMethod());
+        request.addHeader("Authorization",  headerValue);        
+        getProxy().doFilter(request, response, chain);
+        tmp = response.getHeader("WWW-Authenticate");
+        assertNotNull(tmp);
+        assert(tmp.indexOf(GeoServerSecurityManager.REALM) !=-1 );
+        assert(tmp.indexOf("Digest") !=-1 );
+        assertEquals(HttpServletResponse.SC_UNAUTHORIZED, response.getErrorCode());
+        ctx = (SecurityContext)request.getSession(true).getAttribute(
+                HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY);        
+        assertNull(ctx);
+        assertNull(SecurityContextHolder.getContext().getAuthentication());
+
+
+        
+        // check disabled user
+        updateUser("ug1", testUserName, false);
+        request= createRequest("/foo/bar");
+        response= new MockHttpServletResponse();
+        chain = new MockFilterChain();        
+
+        headerValue=clientDigestString(tmp, "unknown", testPassword, request.getMethod());
+        request.addHeader("Authorization",  headerValue);        
+        getProxy().doFilter(request, response, chain);
+        tmp = response.getHeader("WWW-Authenticate");
+        assertNotNull(tmp);
+        assert(tmp.indexOf(GeoServerSecurityManager.REALM) !=-1 );
+        assert(tmp.indexOf("Digest") !=-1 );
+        assertEquals(HttpServletResponse.SC_UNAUTHORIZED, response.getErrorCode());
+        ctx = (SecurityContext)request.getSession(true).getAttribute(
+                HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY);        
+        assertNull(ctx);
+        assertNull(SecurityContextHolder.getContext().getAuthentication());        
+        updateUser("ug1", testUserName, true);        
+
+
+        // Test anonymous
+        insertAnonymousFilter(digestEntryPointFilter);
+        request= createRequest("/foo/bar");
+        response= new MockHttpServletResponse();
+        chain = new MockFilterChain();                        
+        getProxy().doFilter(request, response, chain);
+        assertEquals(HttpServletResponse.SC_OK, response.getErrorCode());
+        // Anonymous context is not stored in http session, no further testing
+        removeAnonymousFilter();
+
     }
 }

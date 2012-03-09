@@ -6,57 +6,30 @@
 
 package org.geoserver.security.password;
 
-import java.util.Collection;
-
-import org.springframework.security.core.GrantedAuthority;
+import org.geoserver.security.impl.UserDetailsWrapper;
 import org.springframework.security.core.userdetails.UserDetails;
 
 /**
  * Wrapper class needed if the password is needed in
- * a modified form (plain text, 
- * prepared for message digest authentication,..)
+ * a modified form (plain text as an example) 
  *  
  * @author mcr
  *
  */
-public class UserDetailsPasswordWrapper implements UserDetails{
+public class UserDetailsPasswordWrapper extends UserDetailsWrapper {
 
     private static final long serialVersionUID = 1L;
 
     public UserDetailsPasswordWrapper(UserDetails details, String password) {
-        this.details=details;
+        super(details);
         this.password=password;
     }
     
     private String password;
     
-    protected UserDetails details;
-
-    public Collection<GrantedAuthority> getAuthorities() {
-        return details.getAuthorities();
-    }
 
     public String getPassword() {
         return password;
     }
 
-    public String getUsername() {
-        return details.getUsername();
-    }
-
-    public boolean isAccountNonExpired() {
-        return details.isAccountNonExpired();
-    }
-
-    public boolean isAccountNonLocked() {
-        return details.isAccountNonLocked();
-    }
-
-    public boolean isCredentialsNonExpired() {
-        return details.isCredentialsNonExpired();
-    }
-
-    public boolean isEnabled() {
-        return details.isEnabled();
-    }
 }
