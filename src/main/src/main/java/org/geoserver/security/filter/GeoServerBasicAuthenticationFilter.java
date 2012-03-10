@@ -10,9 +10,12 @@ import java.io.IOException;
 import org.geoserver.platform.GeoServerExtensions;
 import org.geoserver.security.config.BasicAuthenticationFilterConfig;
 import org.geoserver.security.config.SecurityNamedServiceConfig;
+import org.springframework.security.authentication.AuthenticationDetailsSource;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.authentication.RememberMeServices;
+import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
+import org.springframework.web.jsf.el.WebApplicationContextFacesELResolver;
 
 /**
  * Named Basic Authentication Filter
@@ -31,18 +34,18 @@ public class GeoServerBasicAuthenticationFilter extends GeoServerCompositeFilter
         BasicAuthenticationFilter filter = new BasicAuthenticationFilter();
         filter.setAuthenticationManager(getSecurityManager());
         filter.setIgnoreFailure(false);
-     // TODO, Justin, is this correct
+        // TODO, Justin, is this correct
         AuthenticationEntryPoint ep = (AuthenticationEntryPoint) 
                 GeoServerExtensions.bean("basicProcessingFilterEntryPoint");
         filter.setAuthenticationEntryPoint(ep);
 
-        
-      
-        String rememberMeServiceName = authConfig.getRememberMeServiceName();
-        if (rememberMeServiceName !=null && rememberMeServiceName.length() >0) {
-            // TODO, this is not correct
+        // TODO, Justin, is this correct
+        if (authConfig.isUseRememberMe()) {             
             filter.setRememberMeServices((RememberMeServices)
-                    GeoServerExtensions.bean(rememberMeServiceName));
+                    GeoServerExtensions.bean("rememberMeServices"));
+            WebAuthenticationDetailsSource s = new WebAuthenticationDetailsSource();
+            s.setClazz(GeoServerWebAuthenticationDetails.class);
+            filter.setAuthenticationDetailsSource(s);
         }
         filter.afterPropertiesSet();
         getNestedFilters().add(filter);        

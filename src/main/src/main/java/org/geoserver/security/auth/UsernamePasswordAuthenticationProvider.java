@@ -15,6 +15,7 @@ import org.geoserver.security.GeoServerAuthenticationProvider;
 import org.geoserver.security.GeoServerUserGroupService;
 import org.geoserver.security.config.SecurityNamedServiceConfig;
 import org.geoserver.security.config.UsernamePasswordAuthenticationProviderConfig;
+import org.geoserver.security.filter.GeoServerWebAuthenticationDetails;
 import org.geoserver.security.impl.GeoServerRole;
 import org.geoserver.security.password.GeoServerPasswordEncoder;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -32,7 +33,8 @@ public class UsernamePasswordAuthenticationProvider extends GeoServerAuthenticat
 
     /** auth provider to delegate to */
     DaoAuthenticationProvider authProvider;
-
+    String userGroupServiceName;
+    
     @Override
     public void initializeFromConfig(SecurityNamedServiceConfig config) throws IOException {
         UsernamePasswordAuthenticationProviderConfig upAuthConfig = 
@@ -44,7 +46,8 @@ public class UsernamePasswordAuthenticationProvider extends GeoServerAuthenticat
             throw new IllegalArgumentException("Unable to load user group service " 
                 + upAuthConfig.getUserGroupServiceName());
         }
-
+        userGroupServiceName = upAuthConfig.getUserGroupServiceName();
+        
         //create delegate auth provider
         authProvider = new DaoAuthenticationProvider();
         authProvider.setUserDetailsService(ugService);
@@ -70,13 +73,20 @@ public class UsernamePasswordAuthenticationProvider extends GeoServerAuthenticat
     @Override
     public Authentication authenticate(Authentication authentication, HttpServletRequest request)
             throws AuthenticationException {
-        Authentication  auth = authProvider.authenticate(authentication);
+        UsernamePasswordAuthenticationToken  auth = 
+                (UsernamePasswordAuthenticationToken) authProvider.authenticate(authentication);
+
+        if (auth.getDetails() instanceof GeoServerWebAuthenticationDetails) {
+            ((GeoServerWebAuthenticationDetails) auth.getDetails()).setUserGroupServiceName(userGroupServiceName);
+        }
         if (auth.getAuthorities().contains(GeoServerRole.AUTHENTICATED_ROLE)==false) {
             List<GrantedAuthority> roles= new ArrayList<GrantedAuthority>();
             roles.addAll(auth.getAuthorities());
             roles.add(GeoServerRole.AUTHENTICATED_ROLE);
-            auth= new UsernamePasswordAuthenticationToken(
+            UsernamePasswordAuthenticationToken newAuth = new UsernamePasswordAuthenticationToken(
                     auth.getPrincipal(), auth.getCredentials(),roles);
+            newAuth.setDetails(auth.getDetails());
+            return newAuth;
         }
         return auth;
     }

@@ -21,8 +21,12 @@ public class UserDetailsWrapper implements UserDetails {
     
     private static final long serialVersionUID = 1L;
     
-    UserDetails details;
+    private UserDetails details;
 
+    public UserDetails getWrappedObject() {
+        return details;
+    }
+    
     public UserDetailsWrapper(UserDetails details) {
         this.details = details;
     }

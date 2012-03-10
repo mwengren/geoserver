@@ -10,12 +10,9 @@ import javax.servlet.http.HttpServletResponse;
 import org.geoserver.security.GeoServerSecurityManager;
 import org.springframework.beans.factory.FactoryBean;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.web.authentication.RememberMeServices;
 import org.springframework.security.web.authentication.logout.LogoutHandler;
 import org.springframework.security.web.authentication.rememberme.AbstractRememberMeServices;
-import org.springframework.security.web.authentication.rememberme.RememberMeAuthenticationException;
 
 /**
  * Factory bean that proxies for the global remember me service.
@@ -105,9 +102,9 @@ public class RememberMeServicesFactoryBean implements FactoryBean<RememberMeServ
                 arms.setUserDetailsService(new RememberMeUserDetailsService(securityManager));
                 arms.setKey(rmsConfig.getKey());
             }
-            if (rms instanceof GeoServerTokenBasedRememberMeServices) {
-                ((GeoServerTokenBasedRememberMeServices) rms).setUserGroupServiceName(rmsConfig.getUserGroupService());
-            }
+//            if (rms instanceof GeoServerTokenBasedRememberMeServices) {
+//                ((GeoServerTokenBasedRememberMeServices) rms).setUserGroupServiceName(rmsConfig.getUserGroupService());
+//            }
             return rms;
         }
     }

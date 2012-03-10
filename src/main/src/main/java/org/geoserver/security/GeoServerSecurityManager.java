@@ -103,7 +103,6 @@ import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.ApplicationEvent;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.event.ContextClosedEvent;
-import org.springframework.dao.DataAccessException;
 import org.springframework.security.authentication.AnonymousAuthenticationProvider;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.ProviderManager;
@@ -111,9 +110,6 @@ import org.springframework.security.authentication.RememberMeAuthenticationProvi
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.core.userdetails.memory.UserAttribute;
 import org.springframework.security.core.userdetails.memory.UserAttributeEditor;
 
@@ -127,24 +123,12 @@ import com.thoughtworks.xstream.mapper.Mapper;
 /**
  * Top level singleton/facade/dao for the security authentication/authorization subsystem.  
  * 
- * Christian: implementing UserDetailsservice is temporary.
- * 
- * Reason: applicationSecurityContext.xml
- * 
-   <bean id="rememberMeServices"
-    class="org.springframework.security.web.authentication.rememberme.TokenBasedRememberMeServices">
-    <!--  TODO, temporary, use GeoserverSecurityManager as UserDetailService -->
-    <property name="userDetailsService" ref="authenticationManager" />
-    <property name="key" value="geoserver" />
-  </bean>
- * 
- * The rememberMeServices Bean needs a UserDetailsService Object
  * 
  * @author Justin Deoliveira, OpenGeo
  *
  */
 public class GeoServerSecurityManager extends ProviderManager implements ApplicationContextAware, 
-    ApplicationListener, UserDetailsService {
+    ApplicationListener {
 
     static Logger LOGGER = Logging.getLogger("org.geoserver.security");
 
@@ -1601,36 +1585,41 @@ public class GeoServerSecurityManager extends ProviderManager implements Applica
             roleService = loadRoleService(XMLRoleService.DEFAULT_NAME);
         }
         
-        GeoServerSecurityFilter filter = loadFilter("basicAuthFilter");                  
+        String filterName = GeoServerSecurityFilterChain.BASIC_AUTH_FILTER;
+        GeoServerSecurityFilter filter = loadFilter(filterName);                  
         if (filter==null) {
             BasicAuthenticationFilterConfig bfConfig = new BasicAuthenticationFilterConfig();
-            bfConfig.setName("basicAuthFilter");
+            bfConfig.setName(filterName);
             bfConfig.setClassName(GeoServerBasicAuthenticationFilter.class.getName());
-            bfConfig.setRememberMeServiceName("rememberMeServices");
+            bfConfig.setUseRememberMe(true);
             saveFilter(bfConfig);
         }
-        filter = loadFilter("basicAuthNoRememberMeFilter");                  
+        filterName = GeoServerSecurityFilterChain.BASIC_AUTH_NO_REMEMBER_ME_FILTER;
+        filter = loadFilter(filterName);                  
         if (filter==null) {
             BasicAuthenticationFilterConfig bfConfig = new BasicAuthenticationFilterConfig();
             bfConfig.setClassName(GeoServerBasicAuthenticationFilter.class.getName());
-            bfConfig.setName("basicAuthNoRememberMeFilter");
+            bfConfig.setName(filterName);
+            bfConfig.setUseRememberMe(false);
             saveFilter(bfConfig);
         }
-        filter = loadFilter("exceptionTranslationFilter");
+        filterName = GeoServerSecurityFilterChain.EXCEPTION_TRANSLATION_FILTER;
+        filter = loadFilter(filterName);
         if (filter==null) {
             ExceptionTranslationFilterConfig bfConfig= new ExceptionTranslationFilterConfig();
             bfConfig.setClassName(GeoServerExceptionTranslationFilter.class.getName());
-            bfConfig.setName("exceptionTranslationFilter");
-            bfConfig.setAuthenticationEntryPointName("loingFormFilterEntryPoint");
+            bfConfig.setName(filterName);
+            bfConfig.setAuthenticationEntryPointName(GeoServerSecurityFilterChain.ENTRY_POINT_LOGIN_FORM);
             bfConfig.setAccessDeniedErrorPage("/accessDenied.jsp");
             saveFilter(bfConfig);
         }
-        filter = loadFilter("exceptionTranslationOwsFilter");
+        filterName =GeoServerSecurityFilterChain.EXCEPTION_TRANSLATION_OWS_FILTER;
+        filter = loadFilter(filterName);
         if (filter==null) {
             ExceptionTranslationFilterConfig bfConfig= new ExceptionTranslationFilterConfig();
             bfConfig.setClassName(GeoServerExceptionTranslationFilter.class.getName());
-            bfConfig.setName("exceptionTranslationOwsFilter");
-            bfConfig.setAuthenticationEntryPointName("basicProcessingFilterEntryPoint");
+            bfConfig.setName(filterName);
+            bfConfig.setAuthenticationEntryPointName(GeoServerSecurityFilterChain.ENTRY_POINT_BASIC);
             bfConfig.setAccessDeniedErrorPage("/accessDenied.jsp");
             saveFilter(bfConfig);
         }
@@ -1665,7 +1654,6 @@ public class GeoServerSecurityManager extends ProviderManager implements Applica
         // setup the default remember me service
         RememberMeServicesConfig rememberMeConfig = new RememberMeServicesConfig();
         rememberMeConfig.setClassName(GeoServerTokenBasedRememberMeServices.class.getName());
-        rememberMeConfig.setUserGroupService(userGroupService.getName());
         config.setRememberMeService(rememberMeConfig);
 
         config.setFilterChain(GeoServerSecurityFilterChain.getInitialChain());
@@ -2199,18 +2187,6 @@ public class GeoServerSecurityManager extends ProviderManager implements Applica
      */
     public void setActiveRoleService(GeoServerRoleService activeRoleService) {
         this.activeRoleService = activeRoleService;
-    }
-
-    /**
-     * Temporary, need by rememberMeServices
-     *  
-     * @see org.springframework.security.core.userdetails.UserDetailsService#loadUserByUsername(java.lang.String)
-     */
-    @Override
-    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException,
-            DataAccessException {
-        // TODO, get rid of this
-        throw new RuntimeException("Should not reach thsi point");
     }
 
     /**

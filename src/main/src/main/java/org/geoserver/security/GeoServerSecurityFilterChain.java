@@ -50,6 +50,14 @@ public class GeoServerSecurityFilterChain  {
     public static final String FILTER_SECURITY_INTERCEPTOR = "filterSecurityInterceptor";
     public static final String FILTER_SECURITY_REST_INTERCEPTOR = "filterSecurityRestInterceptor";
     
+    // authentication entry points
+    public static final String ENTRY_POINT_BASIC="basicProcessingFilterEntryPoint";
+    public static final String ENTRY_POINT_DIGIST="digestProcessingFilterEntryPoint";
+    public static final String ENTRY_POINT_ACCESS_DENIED ="accessDeniedEntryPoint";
+    public static final String ENTRY_POINT_LOGIN_FORM="loginFormFilterEntryPoint";
+ 
+    
+    
     public GeoServerSecurityFilterChain() {
         antPatterns = new ArrayList<String>();
         filterMap = new HashMap<String,ArrayList<String>>();   

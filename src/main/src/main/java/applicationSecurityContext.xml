@@ -223,7 +223,7 @@
      <bean id="accessDeniedEntryPoint"
     class="org.springframework.security.web.authentication.Http403ForbiddenEntryPoint">
   </bean>
-  <bean id="loingFormFilterEntryPoint"
+  <bean id="loginFormFilterEntryPoint"
     class="org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint">
     <property name="loginFormUrl" value="/admin/login.do" />
     <property name="forceHttps" value="false" />
@@ -239,7 +239,7 @@
   <bean id="exceptionTranslationFilter"
     class="org.springframework.security.web.access.ExceptionTranslationFilter">
     <property name="authenticationEntryPoint">
-    	<ref bean="loingFormFilterEntryPoint"/>
+    	<ref bean="loginFormFilterEntryPoint"/>
     </property>
     <property name="accessDeniedHandler">
       <bean class="org.springframework.security.web.access.AccessDeniedHandlerImpl">

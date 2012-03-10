@@ -8,19 +8,24 @@ package org.geoserver.security.config;
 /**
  * Configuration for basic authentication
  * 
+ * if {@link #useRememberMe} is <code>true</code>, the
+ * filter registers a successful authentication in the 
+ * global remember me service 
+ * 
  * @author mcr
  *
  */
 public class BasicAuthenticationFilterConfig extends BaseSecurityNamedServiceConfig {
 
     private static final long serialVersionUID = 1L;
-    private String rememberMeServiceName;
+    private boolean useRememberMe;
     
-    public String getRememberMeServiceName() {
-        return rememberMeServiceName;
+    public boolean isUseRememberMe() {
+        return useRememberMe;
     }
-    public void setRememberMeServiceName(String rememberMeServiceName) {
-        this.rememberMeServiceName = rememberMeServiceName;
+    public void setUseRememberMe(boolean useRememberMe) {
+        this.useRememberMe = useRememberMe;
     }
+    
         
 }
