@@ -27,11 +27,13 @@ import org.geoserver.security.config.J2eeAuthenticationFilterConfig;
 import org.geoserver.security.config.RequestHeaderAuthenticationFilterConfig;
 import org.geoserver.security.config.RequestHeaderAuthenticationFilterConfig.RoleSource;
 import org.geoserver.security.config.SecurityManagerConfig;
+import org.geoserver.security.config.UsernamePasswordAuthenticationFilterConfig;
 import org.geoserver.security.filter.GeoServerBasicAuthenticationFilter;
 import org.geoserver.security.filter.GeoServerDigestAuthenticationFilter;
 import org.geoserver.security.filter.GeoServerExceptionTranslationFilter;
 import org.geoserver.security.filter.GeoServerJ2eeAuthenticationFilter;
 import org.geoserver.security.filter.GeoServerRequestHeaderAuthenticationFilter;
+import org.geoserver.security.filter.GeoServerUserNamePasswordAuthenticationFilter;
 import org.geoserver.security.impl.DigestAuthUtils;
 import org.geoserver.security.impl.GeoServerRole;
 import org.geoserver.security.impl.GeoServerUser;
@@ -40,6 +42,8 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.authentication.logout.LogoutFilter;
 import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 
 import com.mockrunner.mock.web.MockFilterChain;
@@ -52,7 +56,10 @@ public class AuthenticationFilterTest extends AbstractAuthenticationProviderTest
     public final static String testFilterName2 = "digestAuthTestFilter";
     public final static String testFilterName3 = "j2eeAuthTestFilter";
     public final static String testFilterName4 = "requestHeaderTestFilter";
-    public final static String testFilterName5 = "basicAuthTestFilterWithRemeberMe";
+    public final static String testFilterName5 = "basicAuthTestFilterWithRememberMe";
+    public final static String testFilterName6 = "formLoginTestFilter";
+    public final static String testFilterName7 = "formLoginTestFilterWithRememberMe";
+
 
     public final static String accessDeniedFilter = "accessDeniedFilter";
     public final static String digestEntryPointFilter = "digestEntryPointFilter";
@@ -836,6 +843,322 @@ public class AuthenticationFilterTest extends AbstractAuthenticationProviderTest
         updateUser("ug1", "abc@xyz.com", true);
 
         
+    }
+
+    protected void prepareFormLoginFilterForTest() {
+        GeoServerUserNamePasswordAuthenticationFilter authFilter =
+                (GeoServerUserNamePasswordAuthenticationFilter)
+                getProxy().getFilters(pattern).get(1);
+        UsernamePasswordAuthenticationFilter authFilter2 = (UsernamePasswordAuthenticationFilter) authFilter.getNestedFilters().get(1);
+        authFilter2.setFilterProcessesUrl("/foo/j_spring_security_check");
+        LogoutFilter authFilter3 = (LogoutFilter) authFilter.getNestedFilters().get(0);
+        authFilter3.setFilterProcessesUrl("/foo/j_spring_security_logout");
+        
+    }
+    
+    public void testFormLogin() throws Exception {
+            
+            
+        UsernamePasswordAuthenticationFilterConfig config = new UsernamePasswordAuthenticationFilterConfig();
+        config.setClassName(GeoServerUserNamePasswordAuthenticationFilter.class.getName());
+        config.setUsernameParameterName("username");
+        config.setPasswordParameterName("password");
+        config.setName(testFilterName6);
+        
+        getSecurityManager().saveFilter(config);
+        prepareFiterChain(pattern,
+            GeoServerSecurityFilterChain.SECURITY_CONTEXT_ASC_FILTER,    
+            testFilterName6,
+            GeoServerSecurityFilterChain.EXCEPTION_TRANSLATION_FILTER,
+            GeoServerSecurityFilterChain.FILTER_SECURITY_INTERCEPTOR);
+        prepareFormLoginFilterForTest();
+        
+
+        SecurityContextHolder.getContext().setAuthentication(null);
+        
+        
+        // Test entry point                
+        MockHttpServletRequest request= createRequest("/foo/bar");
+        MockHttpServletResponse response= new MockHttpServletResponse();
+        MockFilterChain chain = new MockFilterChain();        
+        
+        
+        getProxy().doFilter(request, response, chain);
+        assertEquals(HttpServletResponse.SC_OK, response.getErrorCode());
+        assertTrue(response.wasRedirectSent());
+        String tmp = response.getHeader("Location");
+        assertNotNull(tmp);
+        SecurityContext ctx = (SecurityContext)request.getSession(true).getAttribute(
+                HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY);        
+        assertNull(ctx);
+        assertNull(SecurityContextHolder.getContext().getAuthentication());
+
+        
+        
+        // check success
+        request= createRequest("foo/j_spring_security_check");
+        response= new MockHttpServletResponse();
+        chain = new MockFilterChain();
+        request.setMethod("POST");
+        request.setupAddParameter(config.getUsernameParameterName(), testUserName);
+        request.setupAddParameter(config.getPasswordParameterName(), testPassword);
+        getProxy().doFilter(request, response, chain);
+        assertEquals(HttpServletResponse.SC_OK, response.getErrorCode());
+        assertTrue(response.wasRedirectSent());
+        assertTrue(response.getHeader("Location").endsWith(GeoServerUserNamePasswordAuthenticationFilter.URL_LOGIN_SUCCCESS));
+        ctx = (SecurityContext)request.getSession(true).getAttribute(
+                HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY);        
+        assertNotNull(ctx);
+        Authentication auth = ctx.getAuthentication();
+        assertNotNull(auth);
+        assertNull(SecurityContextHolder.getContext().getAuthentication());
+        checkForAuthenticatedRole(auth);
+        assertEquals(testUserName, ((UserDetails) auth.getPrincipal()).getUsername());
+        assertTrue(auth.getAuthorities().contains(new GeoServerRole(rootRole)));
+        assertTrue(auth.getAuthorities().contains(new GeoServerRole(derivedRole)));
+
+        // test invalid password
+        request= createRequest("foo/j_spring_security_check");
+        response= new MockHttpServletResponse();
+        chain = new MockFilterChain();
+        request.setMethod("POST");
+        request.setupAddParameter(config.getUsernameParameterName(), testUserName);
+        request.setupAddParameter(config.getPasswordParameterName(), "wrongpass");
+        getProxy().doFilter(request, response, chain);
+        assertEquals(HttpServletResponse.SC_OK, response.getErrorCode());
+        assertTrue(response.wasRedirectSent());
+        assertTrue(response.getHeader("Location").endsWith(GeoServerUserNamePasswordAuthenticationFilter.URL_LOGIN_FAILURE));
+
+        ctx = (SecurityContext)request.getSession(true).getAttribute(
+                HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY);        
+        assertNull(ctx);
+        assertNull(SecurityContextHolder.getContext().getAuthentication());
+        
+        // check unknown user
+        request= createRequest("foo/j_spring_security_check");
+        response= new MockHttpServletResponse();
+        chain = new MockFilterChain();
+        request.setMethod("POST");
+        request.setupAddParameter(config.getUsernameParameterName(), "unknwon");
+        request.setupAddParameter(config.getPasswordParameterName(), testPassword);
+        getProxy().doFilter(request, response, chain);
+        assertEquals(HttpServletResponse.SC_OK, response.getErrorCode());
+        assertTrue(response.wasRedirectSent());
+        assertTrue(response.getHeader("Location").endsWith(GeoServerUserNamePasswordAuthenticationFilter.URL_LOGIN_FAILURE));
+        
+        ctx = (SecurityContext)request.getSession(true).getAttribute(
+                HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY);        
+        assertNull(ctx);
+        assertNull(SecurityContextHolder.getContext().getAuthentication());
+
+        // check root user
+        request= createRequest("foo/j_spring_security_check");
+        response= new MockHttpServletResponse();
+        chain = new MockFilterChain();
+        request.setMethod("POST");
+        request.setupAddParameter(config.getUsernameParameterName(), GeoServerUser.ROOT_USERNAME);
+        request.setupAddParameter(config.getPasswordParameterName(), "geoserver");
+        getProxy().doFilter(request, response, chain);
+        assertEquals(HttpServletResponse.SC_OK, response.getErrorCode());
+        assertTrue(response.wasRedirectSent());
+        assertTrue(response.getHeader("Location").endsWith(GeoServerUserNamePasswordAuthenticationFilter.URL_LOGIN_SUCCCESS));
+        ctx = (SecurityContext)request.getSession(true).getAttribute(
+                HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY);        
+        auth = ctx.getAuthentication();
+        assertNotNull(auth);
+        assertNull(SecurityContextHolder.getContext().getAuthentication());
+        //checkForAuthenticatedRole(auth);
+        assertEquals(GeoServerUser.ROOT_USERNAME, auth.getPrincipal());
+        assertTrue(auth.getAuthorities().size()==1);
+        assertTrue(auth.getAuthorities().contains(GeoServerRole.ADMIN_ROLE));
+        
+        // check root user with wrong password
+        request= createRequest("foo/j_spring_security_check");
+        response= new MockHttpServletResponse();
+        chain = new MockFilterChain();
+        request.setMethod("POST");
+        request.setupAddParameter(config.getUsernameParameterName(), GeoServerUser.ROOT_USERNAME);
+        request.setupAddParameter(config.getPasswordParameterName(), "geoserver1");
+        getProxy().doFilter(request, response, chain);
+        assertEquals(HttpServletResponse.SC_OK, response.getErrorCode());
+        assertTrue(response.wasRedirectSent());
+        assertTrue(response.getHeader("Location").endsWith(GeoServerUserNamePasswordAuthenticationFilter.URL_LOGIN_FAILURE));
+        ctx = (SecurityContext)request.getSession(true).getAttribute(
+                HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY);        
+        assertNull(ctx);
+        assertNull(SecurityContextHolder.getContext().getAuthentication());
+
+        
+        // check disabled user
+        updateUser("ug1", testUserName, false);
+        request= createRequest("foo/j_spring_security_check");
+        response= new MockHttpServletResponse();
+        chain = new MockFilterChain();
+        request.setMethod("POST");
+        request.setupAddParameter(config.getUsernameParameterName(), testUserName);
+        request.setupAddParameter(config.getPasswordParameterName(), testPassword);
+        getProxy().doFilter(request, response, chain);
+        assertEquals(HttpServletResponse.SC_OK, response.getErrorCode());
+        assertTrue(response.wasRedirectSent());
+        assertTrue(response.getHeader("Location").endsWith(GeoServerUserNamePasswordAuthenticationFilter.URL_LOGIN_FAILURE));
+        ctx = (SecurityContext)request.getSession(true).getAttribute(
+                HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY);        
+        assertNull(ctx);
+        assertNull(SecurityContextHolder.getContext().getAuthentication());
+        
+        updateUser("ug1", testUserName, true);
+        
+        // Test anonymous
+        insertAnonymousFilter(GeoServerSecurityFilterChain.EXCEPTION_TRANSLATION_FILTER);
+        request= createRequest("foo/bar");
+        response= new MockHttpServletResponse();
+        chain = new MockFilterChain();
+        getProxy().doFilter(request, response, chain);
+        assertEquals(HttpServletResponse.SC_OK, response.getErrorCode());
+        // Anonymous context is not stored in http session, no further testing
+        removeAnonymousFilter();
+
+
+        // Test logout                
+        request= createRequest("/foo/j_spring_security_logout");
+        response= new MockHttpServletResponse();
+        chain = new MockFilterChain();        
+        
+        getProxy().doFilter(request, response, chain);
+        assertEquals(HttpServletResponse.SC_OK, response.getErrorCode());
+        assertTrue(response.wasRedirectSent());
+        tmp = response.getHeader("Location");
+        assertNotNull(tmp);
+        assert(tmp.endsWith(GeoServerUserNamePasswordAuthenticationFilter.URL_AFTER_LOGOUT));
+        ctx = (SecurityContext)request.getSession(true).getAttribute(
+                HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY);        
+        assertNull(ctx);
+        assertNull(SecurityContextHolder.getContext().getAuthentication());
+
+    }
+    
+    public void testFormLoginWithRememberMe() throws Exception{
+
+        UsernamePasswordAuthenticationFilterConfig config = new UsernamePasswordAuthenticationFilterConfig();
+        config.setClassName(GeoServerUserNamePasswordAuthenticationFilter.class.getName());
+        config.setUsernameParameterName("username");
+        config.setPasswordParameterName("password");
+        config.setName(testFilterName7);
+        
+        getSecurityManager().saveFilter(config);
+        prepareFiterChain(pattern,
+            GeoServerSecurityFilterChain.SECURITY_CONTEXT_ASC_FILTER,    
+            testFilterName7,
+            GeoServerSecurityFilterChain.REMEMBER_ME_FILTER,
+            GeoServerSecurityFilterChain.EXCEPTION_TRANSLATION_FILTER,
+            GeoServerSecurityFilterChain.FILTER_SECURITY_INTERCEPTOR);
+        prepareFormLoginFilterForTest();
+        
+
+        SecurityContextHolder.getContext().setAuthentication(null);
+
+        // Test entry point                
+        MockHttpServletRequest request= createRequest("/foo/bar");
+        request.setupAddParameter("_spring_security_remember_me", "yes");
+        MockHttpServletResponse response= new MockHttpServletResponse();
+        MockFilterChain chain = new MockFilterChain();        
+                
+        getProxy().doFilter(request, response, chain);
+        assertEquals(HttpServletResponse.SC_OK, response.getErrorCode());
+        assertTrue(response.wasRedirectSent());
+        String tmp = response.getHeader("Location");
+        assertNotNull(tmp);
+        SecurityContext ctx = (SecurityContext)request.getSession(true).getAttribute(
+                HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY);        
+        assertNull(ctx);
+        assertNull(SecurityContextHolder.getContext().getAuthentication());                    
+        
+        request= createRequest("foo/j_spring_security_check");
+        request.setupAddParameter("_spring_security_remember_me", "yes");
+        response= new MockHttpServletResponse();
+        chain = new MockFilterChain();
+        request.setMethod("POST");
+        request.setupAddParameter(config.getUsernameParameterName(), testUserName);
+        request.setupAddParameter(config.getPasswordParameterName(), testPassword);
+        getProxy().doFilter(request, response, chain);
+        assertEquals(HttpServletResponse.SC_OK, response.getErrorCode());
+        assertTrue(response.wasRedirectSent());
+        assertTrue(response.getHeader("Location").endsWith(GeoServerUserNamePasswordAuthenticationFilter.URL_LOGIN_SUCCCESS));
+        ctx = (SecurityContext)request.getSession(true).getAttribute(
+                HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY);        
+        assertNotNull(ctx);
+        Authentication auth = ctx.getAuthentication();
+        assertNotNull(auth);
+        assertNull(SecurityContextHolder.getContext().getAuthentication());
+        checkForAuthenticatedRole(auth);
+        assertEquals(testUserName, ((UserDetails) auth.getPrincipal()).getUsername());
+        assertTrue(auth.getAuthorities().contains(new GeoServerRole(rootRole)));
+        assertTrue(auth.getAuthorities().contains(new GeoServerRole(derivedRole)));
+        assertEquals(1,response.getCookies().size());
+        Cookie cookie = (Cookie) response.getCookies().get(0);
+        assertNotNull(cookie.getValue());
+        
+             
+
+        // check no remember me for root user
+        request= createRequest("foo/j_spring_security_check");
+        request.setupAddParameter("_spring_security_remember_me", "yes");
+        response= new MockHttpServletResponse();
+        chain = new MockFilterChain();
+        request.setMethod("POST");
+        request.setupAddParameter(config.getUsernameParameterName(), GeoServerUser.ROOT_USERNAME);
+        request.setupAddParameter(config.getPasswordParameterName(), "geoserver");
+        getProxy().doFilter(request, response, chain);
+        assertEquals(HttpServletResponse.SC_OK, response.getErrorCode());
+        assertTrue(response.wasRedirectSent());
+        assertTrue(response.getHeader("Location").endsWith(GeoServerUserNamePasswordAuthenticationFilter.URL_LOGIN_SUCCCESS));
+        ctx = (SecurityContext)request.getSession(true).getAttribute(
+                HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY);        
+        assertNotNull(ctx);
+        auth = ctx.getAuthentication();
+        assertNotNull(auth);
+        //checkForAuthenticatedRole(auth);
+        assertEquals(GeoServerUser.ROOT_USERNAME,auth.getPrincipal());
+        assertEquals(0,response.getCookies().size());
+        
+        // check disabled user
+        updateUser("ug1", testUserName, false);
+        
+        request= createRequest("/foo/bar");
+        request.addCookie(cookie);        
+        response= new MockHttpServletResponse();
+        chain = new MockFilterChain();
+        getProxy().doFilter(request, response, chain);
+        assertEquals(HttpServletResponse.SC_OK, response.getErrorCode());
+        assertTrue(response.wasRedirectSent());
+        tmp = response.getHeader("Location");
+        assertNotNull(tmp);
+        // check for cancel cookie
+        assertEquals(1,response.getCookies().size());
+        Cookie cancelCookie = (Cookie) response.getCookies().get(0);
+        assertNull(cancelCookie.getValue());
+        updateUser("ug1", testUserName, true);
+       
+
+        // Test logout                
+        request= createRequest("/foo/j_spring_security_logout");
+        //request.setupAddParameter("_spring_security_remember_me", "yes");
+        request.addCookie(cookie);
+        response= new MockHttpServletResponse();
+        chain = new MockFilterChain();                
+        getProxy().doFilter(request, response, chain);
+        assertEquals(HttpServletResponse.SC_OK, response.getErrorCode());
+        assertTrue(response.wasRedirectSent());
+        tmp = response.getHeader("Location");
+        assertNotNull(tmp);
+        assert(tmp.endsWith(GeoServerUserNamePasswordAuthenticationFilter.URL_AFTER_LOGOUT));
+        cancelCookie = (Cookie) response.getCookies().get(0);
+        assertNull(cancelCookie.getValue());
+        ctx = (SecurityContext)request.getSession(true).getAttribute(
+                HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY);        
+        assertNull(ctx);
+        assertNull(SecurityContextHolder.getContext().getAuthentication());
+
     }
 
 }

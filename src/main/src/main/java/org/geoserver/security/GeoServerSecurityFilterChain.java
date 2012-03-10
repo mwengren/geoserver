@@ -31,7 +31,7 @@ public class GeoServerSecurityFilterChain  {
     public static final String SECURITY_CONTEXT_ASC_FILTER = "securityContextAscFilter";
     public static final String SECURITY_CONTEXT_NO_ASC_FILTER = "securityContextNoAscFilter";
     
-    public static final String SERVLET_API_SUPPORT_FILTER = "servletApiSupportFilter";
+    //public static final String SERVLET_API_SUPPORT_FILTER = "servletApiSupportFilter";
 
     public static final String FORM_LOGIN_FILTER = "formLoginFilter";
 
@@ -45,7 +45,7 @@ public class GeoServerSecurityFilterChain  {
     public static final String EXCEPTION_TRANSLATION_FILTER = "exceptionTranslationFilter";
     public static final String EXCEPTION_TRANSLATION_OWS_FILTER = "exceptionTranslationOwsFilter";
 
-    public static final String LOGOUT_FILTER = "logoutFilter";
+    //public static final String LOGOUT_FILTER = "logoutFilter";
 
     public static final String FILTER_SECURITY_INTERCEPTOR = "filterSecurityInterceptor";
     public static final String FILTER_SECURITY_REST_INTERCEPTOR = "filterSecurityRestInterceptor";
@@ -89,18 +89,18 @@ public class GeoServerSecurityFilterChain  {
                 "/gwc/rest/web/**","/gwc/rest/**","/**"));
         
         chain.filterMap.put("/web/**",
-                createListFromStrings(SECURITY_CONTEXT_ASC_FILTER, LOGOUT_FILTER, 
-                        FORM_LOGIN_FILTER, SERVLET_API_SUPPORT_FILTER, REMEMBER_ME_FILTER, ANONYMOUS_FILTER, 
+                createListFromStrings(SECURITY_CONTEXT_ASC_FILTER,  
+                        FORM_LOGIN_FILTER,  REMEMBER_ME_FILTER, ANONYMOUS_FILTER, 
                         EXCEPTION_TRANSLATION_FILTER, FILTER_SECURITY_INTERCEPTOR));
         
         chain.filterMap.put("/j_spring_security_check/**", 
                 createListFromStrings(SECURITY_CONTEXT_ASC_FILTER, 
-                LOGOUT_FILTER, FORM_LOGIN_FILTER, SERVLET_API_SUPPORT_FILTER, REMEMBER_ME_FILTER, 
+                 FORM_LOGIN_FILTER,  REMEMBER_ME_FILTER, 
                 ANONYMOUS_FILTER, EXCEPTION_TRANSLATION_FILTER, FILTER_SECURITY_INTERCEPTOR));
             
         chain.filterMap.put("/j_spring_security_logout/**", 
                 createListFromStrings(SECURITY_CONTEXT_ASC_FILTER, 
-                LOGOUT_FILTER, FORM_LOGIN_FILTER, SERVLET_API_SUPPORT_FILTER, REMEMBER_ME_FILTER, 
+                FORM_LOGIN_FILTER, REMEMBER_ME_FILTER, 
                 ANONYMOUS_FILTER, EXCEPTION_TRANSLATION_FILTER, FILTER_SECURITY_INTERCEPTOR));
             
         chain.filterMap.put("/rest/**", 

@@ -10,12 +10,10 @@ import java.io.IOException;
 import org.geoserver.platform.GeoServerExtensions;
 import org.geoserver.security.config.BasicAuthenticationFilterConfig;
 import org.geoserver.security.config.SecurityNamedServiceConfig;
-import org.springframework.security.authentication.AuthenticationDetailsSource;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.authentication.RememberMeServices;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
-import org.springframework.web.jsf.el.WebApplicationContextFacesELResolver;
 
 /**
  * Named Basic Authentication Filter

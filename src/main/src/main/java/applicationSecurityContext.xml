@@ -131,11 +131,9 @@
   <!--
     This filters processes logouts, removing both session informations, and the remember-me
     cookie from the browser
-  -->
   <bean id="logoutFilter"
     class="org.springframework.security.web.authentication.logout.LogoutFilter">
     <constructor-arg value="/web/" />
-    <!-- URL redirected to after logout -->
     <constructor-arg>
       <list>
         <ref bean="rememberMeServices" />
@@ -144,6 +142,8 @@
       </list>
     </constructor-arg>
   </bean>
+    -->
+  
 
   <!-- 
     This filter does the actual main authentication workflow and handles form based authentication too.
@@ -151,11 +151,10 @@
     redirects to a failure page if it fails, and to another filter if the authentication informations are 
     just being provided. This is useful only for form based authentication, the OWS services do use another
     authentication processing filter.
-  -->
   
   <bean id="successHandler" class="org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler" >
-  <!-- <bean id="successHandler" class="org.springframework.security.web.authentication.SavedRequestAwareAuthenticationSuccessHandler" > -->
-	<property name="defaultTargetUrl" value="/" /> <!-- which is the default value -->
+  
+	<property name="defaultTargetUrl" value="/" /> 
   </bean>
   <bean id="failureHandler" class="org.springframework.security.web.authentication.SimpleUrlAuthenticationFailureHandler" >
 	<property name="defaultFailureUrl" value="/web/?wicket:bookmarkablePage=:org.geoserver.web.GeoServerLoginPage&amp;error=true" />
@@ -171,12 +170,12 @@
     <property name="rememberMeServices" ref="rememberMeServices" />
     <property name="allowSessionCreation" value="false" />
   </bean>
-
+-->
   <!--  
     Double check, this may not be necessary
-  -->
   <bean id="servletApiSupportFilter"
     class="org.springframework.security.web.servletapi.SecurityContextHolderAwareRequestFilter" />
+  -->
 
   <!-- 
     If authentication is missing from the SecurityContext, tries to put authentication
@@ -338,9 +337,9 @@
   <bean id="j2eeAuthSecurityProvider" class="org.geoserver.security.filter.GeoServerJ2eeAuthenticationProvider"/>
   <bean id="requestHeaderFilterProvider" class="org.geoserver.security.filter.GeoServerRequestHeaderAuthenticationProvider"/>
   <bean id="exceptionTranslationFilterProvider" class="org.geoserver.security.filter.GeoServerExceptionTranslationProvider"/>
+  <bean id="usernamePasswordFilterProvider" class="org.geoserver.security.filter.GeoServerUserNamePasswordAuthenticationProvider"/>
   
-    	
-    	
+    	    	
   <bean id="urlMasterPasswordProvider" 
     class="org.geoserver.security.password.URLMasterPasswordProvider$SecurityProvider"/>
   

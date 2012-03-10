@@ -60,6 +60,7 @@ import org.geoserver.security.config.SecurityManagerConfig;
 import org.geoserver.security.config.SecurityNamedServiceConfig;
 import org.geoserver.security.config.SecurityRoleServiceConfig;
 import org.geoserver.security.config.SecurityUserGroupServiceConfig;
+import org.geoserver.security.config.UsernamePasswordAuthenticationFilterConfig;
 import org.geoserver.security.config.UsernamePasswordAuthenticationProviderConfig;
 import org.geoserver.security.file.FileWatcher;
 import org.geoserver.security.file.RoleFileWatcher;
@@ -67,6 +68,7 @@ import org.geoserver.security.file.UserGroupFileWatcher;
 import org.geoserver.security.filter.GeoServerBasicAuthenticationFilter;
 import org.geoserver.security.filter.GeoServerExceptionTranslationFilter;
 import org.geoserver.security.filter.GeoServerSecurityFilter;
+import org.geoserver.security.filter.GeoServerUserNamePasswordAuthenticationFilter;
 import org.geoserver.security.impl.GeoServerRole;
 import org.geoserver.security.impl.GeoServerUser;
 import org.geoserver.security.impl.Util;
@@ -1623,6 +1625,17 @@ public class GeoServerSecurityManager extends ProviderManager implements Applica
             bfConfig.setAccessDeniedErrorPage("/accessDenied.jsp");
             saveFilter(bfConfig);
         }
+        filterName =GeoServerSecurityFilterChain.FORM_LOGIN_FILTER;
+        filter = loadFilter(filterName);
+        if (filter==null) {
+            UsernamePasswordAuthenticationFilterConfig upConfig= new UsernamePasswordAuthenticationFilterConfig();
+            upConfig.setClassName(GeoServerUserNamePasswordAuthenticationFilter.class.getName());
+            upConfig.setName(filterName);
+            upConfig.setUsernameParameterName(UsernamePasswordAuthenticationFilterConfig.DEFAULT_USERNAME_PARAM);
+            upConfig.setPasswordParameterName(UsernamePasswordAuthenticationFilterConfig.DEFAULT_PASSWORD_PARAM);
+            saveFilter(upConfig);
+        }
+
 
 
 
