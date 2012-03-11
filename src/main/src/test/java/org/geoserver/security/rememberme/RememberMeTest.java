@@ -119,6 +119,8 @@ public class RememberMeTest extends GeoServerTestSupport {
     }
 
     public void testRememberMeOtherUserGroupService() throws Exception {
+        // Justin, this should work now
+        
         //need to implement this test, at the moment we don't have a way to mock up new users 
         // in a memory user group service... 
         /*

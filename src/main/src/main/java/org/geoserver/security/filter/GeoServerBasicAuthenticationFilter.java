@@ -16,8 +16,6 @@ import org.geoserver.platform.GeoServerExtensions;
 import org.geoserver.security.GeoServerSecurityManager;
 import org.geoserver.security.config.BasicAuthenticationFilterConfig;
 import org.geoserver.security.config.SecurityNamedServiceConfig;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.authentication.RememberMeServices;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.security.web.authentication.www.BasicAuthenticationEntryPoint;
@@ -58,7 +56,7 @@ public class GeoServerBasicAuthenticationFilter extends GeoServerCompositeFilter
         };
         filter.setAuthenticationManager(getSecurityManager());
         filter.setIgnoreFailure(false);
-        filter.setAuthenticationEntryPoint(aep);        
+        filter.setAuthenticationEntryPoint(aep);                
 
         // TODO, Justin, is this correct
         if (authConfig.isUseRememberMe()) {             

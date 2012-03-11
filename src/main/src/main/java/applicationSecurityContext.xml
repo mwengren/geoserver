@@ -338,6 +338,7 @@
   <bean id="requestHeaderFilterProvider" class="org.geoserver.security.filter.GeoServerRequestHeaderAuthenticationProvider"/>
   <bean id="exceptionTranslationFilterProvider" class="org.geoserver.security.filter.GeoServerExceptionTranslationProvider"/>
   <bean id="usernamePasswordFilterProvider" class="org.geoserver.security.filter.GeoServerUserNamePasswordAuthenticationProvider"/>
+  <bean id="casFilterProvider" class="org.geoserver.security.filter.GeoServerCasAuthenticationProvider"/>
   
     	    	
   <bean id="urlMasterPasswordProvider" 

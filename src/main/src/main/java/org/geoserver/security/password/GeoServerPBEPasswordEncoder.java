@@ -15,8 +15,7 @@ import org.jasypt.encryption.pbe.StandardPBEByteEncryptor;
 import org.jasypt.encryption.pbe.StandardPBEStringEncryptor;
 import org.jasypt.spring.security3.PBEPasswordEncoder;
 import org.springframework.security.authentication.encoding.PasswordEncoder;
-
-import com.ibm.xml.enc.dom.Base64;
+import org.springframework.security.core.codec.Base64;
 
 import static org.geoserver.security.SecurityUtils.scramble;
 import static org.geoserver.security.SecurityUtils.toBytes;
@@ -185,7 +184,7 @@ public class GeoServerPBEPasswordEncoder extends AbstractGeoserverPasswordEncode
             getCharEncoder();
         }
 
-        byte[] decoded = Base64.decode(removePrefix(encPass));
+        byte[] decoded = Base64.decode(removePrefix(encPass).getBytes());
         byte[] bytes = byteEncrypter.decrypt(decoded);
         try {
             return toChars(bytes);

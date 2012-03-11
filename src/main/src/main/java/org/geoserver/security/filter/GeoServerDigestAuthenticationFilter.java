@@ -17,7 +17,6 @@ import org.geoserver.security.GeoServerSecurityManager;
 import org.geoserver.security.HttpDigestUserDetailsServiceWrapper;
 import org.geoserver.security.config.DigestAuthenticationFilterConfig;
 import org.geoserver.security.config.SecurityNamedServiceConfig;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.www.DigestAuthenticationEntryPoint;
 import org.springframework.security.web.authentication.www.DigestAuthenticationFilter;
 
