@@ -204,7 +204,7 @@
   <!-- 
     Entry points for basic, digest, form based login. 
     A http 403, access denied entry point is needed for proxy authentication 
-  -->
+
   <bean id="basicProcessingFilterEntryPoint"
     class="org.springframework.security.web.authentication.www.BasicAuthenticationEntryPoint">
     <property name="realmName">
@@ -227,7 +227,7 @@
     <property name="loginFormUrl" value="/admin/login.do" />
     <property name="forceHttps" value="false" />
    </bean>
-  
+  -->  
   
 
   <!-- 

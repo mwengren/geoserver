@@ -7,12 +7,20 @@ package org.geoserver.security.filter;
 
 import java.io.IOException;
 
+import javax.servlet.FilterChain;
+import javax.servlet.ServletException;
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletResponse;
+
 import org.geoserver.platform.GeoServerExtensions;
+import org.geoserver.security.GeoServerSecurityManager;
 import org.geoserver.security.config.BasicAuthenticationFilterConfig;
 import org.geoserver.security.config.SecurityNamedServiceConfig;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.authentication.RememberMeServices;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
+import org.springframework.security.web.authentication.www.BasicAuthenticationEntryPoint;
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
 
 /**
@@ -22,20 +30,35 @@ import org.springframework.security.web.authentication.www.BasicAuthenticationFi
  *
  */
 public class GeoServerBasicAuthenticationFilter extends GeoServerCompositeFilter {
+    private BasicAuthenticationEntryPoint aep; 
     @Override
     public void initializeFromConfig(SecurityNamedServiceConfig config) throws IOException {
         super.initializeFromConfig(config);
         
+        aep= new BasicAuthenticationEntryPoint();
+        aep.setRealmName(GeoServerSecurityManager.REALM);
+        try {
+            aep.afterPropertiesSet();
+        } catch (Exception e) {
+            throw new IOException(e);
+        }
+        
         BasicAuthenticationFilterConfig authConfig = 
                 (BasicAuthenticationFilterConfig) config;
         
-        BasicAuthenticationFilter filter = new BasicAuthenticationFilter();
+        BasicAuthenticationFilter filter = new BasicAuthenticationFilter() {
+
+            @Override
+            public void doFilter(ServletRequest req, ServletResponse res, FilterChain chain)
+                    throws IOException, ServletException {
+                
+                req.setAttribute(GeoServerSecurityFilter.AUTHENTICATION_ENTRY_POINT_HEADER, aep);
+                super.doFilter(req, res, chain);
+            }            
+        };
         filter.setAuthenticationManager(getSecurityManager());
         filter.setIgnoreFailure(false);
-        // TODO, Justin, is this correct
-        AuthenticationEntryPoint ep = (AuthenticationEntryPoint) 
-                GeoServerExtensions.bean("basicProcessingFilterEntryPoint");
-        filter.setAuthenticationEntryPoint(ep);
+        filter.setAuthenticationEntryPoint(aep);        
 
         // TODO, Justin, is this correct
         if (authConfig.isUseRememberMe()) {             

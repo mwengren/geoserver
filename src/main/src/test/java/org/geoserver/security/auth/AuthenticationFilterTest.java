@@ -22,7 +22,6 @@ import org.geoserver.security.GeoServerUserGroupService;
 import org.geoserver.security.GeoServerUserGroupStore;
 import org.geoserver.security.config.BasicAuthenticationFilterConfig;
 import org.geoserver.security.config.DigestAuthenticationFilterConfig;
-import org.geoserver.security.config.ExceptionTranslationFilterConfig;
 import org.geoserver.security.config.J2eeAuthenticationFilterConfig;
 import org.geoserver.security.config.RequestHeaderAuthenticationFilterConfig;
 import org.geoserver.security.config.RequestHeaderAuthenticationFilterConfig.RoleSource;
@@ -30,7 +29,6 @@ import org.geoserver.security.config.SecurityManagerConfig;
 import org.geoserver.security.config.UsernamePasswordAuthenticationFilterConfig;
 import org.geoserver.security.filter.GeoServerBasicAuthenticationFilter;
 import org.geoserver.security.filter.GeoServerDigestAuthenticationFilter;
-import org.geoserver.security.filter.GeoServerExceptionTranslationFilter;
 import org.geoserver.security.filter.GeoServerJ2eeAuthenticationFilter;
 import org.geoserver.security.filter.GeoServerRequestHeaderAuthenticationFilter;
 import org.geoserver.security.filter.GeoServerUserNamePasswordAuthenticationFilter;
@@ -61,8 +59,6 @@ public class AuthenticationFilterTest extends AbstractAuthenticationProviderTest
     public final static String testFilterName7 = "formLoginTestFilterWithRememberMe";
 
 
-    public final static String accessDeniedFilter = "accessDeniedFilter";
-    public final static String digestEntryPointFilter = "digestEntryPointFilter";
     public final static String testProviderName = "basicAuthTestProvider";
     public final static String testUserName = "user1";
     public final static String testPassword = "pw1";
@@ -104,18 +100,6 @@ public class AuthenticationFilterTest extends AbstractAuthenticationProviderTest
         GeoServerAuthenticationProvider prov = createAuthProvider(testProviderName, ugservice.getName());
         prepareAuthProviders(prov.getName());        
         
-        ExceptionTranslationFilterConfig exConfig = new ExceptionTranslationFilterConfig();
-        exConfig.setClassName(GeoServerExceptionTranslationFilter.class.getName());
-        exConfig.setName(accessDeniedFilter);
-        exConfig.setAuthenticationEntryPointName("accessDeniedEntryPoint");
-        getSecurityManager().saveFilter(exConfig);
-        
-        exConfig = new ExceptionTranslationFilterConfig();
-        exConfig.setClassName(GeoServerExceptionTranslationFilter.class.getName());
-        exConfig.setName(digestEntryPointFilter);
-        exConfig.setAuthenticationEntryPointName("digestProcessingFilterEntryPoint");
-        getSecurityManager().saveFilter(exConfig);
-
     }
     
     protected void insertAnonymousFilter(String beforName) throws Exception{
@@ -143,7 +127,7 @@ public class AuthenticationFilterTest extends AbstractAuthenticationProviderTest
         prepareFiterChain(pattern,
             GeoServerSecurityFilterChain.SECURITY_CONTEXT_ASC_FILTER,    
             testFilterName,
-            GeoServerSecurityFilterChain.EXCEPTION_TRANSLATION_OWS_FILTER,
+            GeoServerSecurityFilterChain.DYNAMIC_EXCEPTION_TRANSLATION_OFILTER,
             GeoServerSecurityFilterChain.FILTER_SECURITY_INTERCEPTOR);
 
 
@@ -283,7 +267,7 @@ public class AuthenticationFilterTest extends AbstractAuthenticationProviderTest
         updateUser("ug1", testUserName, true);
         
         // Test anonymous
-        insertAnonymousFilter(GeoServerSecurityFilterChain.EXCEPTION_TRANSLATION_OWS_FILTER);
+        insertAnonymousFilter(GeoServerSecurityFilterChain.DYNAMIC_EXCEPTION_TRANSLATION_OFILTER);
         request= createRequest("/foo/bar");
         response= new MockHttpServletResponse();
         chain = new MockFilterChain();                        
@@ -305,7 +289,7 @@ public class AuthenticationFilterTest extends AbstractAuthenticationProviderTest
         prepareFiterChain(pattern,
             GeoServerSecurityFilterChain.SECURITY_CONTEXT_ASC_FILTER,    
             testFilterName3,
-            accessDeniedFilter,
+            GeoServerSecurityFilterChain.DYNAMIC_EXCEPTION_TRANSLATION_OFILTER,
             GeoServerSecurityFilterChain.FILTER_SECURITY_INTERCEPTOR);
 
 
@@ -404,7 +388,7 @@ public class AuthenticationFilterTest extends AbstractAuthenticationProviderTest
         assertTrue(auth.getAuthorities().contains(new GeoServerRole(derivedRole)));
         
         // Test anonymous
-        insertAnonymousFilter(accessDeniedFilter);
+        insertAnonymousFilter(GeoServerSecurityFilterChain.DYNAMIC_EXCEPTION_TRANSLATION_OFILTER);
         request= createRequest("/foo/bar");
         response= new MockHttpServletResponse();
         chain = new MockFilterChain();                        
@@ -433,7 +417,7 @@ public class AuthenticationFilterTest extends AbstractAuthenticationProviderTest
         prepareFiterChain(pattern,
             GeoServerSecurityFilterChain.SECURITY_CONTEXT_ASC_FILTER,    
             testFilterName4,
-            accessDeniedFilter,
+            GeoServerSecurityFilterChain.DYNAMIC_EXCEPTION_TRANSLATION_OFILTER,
             GeoServerSecurityFilterChain.FILTER_SECURITY_INTERCEPTOR);
 
 
@@ -513,7 +497,7 @@ public class AuthenticationFilterTest extends AbstractAuthenticationProviderTest
         assertNull(SecurityContextHolder.getContext().getAuthentication());
         
         // Test anonymous
-        insertAnonymousFilter(accessDeniedFilter);
+        insertAnonymousFilter(GeoServerSecurityFilterChain.DYNAMIC_EXCEPTION_TRANSLATION_OFILTER);
         request= createRequest("/foo/bar");
         response= new MockHttpServletResponse();
         chain = new MockFilterChain();                        
@@ -566,7 +550,7 @@ public class AuthenticationFilterTest extends AbstractAuthenticationProviderTest
         prepareFiterChain(pattern,
                 GeoServerSecurityFilterChain.SECURITY_CONTEXT_ASC_FILTER,    
                 testFilterName2,
-                digestEntryPointFilter,
+                GeoServerSecurityFilterChain.DYNAMIC_EXCEPTION_TRANSLATION_OFILTER,
                 GeoServerSecurityFilterChain.FILTER_SECURITY_INTERCEPTOR);
 
 
@@ -707,7 +691,7 @@ public class AuthenticationFilterTest extends AbstractAuthenticationProviderTest
 
 
         // Test anonymous
-        insertAnonymousFilter(digestEntryPointFilter);
+        insertAnonymousFilter(GeoServerSecurityFilterChain.DYNAMIC_EXCEPTION_TRANSLATION_OFILTER);
         request= createRequest("/foo/bar");
         response= new MockHttpServletResponse();
         chain = new MockFilterChain();                        
@@ -729,7 +713,7 @@ public class AuthenticationFilterTest extends AbstractAuthenticationProviderTest
             GeoServerSecurityFilterChain.SECURITY_CONTEXT_ASC_FILTER,    
             testFilterName5,
             GeoServerSecurityFilterChain.REMEMBER_ME_FILTER,
-            GeoServerSecurityFilterChain.EXCEPTION_TRANSLATION_OWS_FILTER,
+            GeoServerSecurityFilterChain.DYNAMIC_EXCEPTION_TRANSLATION_OFILTER,
             GeoServerSecurityFilterChain.FILTER_SECURITY_INTERCEPTOR);
     
     
@@ -869,7 +853,7 @@ public class AuthenticationFilterTest extends AbstractAuthenticationProviderTest
         prepareFiterChain(pattern,
             GeoServerSecurityFilterChain.SECURITY_CONTEXT_ASC_FILTER,    
             testFilterName6,
-            GeoServerSecurityFilterChain.EXCEPTION_TRANSLATION_FILTER,
+            GeoServerSecurityFilterChain.DYNAMIC_EXCEPTION_TRANSLATION_OFILTER,
             GeoServerSecurityFilterChain.FILTER_SECURITY_INTERCEPTOR);
         prepareFormLoginFilterForTest();
         
@@ -887,7 +871,7 @@ public class AuthenticationFilterTest extends AbstractAuthenticationProviderTest
         assertEquals(HttpServletResponse.SC_OK, response.getErrorCode());
         assertTrue(response.wasRedirectSent());
         String tmp = response.getHeader("Location");
-        assertNotNull(tmp);
+        assertTrue(tmp.endsWith(GeoServerUserNamePasswordAuthenticationFilter.URL_LOGIN_FORM));
         SecurityContext ctx = (SecurityContext)request.getSession(true).getAttribute(
                 HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY);        
         assertNull(ctx);
@@ -1009,7 +993,7 @@ public class AuthenticationFilterTest extends AbstractAuthenticationProviderTest
         updateUser("ug1", testUserName, true);
         
         // Test anonymous
-        insertAnonymousFilter(GeoServerSecurityFilterChain.EXCEPTION_TRANSLATION_FILTER);
+        insertAnonymousFilter(GeoServerSecurityFilterChain.DYNAMIC_EXCEPTION_TRANSLATION_OFILTER);
         request= createRequest("foo/bar");
         response= new MockHttpServletResponse();
         chain = new MockFilterChain();
@@ -1050,7 +1034,7 @@ public class AuthenticationFilterTest extends AbstractAuthenticationProviderTest
             GeoServerSecurityFilterChain.SECURITY_CONTEXT_ASC_FILTER,    
             testFilterName7,
             GeoServerSecurityFilterChain.REMEMBER_ME_FILTER,
-            GeoServerSecurityFilterChain.EXCEPTION_TRANSLATION_FILTER,
+            GeoServerSecurityFilterChain.DYNAMIC_EXCEPTION_TRANSLATION_OFILTER,
             GeoServerSecurityFilterChain.FILTER_SECURITY_INTERCEPTOR);
         prepareFormLoginFilterForTest();
         
@@ -1067,7 +1051,7 @@ public class AuthenticationFilterTest extends AbstractAuthenticationProviderTest
         assertEquals(HttpServletResponse.SC_OK, response.getErrorCode());
         assertTrue(response.wasRedirectSent());
         String tmp = response.getHeader("Location");
-        assertNotNull(tmp);
+        assertTrue(tmp.endsWith(GeoServerUserNamePasswordAuthenticationFilter.URL_LOGIN_FORM));
         SecurityContext ctx = (SecurityContext)request.getSession(true).getAttribute(
                 HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY);        
         assertNull(ctx);
@@ -1132,7 +1116,7 @@ public class AuthenticationFilterTest extends AbstractAuthenticationProviderTest
         assertEquals(HttpServletResponse.SC_OK, response.getErrorCode());
         assertTrue(response.wasRedirectSent());
         tmp = response.getHeader("Location");
-        assertNotNull(tmp);
+        assertTrue(tmp.endsWith(GeoServerUserNamePasswordAuthenticationFilter.URL_LOGIN_FORM));
         // check for cancel cookie
         assertEquals(1,response.getCookies().size());
         Cookie cancelCookie = (Cookie) response.getCookies().get(0);

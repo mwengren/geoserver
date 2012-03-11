@@ -23,6 +23,8 @@ import org.geoserver.security.impl.GeoServerRole;
 import org.geoserver.security.impl.GeoServerUser;
 import org.springframework.security.authentication.AuthenticationDetailsSource;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.web.AuthenticationEntryPoint;
+import org.springframework.security.web.authentication.Http403ForbiddenEntryPoint;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.security.web.authentication.preauth.PreAuthenticatedAuthenticationToken;
 
@@ -36,6 +38,7 @@ public abstract class GeoServerAbstractPreAuthenticationFilter extends GeoServer
 
     
     private AuthenticationDetailsSource authenticationDetailsSource = new WebAuthenticationDetailsSource();
+    private AuthenticationEntryPoint aep = new Http403ForbiddenEntryPoint();
     
     
     @Override
@@ -54,7 +57,8 @@ public abstract class GeoServerAbstractPreAuthenticationFilter extends GeoServer
         if (SecurityContextHolder.getContext().getAuthentication()==null) {
             doAuthenticate((HttpServletRequest) request, (HttpServletResponse) response);
         }
-
+        
+        request.setAttribute(GeoServerSecurityFilter.AUTHENTICATION_ENTRY_POINT_HEADER, aep);
         chain.doFilter(request, response);        
     }
             

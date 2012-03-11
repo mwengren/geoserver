@@ -1605,23 +1605,13 @@ public class GeoServerSecurityManager extends ProviderManager implements Applica
             bfConfig.setUseRememberMe(false);
             saveFilter(bfConfig);
         }
-        filterName = GeoServerSecurityFilterChain.EXCEPTION_TRANSLATION_FILTER;
+        filterName = GeoServerSecurityFilterChain.DYNAMIC_EXCEPTION_TRANSLATION_OFILTER;
         filter = loadFilter(filterName);
         if (filter==null) {
             ExceptionTranslationFilterConfig bfConfig= new ExceptionTranslationFilterConfig();
             bfConfig.setClassName(GeoServerExceptionTranslationFilter.class.getName());
             bfConfig.setName(filterName);
-            bfConfig.setAuthenticationEntryPointName(GeoServerSecurityFilterChain.ENTRY_POINT_LOGIN_FORM);
-            bfConfig.setAccessDeniedErrorPage("/accessDenied.jsp");
-            saveFilter(bfConfig);
-        }
-        filterName =GeoServerSecurityFilterChain.EXCEPTION_TRANSLATION_OWS_FILTER;
-        filter = loadFilter(filterName);
-        if (filter==null) {
-            ExceptionTranslationFilterConfig bfConfig= new ExceptionTranslationFilterConfig();
-            bfConfig.setClassName(GeoServerExceptionTranslationFilter.class.getName());
-            bfConfig.setName(filterName);
-            bfConfig.setAuthenticationEntryPointName(GeoServerSecurityFilterChain.ENTRY_POINT_BASIC);
+            bfConfig.setAuthenticationEntryPointName(null);
             bfConfig.setAccessDeniedErrorPage("/accessDenied.jsp");
             saveFilter(bfConfig);
         }
@@ -1635,7 +1625,6 @@ public class GeoServerSecurityManager extends ProviderManager implements Applica
             upConfig.setPasswordParameterName(UsernamePasswordAuthenticationFilterConfig.DEFAULT_PASSWORD_PARAM);
             saveFilter(upConfig);
         }
-
 
 
 

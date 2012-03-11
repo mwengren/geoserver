@@ -4,6 +4,8 @@
  */
 package org.geoserver.security.config;
 
+import org.geoserver.security.filter.GeoServerExceptionTranslationFilter;
+import org.geoserver.security.filter.GeoServerSecurityFilter;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.AuthenticationEntryPoint;
@@ -12,9 +14,13 @@ import org.springframework.security.web.AuthenticationEntryPoint;
 /**
  * Configuration for exception translation filter
  * 
- * The property {@link #authenticationEntryPointName} is the name 
+ * The property {@link #authenticationEntryPointName} is the Spring name 
  * of a {@link AuthenticationEntryPoint} object which is needed in case
  * of an {@link AuthenticationException}
+ * 
+ * IMPORTANT: if no authentication entry point is given, {@link GeoServerExceptionTranslationFilter}
+ * uses the entry point found in the servlet request  attribute 
+ * {@link GeoServerSecurityFilter#AUTHENTICATION_ENTRY_POINT_HEADER}
  * 
  * The property {@link #accessDeniedErrorPage} is optional and needed in 
  * case of an {@link AccessDeniedException}. Geoserver default is

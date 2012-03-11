@@ -13,6 +13,8 @@ import org.geoserver.security.GeoServerSecurityProvider;
 import org.geoserver.security.config.SecurityManagerConfig;
 import org.geoserver.security.impl.AbstractGeoServerSecurityService;
 import org.springframework.beans.factory.BeanNameAware;
+import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.web.AuthenticationEntryPoint;
 
 /**
  * Extension of {@link Filter} for the geoserver security subsystem.
@@ -27,8 +29,21 @@ import org.springframework.beans.factory.BeanNameAware;
  * @author Justin Deoliveira, OpenGeo
  * 
  */
-public abstract class GeoServerSecurityFilter extends AbstractGeoServerSecurityService 
+public abstract class GeoServerSecurityFilter extends AbstractGeoServerSecurityService
+
+
     implements Filter,BeanNameAware {
+
+    
+    /**
+     * Geoserver authentication filter should set an {@link AuthenticationEntryPoint} using
+     * this servlet attribute name.
+     * 
+     * The {@link GeoServerExceptionTranslationFilter} may use the entry point in case of an
+     * {@link AuthenticationException}
+     * 
+     */
+    public final static String AUTHENTICATION_ENTRY_POINT_HEADER = "_AUTHENTICATION_ENTRY_POINT_HEADER";
 
     private String beanName;
 

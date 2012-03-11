@@ -6,11 +6,16 @@ package org.geoserver.security.filter;
 
 import java.io.IOException;
 
+import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletResponse;
 
 import org.geoserver.platform.GeoServerExtensions;
 import org.geoserver.security.config.SecurityNamedServiceConfig;
 import org.geoserver.security.config.UsernamePasswordAuthenticationFilterConfig;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint;
 import org.springframework.security.web.authentication.RememberMeServices;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationFailureHandler;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
@@ -35,11 +40,24 @@ public class GeoServerUserNamePasswordAuthenticationFilter extends GeoServerComp
     public static final String URL_FOR_LOGOUT= "/j_spring_security_logout";
     public static final String URL_LOGIN_SUCCCESS = "/";
     public static final String URL_LOGIN_FAILURE = "/web/?wicket:bookmarkablePage=:org.geoserver.web.GeoServerLoginPage&amp;error=true";
+    public static final String URL_LOGIN_FORM="/admin/login.do";
+    
+    private LoginUrlAuthenticationEntryPoint aep;  
 
     @Override
     public void initializeFromConfig(SecurityNamedServiceConfig config) throws IOException {
         super.initializeFromConfig(config);
+        
         UsernamePasswordAuthenticationFilterConfig upConfig = (UsernamePasswordAuthenticationFilterConfig) config;
+        
+        aep=new LoginUrlAuthenticationEntryPoint();
+        aep.setLoginFormUrl(URL_LOGIN_FORM);
+        aep.setForceHttps(false);
+        try {
+            aep.afterPropertiesSet();
+        } catch (Exception e2) {
+            throw new IOException(e2);
+        }
 
         // TODO, Justin, is this correct
         RememberMeServices rms = (RememberMeServices) GeoServerExtensions
@@ -58,7 +76,16 @@ public class GeoServerUserNamePasswordAuthenticationFilter extends GeoServerComp
         getNestedFilters().add(logoutFilter);
 
         // add login filter
-        UsernamePasswordAuthenticationFilter filter = new UsernamePasswordAuthenticationFilter();
+        UsernamePasswordAuthenticationFilter filter = new UsernamePasswordAuthenticationFilter(){
+
+            @Override
+            public void doFilter(ServletRequest req, ServletResponse res, FilterChain chain)
+                    throws IOException, ServletException {
+                req.setAttribute(GeoServerSecurityFilter.AUTHENTICATION_ENTRY_POINT_HEADER, aep);
+                super.doFilter(req, res, chain);
+            }            
+        };
+;
 
         filter.setPasswordParameter(upConfig.getPasswordParameterName());
         filter.setUsernameParameter(upConfig.getUsernameParameterName());

@@ -42,8 +42,8 @@ public class GeoServerSecurityFilterChain  {
     public static final String BASIC_AUTH_FILTER = "basicAuthFilter";
     public static final String BASIC_AUTH_NO_REMEMBER_ME_FILTER = "basicAuthNoRememberMeFilter";
 
-    public static final String EXCEPTION_TRANSLATION_FILTER = "exceptionTranslationFilter";
-    public static final String EXCEPTION_TRANSLATION_OWS_FILTER = "exceptionTranslationOwsFilter";
+    public static final String DYNAMIC_EXCEPTION_TRANSLATION_OFILTER = "daynamicExceptionTranslationOwsFilter";
+
 
     //public static final String LOGOUT_FILTER = "logoutFilter";
 
@@ -91,34 +91,34 @@ public class GeoServerSecurityFilterChain  {
         chain.filterMap.put("/web/**",
                 createListFromStrings(SECURITY_CONTEXT_ASC_FILTER,  
                         FORM_LOGIN_FILTER,  REMEMBER_ME_FILTER, ANONYMOUS_FILTER, 
-                        EXCEPTION_TRANSLATION_FILTER, FILTER_SECURITY_INTERCEPTOR));
+                        DYNAMIC_EXCEPTION_TRANSLATION_OFILTER, FILTER_SECURITY_INTERCEPTOR));
         
         chain.filterMap.put("/j_spring_security_check/**", 
                 createListFromStrings(SECURITY_CONTEXT_ASC_FILTER, 
                  FORM_LOGIN_FILTER,  REMEMBER_ME_FILTER, 
-                ANONYMOUS_FILTER, EXCEPTION_TRANSLATION_FILTER, FILTER_SECURITY_INTERCEPTOR));
+                ANONYMOUS_FILTER, DYNAMIC_EXCEPTION_TRANSLATION_OFILTER, FILTER_SECURITY_INTERCEPTOR));
             
         chain.filterMap.put("/j_spring_security_logout/**", 
                 createListFromStrings(SECURITY_CONTEXT_ASC_FILTER, 
                 FORM_LOGIN_FILTER, REMEMBER_ME_FILTER, 
-                ANONYMOUS_FILTER, EXCEPTION_TRANSLATION_FILTER, FILTER_SECURITY_INTERCEPTOR));
+                ANONYMOUS_FILTER, DYNAMIC_EXCEPTION_TRANSLATION_OFILTER, FILTER_SECURITY_INTERCEPTOR));
             
         chain.filterMap.put("/rest/**", 
                 createListFromStrings(SECURITY_CONTEXT_NO_ASC_FILTER, BASIC_AUTH_FILTER,
-                ANONYMOUS_FILTER, EXCEPTION_TRANSLATION_OWS_FILTER, FILTER_SECURITY_REST_INTERCEPTOR));
+                ANONYMOUS_FILTER, DYNAMIC_EXCEPTION_TRANSLATION_OFILTER, FILTER_SECURITY_REST_INTERCEPTOR));
 
         chain.filterMap.put("/gwc/rest/web/**",
                 createListFromStrings(ANONYMOUS_FILTER, 
-                EXCEPTION_TRANSLATION_FILTER, FILTER_SECURITY_INTERCEPTOR));
+                        DYNAMIC_EXCEPTION_TRANSLATION_OFILTER, FILTER_SECURITY_INTERCEPTOR));
 
         chain.filterMap.put("/gwc/rest/**", 
                 createListFromStrings(SECURITY_CONTEXT_NO_ASC_FILTER, 
-                BASIC_AUTH_NO_REMEMBER_ME_FILTER, EXCEPTION_TRANSLATION_OWS_FILTER, 
+                BASIC_AUTH_NO_REMEMBER_ME_FILTER, DYNAMIC_EXCEPTION_TRANSLATION_OFILTER, 
                 FILTER_SECURITY_REST_INTERCEPTOR));
 
          chain.filterMap.put("/**", 
                  createListFromStrings(SECURITY_CONTEXT_NO_ASC_FILTER, BASIC_AUTH_FILTER, 
-                ANONYMOUS_FILTER, EXCEPTION_TRANSLATION_OWS_FILTER, FILTER_SECURITY_INTERCEPTOR));        
+                ANONYMOUS_FILTER, DYNAMIC_EXCEPTION_TRANSLATION_OFILTER, FILTER_SECURITY_INTERCEPTOR));        
          
         return chain;
     }
