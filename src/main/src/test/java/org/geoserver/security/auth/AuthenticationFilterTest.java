@@ -6,9 +6,22 @@
 
 package org.geoserver.security.auth;
 
+import java.math.BigInteger;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
 import java.security.Principal;
+import java.security.PublicKey;
+import java.security.SignatureException;
+import java.security.cert.CertificateEncodingException;
+import java.security.cert.CertificateException;
+import java.security.cert.CertificateExpiredException;
+import java.security.cert.CertificateNotYetValidException;
+import java.security.cert.X509Certificate;
 import java.text.MessageFormat;
+import java.util.Date;
 import java.util.Map;
+import java.util.Set;
 
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletResponse;
@@ -24,6 +37,7 @@ import org.geoserver.security.config.BasicAuthenticationFilterConfig;
 import org.geoserver.security.config.DigestAuthenticationFilterConfig;
 import org.geoserver.security.config.J2eeAuthenticationFilterConfig;
 import org.geoserver.security.config.RequestHeaderAuthenticationFilterConfig;
+import org.geoserver.security.config.X509CertificateAuthenticationFilterConfig;
 import org.geoserver.security.config.RequestHeaderAuthenticationFilterConfig.RoleSource;
 import org.geoserver.security.config.SecurityManagerConfig;
 import org.geoserver.security.config.UsernamePasswordAuthenticationFilterConfig;
@@ -32,6 +46,7 @@ import org.geoserver.security.filter.GeoServerDigestAuthenticationFilter;
 import org.geoserver.security.filter.GeoServerJ2eeAuthenticationFilter;
 import org.geoserver.security.filter.GeoServerRequestHeaderAuthenticationFilter;
 import org.geoserver.security.filter.GeoServerUserNamePasswordAuthenticationFilter;
+import org.geoserver.security.filter.GeoServerX509CertificateAuthenticationFilter;
 import org.geoserver.security.impl.DigestAuthUtils;
 import org.geoserver.security.impl.GeoServerRole;
 import org.geoserver.security.impl.GeoServerUser;
@@ -57,6 +72,7 @@ public class AuthenticationFilterTest extends AbstractAuthenticationProviderTest
     public final static String testFilterName5 = "basicAuthTestFilterWithRememberMe";
     public final static String testFilterName6 = "formLoginTestFilter";
     public final static String testFilterName7 = "formLoginTestFilterWithRememberMe";
+    public final static String testFilterName8 = "x509TestFilter";
 
 
     public final static String testProviderName = "basicAuthTestProvider";
@@ -487,6 +503,7 @@ public class AuthenticationFilterTest extends AbstractAuthenticationProviderTest
         config.setRoleSource(RoleSource.UGService);
         getSecurityManager().saveFilter(config);
         request= createRequest("/foo/bar");
+        request.setHeader("principal", testUserName);
         response= new MockHttpServletResponse();
         chain = new MockFilterChain();            
         getProxy().doFilter(request, response, chain);            
@@ -1013,7 +1030,7 @@ public class AuthenticationFilterTest extends AbstractAuthenticationProviderTest
         assertTrue(response.wasRedirectSent());
         tmp = response.getHeader("Location");
         assertNotNull(tmp);
-        assert(tmp.endsWith(GeoServerUserNamePasswordAuthenticationFilter.URL_AFTER_LOGOUT));
+        assertTrue(tmp.endsWith(GeoServerUserNamePasswordAuthenticationFilter.URL_LOGIN_FORM));
         ctx = (SecurityContext)request.getSession(true).getAttribute(
                 HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY);        
         assertNull(ctx);
@@ -1145,4 +1162,339 @@ public class AuthenticationFilterTest extends AbstractAuthenticationProviderTest
 
     }
 
+    public void testX509Auth() throws Exception{
+
+        X509CertificateAuthenticationFilterConfig config = 
+                new X509CertificateAuthenticationFilterConfig();        
+        config.setClassName(GeoServerX509CertificateAuthenticationFilter.class.getName());        
+        config.setName(testFilterName8);
+        config.setRoleServiceName("rs1");
+        config.setRoleSource(org.geoserver.security.config.X509CertificateAuthenticationFilterConfig.RoleSource.RoleService);
+        config.setUserGroupServiceName("ug1");
+        getSecurityManager().saveFilter(config);
+        
+        prepareFiterChain(pattern,
+            GeoServerSecurityFilterChain.SECURITY_CONTEXT_ASC_FILTER,    
+            testFilterName8,
+            GeoServerSecurityFilterChain.DYNAMIC_EXCEPTION_TRANSLATION_OFILTER,
+            GeoServerSecurityFilterChain.FILTER_SECURITY_INTERCEPTOR);
+
+
+        SecurityContextHolder.getContext().setAuthentication(null);
+        
+        // Test entry point                
+        MockHttpServletRequest request= createRequest("/foo/bar");
+        MockHttpServletResponse response= new MockHttpServletResponse();
+        MockFilterChain chain = new MockFilterChain();                
+        
+        getProxy().doFilter(request, response, chain);
+        assertEquals(HttpServletResponse.SC_FORBIDDEN,response.getErrorCode());
+        SecurityContext ctx = (SecurityContext)request.getSession(true).getAttribute(
+                HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY);        
+        assertNull(ctx);
+        assertNull(SecurityContextHolder.getContext().getAuthentication());
+        
+        
+        for (org.geoserver.security.config.X509CertificateAuthenticationFilterConfig.RoleSource rs : 
+            org.geoserver.security.config.X509CertificateAuthenticationFilterConfig.RoleSource.values()) {
+            config.setRoleSource(rs);
+            getSecurityManager().saveFilter(config);
+            request= createRequest("/foo/bar");
+            response= new MockHttpServletResponse();
+            chain = new MockFilterChain();
+            setCertifacteForUser(testUserName, request);                        
+            getProxy().doFilter(request, response, chain);            
+            assertEquals(HttpServletResponse.SC_OK, response.getErrorCode());
+            ctx = (SecurityContext)request.getSession(true).getAttribute(
+                    HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY);        
+            assertNotNull(ctx);
+            Authentication auth = ctx.getAuthentication();
+            assertNotNull(auth);
+            assertNull(SecurityContextHolder.getContext().getAuthentication());
+            checkForAuthenticatedRole(auth);
+            assertEquals(testUserName, auth.getPrincipal());
+            assertTrue(auth.getAuthorities().contains(new GeoServerRole(rootRole)));
+            assertTrue(auth.getAuthorities().contains(new GeoServerRole(derivedRole)));        
+        }
+
+        // unknown user
+        for (org.geoserver.security.config.X509CertificateAuthenticationFilterConfig.RoleSource rs : 
+            org.geoserver.security.config.X509CertificateAuthenticationFilterConfig.RoleSource.values()) {
+            config.setRoleSource(rs);
+            getSecurityManager().saveFilter(config);
+
+            config.setRoleSource(rs);
+            request= createRequest("/foo/bar");
+            response= new MockHttpServletResponse();
+            chain = new MockFilterChain();
+            //TODO
+            setCertifacteForUser("unknown", request);
+            getProxy().doFilter(request, response, chain);            
+            assertEquals(HttpServletResponse.SC_OK, response.getErrorCode());
+            ctx = (SecurityContext)request.getSession(true).getAttribute(
+                    HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY);        
+            assertNotNull(ctx);
+            Authentication auth = ctx.getAuthentication();
+            assertNotNull(auth);
+            assertNull(SecurityContextHolder.getContext().getAuthentication());
+            checkForAuthenticatedRole(auth);
+            assertEquals("unknown", auth.getPrincipal());
+        }
+
+        // test disabled user
+        updateUser("ug1", testUserName, false);
+        config.setRoleSource(org.geoserver.security.config.X509CertificateAuthenticationFilterConfig.RoleSource.UGService);
+        getSecurityManager().saveFilter(config);
+        request= createRequest("/foo/bar");
+        response= new MockHttpServletResponse();
+        chain = new MockFilterChain();
+        setCertifacteForUser(testUserName, request);
+        getProxy().doFilter(request, response, chain);            
+        assertEquals(HttpServletResponse.SC_FORBIDDEN,response.getErrorCode());
+        ctx = (SecurityContext)request.getSession(true).getAttribute(
+                HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY);        
+        assertNull(ctx);
+        assertNull(SecurityContextHolder.getContext().getAuthentication());
+        
+        // Test anonymous
+        insertAnonymousFilter(GeoServerSecurityFilterChain.DYNAMIC_EXCEPTION_TRANSLATION_OFILTER);
+        request= createRequest("/foo/bar");
+        response= new MockHttpServletResponse();
+        chain = new MockFilterChain();                        
+        getProxy().doFilter(request, response, chain);
+        assertEquals(HttpServletResponse.SC_OK, response.getErrorCode());
+        // Anonymous context is not stored in http session, no further testing
+        removeAnonymousFilter();
+
+                
+    }      
+    
+    protected void setCertifacteForUser(final String userName, MockHttpServletRequest request) {
+        X509Certificate x509 = new X509Certificate() {
+
+            @Override
+            public Set<String> getCriticalExtensionOIDs() {
+                return null;
+            }
+
+            @Override
+            public byte[] getExtensionValue(String arg0) {
+                return null;
+            }
+
+            @Override
+            public Set<String> getNonCriticalExtensionOIDs() {
+                return null;
+            }
+
+            @Override
+            public boolean hasUnsupportedCriticalExtension() {
+                return false;
+            }
+
+            @Override
+            public void checkValidity() throws CertificateExpiredException,
+                    CertificateNotYetValidException {
+            }
+
+            @Override
+            public void checkValidity(Date arg0) throws CertificateExpiredException,
+                    CertificateNotYetValidException {
+            }
+
+            @Override
+            public int getBasicConstraints() {
+                return 0;
+            }
+
+            @Override
+            public Principal getIssuerDN() {
+                return null;
+            }
+
+            @Override
+            public boolean[] getIssuerUniqueID() {
+                return null;
+            }
+
+            @Override
+            public boolean[] getKeyUsage() {
+                return null;
+            }
+
+            @Override
+            public Date getNotAfter() {
+                return null;
+            }
+
+            @Override
+            public Date getNotBefore() {
+                return null;
+            }
+
+            @Override
+            public BigInteger getSerialNumber() {
+                return null;
+            }
+
+            @Override
+            public String getSigAlgName() {
+                return null;
+            }
+
+            @Override
+            public String getSigAlgOID() {
+                return null;
+            }
+
+            @Override
+            public byte[] getSigAlgParams() {
+                return null;
+            }
+
+            @Override
+            public byte[] getSignature() {
+                return null;
+            }
+
+            @Override
+            public Principal getSubjectDN() {
+                return new Principal () {
+                 @Override
+                public String getName() {
+                     return "cn="+userName+",ou=ou1";
+                     }   
+                };
+            }
+
+            @Override
+            public boolean[] getSubjectUniqueID() {
+                return null;
+            }
+
+            @Override
+            public byte[] getTBSCertificate() throws CertificateEncodingException {
+                return null;
+            }
+
+            @Override
+            public int getVersion() {
+                return 0;
+            }
+
+            @Override
+            public byte[] getEncoded() throws CertificateEncodingException {
+                return null;
+            }
+
+            @Override
+            public PublicKey getPublicKey() {
+                return null;
+            }
+
+            @Override
+            public String toString() {
+                return null;
+            }
+
+            @Override
+            public void verify(PublicKey arg0) throws CertificateException,
+                    NoSuchAlgorithmException, InvalidKeyException, NoSuchProviderException,
+                    SignatureException {
+            }
+
+            @Override
+            public void verify(PublicKey arg0, String arg1) throws CertificateException,
+                    NoSuchAlgorithmException, InvalidKeyException, NoSuchProviderException,
+                    SignatureException {
+            }
+            
+        };
+        request.setAttribute("javax.servlet.request.X509Certificate", 
+                new X509Certificate[]{x509});
+    }
+
+    public void testCascadingFilters() throws Exception{
+
+        BasicAuthenticationFilterConfig bconfig = new BasicAuthenticationFilterConfig();
+        bconfig.setClassName(GeoServerBasicAuthenticationFilter.class.getName());
+        bconfig.setUseRememberMe(false);
+        bconfig.setName(testFilterName);
+        getSecurityManager().saveFilter(bconfig);
+
+        
+        DigestAuthenticationFilterConfig config = new DigestAuthenticationFilterConfig();
+        config.setClassName(GeoServerDigestAuthenticationFilter.class.getName());
+        config.setName(testFilterName2);
+        config.setUserGroupServiceName("ug1");
+        
+        getSecurityManager().saveFilter(config);
+        prepareFiterChain(pattern,
+                GeoServerSecurityFilterChain.SECURITY_CONTEXT_ASC_FILTER,
+                testFilterName,
+                testFilterName2,
+                GeoServerSecurityFilterChain.DYNAMIC_EXCEPTION_TRANSLATION_OFILTER,
+                GeoServerSecurityFilterChain.FILTER_SECURITY_INTERCEPTOR);
+
+
+        SecurityContextHolder.getContext().setAuthentication(null);
+            
+        // Test entry point, must be digest                
+        MockHttpServletRequest request= createRequest("/foo/bar");
+        MockHttpServletResponse response= new MockHttpServletResponse();
+        MockFilterChain chain = new MockFilterChain();                
+            
+        getProxy().doFilter(request, response, chain);
+        assertEquals(HttpServletResponse.SC_UNAUTHORIZED,response.getErrorCode());
+        String tmp = response.getHeader("WWW-Authenticate");
+        assertNotNull(tmp);
+        assert(tmp.indexOf(GeoServerSecurityManager.REALM) !=-1 );
+        assert(tmp.indexOf("Digest") !=-1 );
+        SecurityContext ctx = (SecurityContext)request.getSession(true).getAttribute(
+                    HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY);        
+        assertNull(ctx);
+        assertNull(SecurityContextHolder.getContext().getAuthentication());
+        
+        
+        // test successful login for digest
+        request= createRequest("/foo/bar");
+        response= new MockHttpServletResponse();
+        chain = new MockFilterChain();        
+
+        String headerValue=clientDigestString(tmp, testUserName, testPassword, request.getMethod());
+        request.addHeader("Authorization",  headerValue);
+        getProxy().doFilter(request, response, chain);
+        assertEquals(HttpServletResponse.SC_OK, response.getErrorCode());
+        ctx = (SecurityContext)request.getSession(true).getAttribute(
+                HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY);        
+        assertNotNull(ctx);
+        Authentication auth = ctx.getAuthentication();
+        assertNotNull(auth);
+        assertNull(SecurityContextHolder.getContext().getAuthentication());
+        checkForAuthenticatedRole(auth);
+        assertEquals(testUserName, ((UserDetails) auth.getPrincipal()).getUsername());
+        assertTrue(auth.getAuthorities().contains(new GeoServerRole(rootRole)));
+        assertTrue(auth.getAuthorities().contains(new GeoServerRole(derivedRole)));
+        
+        // check success for basic authentication
+        request= createRequest("/foo/bar");
+        response= new MockHttpServletResponse();
+        chain = new MockFilterChain();        
+
+        request.addHeader("Authorization",  "Basic " + 
+                new String(Base64.encodeBytes((testUserName+":"+testPassword).getBytes())));
+        getProxy().doFilter(request, response, chain);
+        assertEquals(HttpServletResponse.SC_OK, response.getErrorCode());
+        ctx = (SecurityContext)request.getSession(true).getAttribute(
+                HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY);        
+        assertNotNull(ctx);
+        auth = ctx.getAuthentication();
+        assertNotNull(auth);
+        assertNull(SecurityContextHolder.getContext().getAuthentication());
+        checkForAuthenticatedRole(auth);
+        assertEquals(testUserName, ((UserDetails) auth.getPrincipal()).getUsername());
+        assertTrue(auth.getAuthorities().contains(new GeoServerRole(rootRole)));
+        assertTrue(auth.getAuthorities().contains(new GeoServerRole(derivedRole)));
+
+    }
 }

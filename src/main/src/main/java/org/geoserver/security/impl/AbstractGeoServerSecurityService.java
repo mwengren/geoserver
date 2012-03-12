@@ -52,7 +52,8 @@ public abstract class AbstractGeoServerSecurityService implements GeoServerSecur
     
     @Override
     public void initializeFromConfig(SecurityNamedServiceConfig config) throws IOException {
-        this.name=config.getName();
+        if (config!=null)
+            this.name=config.getName();
     }
 
     @Override
