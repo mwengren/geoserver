@@ -347,7 +347,7 @@ public class GeoServerResourceLoader extends DefaultResourceLoader implements Ap
         }
         
         //create it
-        return createDirectory( location );
+        return createDirectory( parent, location );
     }
     
     /**
@@ -427,6 +427,7 @@ public class GeoServerResourceLoader extends DefaultResourceLoader implements Ap
 
         //no base directory set, cannot create a relative path
         if (baseDirectory == null) {
+<<<<<<< HEAD
              String msg = "No base location set, could not create directory: " + location;
              throw new IOException(msg);
         }
@@ -443,6 +444,18 @@ public class GeoServerResourceLoader extends DefaultResourceLoader implements Ap
 
         file.mkdirs();
         return file;
+=======
+            String msg = "No base location set, could not create directory: " + location;
+            throw new IOException(msg);
+        }
+    
+        file = parent != null ? new File(new File(baseDirectory, parent.getPath()), location) 
+            : new File(baseDirectory, location);
+
+        file.mkdirs();
+        return file;
+
+>>>>>>> jdeolive/security
     }
 
     /**

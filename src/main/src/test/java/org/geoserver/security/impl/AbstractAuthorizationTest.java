@@ -27,7 +27,6 @@ import org.geotools.factory.Hints;
 import org.opengis.util.ProgressListener;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.GrantedAuthorityImpl;
 import org.springframework.security.authentication.TestingAuthenticationToken;
 
 
@@ -97,13 +96,13 @@ public abstract class AbstractAuthorizationTest extends SecureObjectsTest {
         super.setUp();
         
         rwUser = new TestingAuthenticationToken("rw", "supersecret", new GrantedAuthority[] {
-                new GrantedAuthorityImpl("READER"), new GrantedAuthorityImpl("WRITER") });
+                new GeoServerRole("READER"), new GeoServerRole("WRITER") });
         roUser = new TestingAuthenticationToken("ro", "supersecret",
-                new GrantedAuthority[] { new GrantedAuthorityImpl("READER") });
+                new GrantedAuthority[] { new GeoServerRole("READER") });
         anonymous = new TestingAuthenticationToken("anonymous", null);
         milUser = new TestingAuthenticationToken("military", "supersecret",
-                new GrantedAuthority[] { new GrantedAuthorityImpl("MILITARY") });
-        root = new TestingAuthenticationToken("admin", "geoserver", new GrantedAuthority[] { new GrantedAuthorityImpl(SecureTreeNode.ROOT_ROLE) });
+                new GrantedAuthority[] { new GeoServerRole("MILITARY") });
+        root = new TestingAuthenticationToken("admin", "geoserver", new GrantedAuthority[] { new GeoServerRole(SecureTreeNode.ROOT_ROLE) });
 
         catalog = createNiceMock(Catalog.class);
         expect(catalog.getWorkspace((String) anyObject())).andReturn(

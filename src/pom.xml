@@ -749,6 +749,16 @@
     <version>${spring.security.version}</version>
    </dependency>
    <dependency>
+      <groupId>org.jasypt</groupId>
+      <artifactId>jasypt</artifactId>
+      <version>1.8</version>
+   </dependency>
+   <dependency>
+    <groupId>org.bouncycastle</groupId>
+    <artifactId>bcprov-jdk14</artifactId>
+    <version>1.46</version>
+   </dependency>
+   <dependency>
      <groupId>org.apache.wicket</groupId>
      <artifactId>wicket</artifactId>
      <version>${wicket.version}</version>
@@ -1061,6 +1071,12 @@
      <exclude>**/doc-files/**</exclude>
     </excludes>
    </testResource>
+   <testResource>
+     <directory>${basedir}/src/test/resources</directory>
+     <includes>
+       <include>**/*</include>
+     </includes>
+   </testResource>
   </testResources>
 
 
@@ -1309,7 +1325,7 @@
 
    <!-- HTML based, cross-reference version of Java source code -->
    <plugin>
-    <artifactId>jxr-maven-plugin</artifactId>
+    <artifactId>maven-jxr-plugin</artifactId>
     <configuration>
      <aggregate>true</aggregate>
     </configuration>
@@ -1362,6 +1378,7 @@
  <modules>
   <module>platform</module>
   <module>main</module>
+  <module>security</module>
   <module>wcs</module>
   <module>wcs1_0</module>
   <module>wcs1_1</module>
