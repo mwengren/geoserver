@@ -31,7 +31,6 @@ public class FilterConfigException extends SecurityConfigException {
     public static final String UNKNOWN_USER_GROUP_SERVICE="UNKNOWN_USER_GROUP_SERVICE";
     public static final String INVALID_SECONDS="INVALID_SECONDS";
     
-    public static final String ROLE_SERVICE_NEEDED="ROLE_SERVICE_NEEDED";
     public static final String UNKNOWN_ROLE_SERVICE="UNKNOWN_ROLE_SERVICE";
     
     public static final String ROLE_SOURCE_NEEDED="ROLE_SOURCE_NEEDED";
@@ -44,4 +43,6 @@ public class FilterConfigException extends SecurityConfigException {
     public static final String PRINCIPAL_HEADER_ATTRIBUTE_NEEDED="PRINCIPAL_HEADER_ATTRIBUTE_NEEDED";
     public static final String ROLES_HEADER_ATTRIBUTE_NEEDED="ROLES_HEADER_ATTRIBUTE_NEEDED";
     
+    public static final String SECURITY_METADATA_SOURCE_NEEDED="SECURITY_METADATA_SOURCE_NEEDED";
+    public static final String UNKNOWN_SECURITY_METADATA_SOURCE="UNKNOWN_SECURITY_METADATA_SOURCE";
 }

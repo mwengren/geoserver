@@ -8,6 +8,7 @@ import org.geoserver.security.config.ExceptionTranslationFilterConfig;
 import org.geoserver.security.config.GeoServerRoleFilterConfig;
 import org.geoserver.security.config.J2eeAuthenticationFilterConfig;
 import org.geoserver.security.config.RequestHeaderAuthenticationFilterConfig;
+import org.geoserver.security.config.SecurityInterceptorFilterConfig;
 import org.geoserver.security.config.UsernamePasswordAuthenticationFilterConfig;
 import org.geoserver.security.config.X509CertificateAuthenticationFilterConfig;
 import org.geoserver.security.filter.GeoServerDigestAuthenticationFilter;
@@ -15,6 +16,7 @@ import org.geoserver.security.filter.GeoServerExceptionTranslationFilter;
 import org.geoserver.security.filter.GeoServerJ2eeAuthenticationFilter;
 import org.geoserver.security.filter.GeoServerRequestHeaderAuthenticationFilter;
 import org.geoserver.security.filter.GeoServerRoleFilter;
+import org.geoserver.security.filter.GeoServerSecurityInterceptorFilter;
 import org.geoserver.security.filter.GeoServerUserNamePasswordAuthenticationFilter;
 import org.geoserver.security.filter.GeoServerX509CertificateAuthenticationFilter;
 import org.geoserver.security.xml.XMLRoleService;
@@ -111,6 +113,43 @@ public class FilterConfigValidatorTest extends GeoServerSecurityTestSupport {
 
     }
     
+    public void testSecurityInterceptorFilterConfigValidation() throws Exception{
+        SecurityInterceptorFilterConfig config = new SecurityInterceptorFilterConfig();
+        config.setClassName(GeoServerSecurityInterceptorFilter.class.getName());
+        config.setName("testInterceptFilter");
+        
+         
+         boolean failed = false;                                        
+         try {
+             getSecurityManager().saveFilter(config);
+         } catch (FilterConfigException ex){
+             assertEquals(FilterConfigException.SECURITY_METADATA_SOURCE_NEEDED,ex.getId());
+             assertEquals(0,ex.getArgs().length);
+             LOGGER.info(ex.getMessage());
+             
+             failed=true;
+         }
+         assertTrue(failed);
+         
+         config.setSecurityMetadataSource("unknown");
+         failed = false;                                        
+         try {
+             getSecurityManager().saveFilter(config);
+         } catch (FilterConfigException ex){
+             assertEquals(FilterConfigException.UNKNOWN_SECURITY_METADATA_SOURCE,ex.getId());
+             assertEquals(1,ex.getArgs().length);
+             assertEquals("unknown",ex.getArgs()[0]);
+             LOGGER.info(ex.getMessage());            
+             failed=true;
+         }
+         assertTrue(failed);
+         
+         //getSecurityManager().saveFilter(config);
+
+     }
+
+    
+    
     public void testX509FilterConfigValidation() throws Exception{
         X509CertificateAuthenticationFilterConfig config = new X509CertificateAuthenticationFilterConfig();
         config.setClassName(GeoServerX509CertificateAuthenticationFilter.class.getName());
@@ -159,17 +198,6 @@ public class FilterConfigValidatorTest extends GeoServerSecurityTestSupport {
         getSecurityManager().saveFilter(config);
         
         config.setRoleSource(X509CertificateAuthenticationFilterConfig.RoleSource.RoleService);        
-        failed = false;                                        
-        try {
-            getSecurityManager().saveFilter(config);
-        } catch (FilterConfigException ex){
-            assertEquals(FilterConfigException.ROLE_SERVICE_NEEDED,ex.getId());
-            assertEquals(0,ex.getArgs().length);
-            LOGGER.info(ex.getMessage());
-            
-            failed=true;
-        }
-        assertTrue(failed);
         
         config.setRoleServiceName("blabla");
         failed = false;                                        
@@ -231,20 +259,9 @@ public class FilterConfigValidatorTest extends GeoServerSecurityTestSupport {
         config.setClassName(GeoServerJ2eeAuthenticationFilter.class.getName());
         config.setName("testJ2ee");
         
-        boolean failed = false;                                        
-        try {
-            getSecurityManager().saveFilter(config);
-        } catch (FilterConfigException ex){
-            assertEquals(FilterConfigException.ROLE_SERVICE_NEEDED,ex.getId());
-            assertEquals(0,ex.getArgs().length);
-            LOGGER.info(ex.getMessage());
-            
-            failed=true;
-        }
-        assertTrue(failed);
         
         config.setRoleServiceName("blabla");
-        failed = false;                                        
+        boolean failed = false;                                        
         try {
             getSecurityManager().saveFilter(config);
         } catch (FilterConfigException ex){
@@ -357,19 +374,7 @@ public class FilterConfigValidatorTest extends GeoServerSecurityTestSupport {
         config.setUserGroupServiceName(XMLUserGroupService.DEFAULT_NAME);
         getSecurityManager().saveFilter(config);
         
-        config.setRoleSource(RequestHeaderAuthenticationFilterConfig.RoleSource.RoleService);        
-        failed = false;                                        
-        try {
-            getSecurityManager().saveFilter(config);
-        } catch (FilterConfigException ex){
-            assertEquals(FilterConfigException.ROLE_SERVICE_NEEDED,ex.getId());
-            assertEquals(0,ex.getArgs().length);
-            LOGGER.info(ex.getMessage());
-            
-            failed=true;
-        }
-        assertTrue(failed);
-        
+        config.setRoleSource(RequestHeaderAuthenticationFilterConfig.RoleSource.RoleService);                
         config.setRoleServiceName("blabla");
         failed = false;                                        
         try {

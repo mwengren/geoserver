@@ -29,7 +29,8 @@ public class GeoServerUser implements UserDetails, CredentialsContainer, Compara
     public static final String AdminName="admin";
     public static final String AdminPasword="geoserver";
     public static final boolean AdminEnabled=true;
-
+    final public static String ROOT_USERNAME="root";
+    final public static String ANONYMOUS_USERNAME="anonymous";
     /**
      * Create the geoserver default administrator
      */
@@ -49,6 +50,17 @@ public class GeoServerUser implements UserDetails, CredentialsContainer, Compara
         root.setAuthorities(roles);
         return root;
     }
+    
+    public static GeoServerUser createAnonymous() {
+        GeoServerUser anon = new GeoServerUser(GeoServerUser.ANONYMOUS_USERNAME);
+        anon.setPassword(null);
+        anon.setEnabled(true);
+        Set<GrantedAuthority> roles = new HashSet<GrantedAuthority>();
+        roles.add(GeoServerRole.ANONYMOUS_ROLE);
+        anon.setAuthorities(roles);
+        return anon;
+    }
+
 
 
     private String password;
@@ -61,7 +73,7 @@ public class GeoServerUser implements UserDetails, CredentialsContainer, Compara
     protected Properties properties;
     protected Collection<GrantedAuthority> authorities;
 
-    final public static String ROOT_USERNAME="root"; 
+     
 
     public GeoServerUser(String username) {
         this.username=username;

@@ -34,7 +34,7 @@ import org.geoserver.security.GeoServerSecurityManager;
  * @author christian
  *
  */
-public class RequestHeaderAuthenticationFilterConfig extends BaseSecurityNamedServiceConfig {
+public class RequestHeaderAuthenticationFilterConfig extends NamedFilterConfig {
 
     private RoleSource roleSource;
     private String principalHeaderAttribute;

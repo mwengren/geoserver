@@ -16,6 +16,8 @@ import org.geoserver.security.GeoServerUserGroupService;
 import org.geoserver.security.config.CasAuthenticationFilterConfig;
 import org.geoserver.security.config.SecurityNamedServiceConfig;
 import org.jasig.cas.client.validation.Cas20ServiceTicketValidator;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.cas.ServiceProperties;
 import org.springframework.security.cas.authentication.CasAuthenticationProvider;
 import org.springframework.security.cas.web.CasAuthenticationEntryPoint;
@@ -69,11 +71,7 @@ public class GeoServerCasAuthenticationFilter extends GeoServerCompositeFilter {
             }            
         };
         
-        filter.setAuthenticationManager(getSecurityManager());
-        filter.setAllowSessionCreation(false);
-        
-        // TODO,add the authentication provider to the security manager
-        
+                
         CasAuthenticationProvider provider = new CasAuthenticationProvider();
         provider.setKey(config.getName());
         GeoServerUserGroupService ugService = getSecurityManager().loadUserGroupService(authConfig.getUserGroupServiceName());
@@ -81,7 +79,17 @@ public class GeoServerCasAuthenticationFilter extends GeoServerCompositeFilter {
         provider.setServiceProperties(sp);
         Cas20ServiceTicketValidator ticketValidator = new Cas20ServiceTicketValidator(authConfig.getTicketValidatorUrl());
         provider.setTicketValidator(ticketValidator);
-        
+
+        ProviderManager manager = new ProviderManager();
+        manager.getProviders().add(provider);
+        try {
+            provider.afterPropertiesSet();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+        filter.setAuthenticationManager(manager);
+        filter.setAllowSessionCreation(false);
+
         
         filter.afterPropertiesSet();
         getNestedFilters().add(filter);        

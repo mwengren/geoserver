@@ -5,32 +5,65 @@
 
 package org.geoserver.security.filter;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.geoserver.security.impl.GeoServerRole;
+import javax.servlet.FilterChain;
+import javax.servlet.ServletException;
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletResponse;
+import javax.servlet.http.HttpServletRequest;
+
+import org.geoserver.security.config.SecurityNamedServiceConfig;
+import org.geoserver.security.impl.GeoServerUser;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
+import org.springframework.security.authentication.AuthenticationDetailsSource;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.userdetails.memory.UserAttribute;
-import org.springframework.security.web.authentication.AnonymousAuthenticationFilter;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
+import org.springframework.util.Assert;
 
 /**
- * anonymous authentication filter injecting  {@link GeoServerRole#ANONYMOUS_ROLE}
- * 
- * This is singleton and not a named security service 
+ * Anonymous authentication filter
  * 
  * @author mcr
  *
  */
-public class GeoServerAnonymousAuthenticationFilter extends AnonymousAuthenticationFilter {
+public class GeoServerAnonymousAuthenticationFilter extends GeoServerSecurityFilter {
 
-    
-    @Override
-    public void setUserAttribute(UserAttribute userAttributeDefinition) {
-        List<GrantedAuthority> list = new ArrayList<GrantedAuthority>();
-        list.add(GeoServerRole.ANONYMOUS_ROLE);
-        userAttributeDefinition.setAuthorities(list);
-        super.setUserAttribute(userAttributeDefinition);
+    public void initializeFromConfig(SecurityNamedServiceConfig config) throws IOException {
+        super.initializeFromConfig(config);
+    }
+       
+    private AuthenticationDetailsSource authenticationDetailsSource = new WebAuthenticationDetailsSource();
+
+
+    public void doFilter(ServletRequest req, ServletResponse res, FilterChain chain)
+            throws IOException, ServletException {
+
+        if (SecurityContextHolder.getContext().getAuthentication() == null) {
+            SecurityContextHolder.getContext().setAuthentication(createAuthentication((HttpServletRequest) req));
+        }
+
+        chain.doFilter(req, res);
     }
 
 
+    protected Authentication createAuthentication(HttpServletRequest request) {
+        GeoServerUser anonymous = GeoServerUser.createAnonymous();
+        List<GrantedAuthority> roles = new ArrayList<GrantedAuthority>();
+        roles.addAll(anonymous.getAuthorities());
+        AnonymousAuthenticationToken auth = new AnonymousAuthenticationToken("geoserver", 
+                anonymous.getUsername(),roles);
+        auth.setDetails(authenticationDetailsSource.buildDetails(request));
+        return auth;
+    }
+
+
+    public void setAuthenticationDetailsSource(AuthenticationDetailsSource authenticationDetailsSource) {
+        Assert.notNull(authenticationDetailsSource, "AuthenticationDetailsSource required");
+        this.authenticationDetailsSource = authenticationDetailsSource;
+    }
 }

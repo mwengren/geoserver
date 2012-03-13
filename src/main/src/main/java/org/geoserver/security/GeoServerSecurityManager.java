@@ -50,12 +50,16 @@ import org.geoserver.security.auth.UsernamePasswordAuthenticationProvider;
 import org.geoserver.security.concurrent.LockingKeyStoreProvider;
 import org.geoserver.security.concurrent.LockingRoleService;
 import org.geoserver.security.concurrent.LockingUserGroupService;
+import org.geoserver.security.config.AnonymousAuthenticationFilterConfig;
 import org.geoserver.security.config.BasicAuthenticationFilterConfig;
 import org.geoserver.security.config.ExceptionTranslationFilterConfig;
 import org.geoserver.security.config.FileBasedSecurityServiceConfig;
 import org.geoserver.security.config.PasswordPolicyConfig;
+import org.geoserver.security.config.RememberMeAuthenticationFilterConfig;
 import org.geoserver.security.config.SecurityAuthProviderConfig;
 import org.geoserver.security.config.SecurityConfig;
+import org.geoserver.security.config.SecurityContextPersistenceFilterConfig;
+import org.geoserver.security.config.SecurityInterceptorFilterConfig;
 import org.geoserver.security.config.SecurityManagerConfig;
 import org.geoserver.security.config.SecurityNamedServiceConfig;
 import org.geoserver.security.config.SecurityRoleServiceConfig;
@@ -65,9 +69,13 @@ import org.geoserver.security.config.UsernamePasswordAuthenticationProviderConfi
 import org.geoserver.security.file.FileWatcher;
 import org.geoserver.security.file.RoleFileWatcher;
 import org.geoserver.security.file.UserGroupFileWatcher;
+import org.geoserver.security.filter.GeoServerAnonymousAuthenticationFilter;
 import org.geoserver.security.filter.GeoServerBasicAuthenticationFilter;
 import org.geoserver.security.filter.GeoServerExceptionTranslationFilter;
+import org.geoserver.security.filter.GeoServerRememberMeAuthenticationFilter;
+import org.geoserver.security.filter.GeoServerSecurityContextPersistenceFilter;
 import org.geoserver.security.filter.GeoServerSecurityFilter;
+import org.geoserver.security.filter.GeoServerSecurityInterceptorFilter;
 import org.geoserver.security.filter.GeoServerUserNamePasswordAuthenticationFilter;
 import org.geoserver.security.impl.GeoServerRole;
 import org.geoserver.security.impl.GeoServerUser;
@@ -114,6 +122,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.memory.UserAttribute;
 import org.springframework.security.core.userdetails.memory.UserAttributeEditor;
+import org.springframework.security.web.context.SecurityContextPersistenceFilter;
 
 import com.thoughtworks.xstream.converters.MarshallingContext;
 import com.thoughtworks.xstream.converters.UnmarshallingContext;
@@ -374,13 +383,13 @@ public class GeoServerSecurityManager extends ProviderManager implements Applica
         List<AuthenticationProvider> allAuthProviders = new ArrayList<AuthenticationProvider>();
         allAuthProviders.addAll(authProviders);
 
-        //anonymous
-        if (config.isAnonymousAuth()) {
-            AnonymousAuthenticationProvider aap = new AnonymousAuthenticationProvider();
-            aap.setKey("geoserver");
-            aap.afterPropertiesSet();
-            allAuthProviders.add(aap);
-        }
+        //anonymous, not needed  anymore
+//        if (config.isAnonymousAuth()) {
+//            AnonymousAuthenticationProvider aap = new AnonymousAuthenticationProvider();
+//            aap.setKey("geoserver");
+//            aap.afterPropertiesSet();
+//            allAuthProviders.add(aap);
+//        }
 
         //remember me
         RememberMeAuthenticationProvider rap = new RememberMeAuthenticationProvider();
@@ -1624,7 +1633,64 @@ public class GeoServerSecurityManager extends ProviderManager implements Applica
             upConfig.setUsernameParameterName(UsernamePasswordAuthenticationFilterConfig.DEFAULT_USERNAME_PARAM);
             upConfig.setPasswordParameterName(UsernamePasswordAuthenticationFilterConfig.DEFAULT_PASSWORD_PARAM);
             saveFilter(upConfig);
+        }        
+        filterName =GeoServerSecurityFilterChain.SECURITY_CONTEXT_ASC_FILTER;
+        filter = loadFilter(filterName);
+        if (filter==null) {
+            SecurityContextPersistenceFilterConfig pConfig= new SecurityContextPersistenceFilterConfig();
+            pConfig.setClassName(GeoServerSecurityContextPersistenceFilter.class.getName());
+            pConfig.setName(filterName);
+            pConfig.setAllowSessionCreation(true);
+            saveFilter(pConfig);
         }
+        filterName =GeoServerSecurityFilterChain.SECURITY_CONTEXT_NO_ASC_FILTER;
+        filter = loadFilter(filterName);
+        if (filter==null) {
+            SecurityContextPersistenceFilterConfig pConfig= new SecurityContextPersistenceFilterConfig();
+            pConfig.setClassName(GeoServerSecurityContextPersistenceFilter.class.getName());
+            pConfig.setName(filterName);
+            pConfig.setAllowSessionCreation(false);
+            saveFilter(pConfig);
+        }
+        filterName =GeoServerSecurityFilterChain.ANONYMOUS_FILTER;
+        filter = loadFilter(filterName);
+        if (filter==null) {
+            AnonymousAuthenticationFilterConfig aConfig= new AnonymousAuthenticationFilterConfig();
+            aConfig.setClassName(GeoServerAnonymousAuthenticationFilter.class.getName());
+            aConfig.setName(filterName);
+            saveFilter(aConfig);
+        }
+        filterName =GeoServerSecurityFilterChain.REMEMBER_ME_FILTER;
+        filter = loadFilter(filterName);
+        if (filter==null) {
+            RememberMeAuthenticationFilterConfig rConfig= new RememberMeAuthenticationFilterConfig();
+            rConfig.setClassName(GeoServerRememberMeAuthenticationFilter.class.getName());
+            rConfig.setName(filterName);
+            saveFilter(rConfig);
+        }
+        filterName =GeoServerSecurityFilterChain.FILTER_SECURITY_INTERCEPTOR;
+        filter = loadFilter(filterName);
+        if (filter==null) {
+            SecurityInterceptorFilterConfig siConfig= new SecurityInterceptorFilterConfig();
+            siConfig.setClassName(GeoServerSecurityInterceptorFilter.class.getName());
+            siConfig.setName(filterName);
+            siConfig.setAllowIfAllAbstainDecisions(false);
+            siConfig.setSecurityMetadataSource("geoserverMetadataSource");
+            saveFilter(siConfig);
+        }
+        filterName =GeoServerSecurityFilterChain.FILTER_SECURITY_REST_INTERCEPTOR;
+        filter = loadFilter(filterName);
+        if (filter==null) {
+            SecurityInterceptorFilterConfig siConfig= new SecurityInterceptorFilterConfig();
+            siConfig.setClassName(GeoServerSecurityInterceptorFilter.class.getName());
+            siConfig.setName(filterName);
+            siConfig.setAllowIfAllAbstainDecisions(false);
+            siConfig.setSecurityMetadataSource("restFilterDefinitionMap");
+            saveFilter(siConfig);
+        }
+        
+
+
 
 
 

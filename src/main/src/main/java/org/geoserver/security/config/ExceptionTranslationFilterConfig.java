@@ -29,7 +29,7 @@ import org.springframework.security.web.AuthenticationEntryPoint;
  * @author christian
  *
  */
-public class ExceptionTranslationFilterConfig extends BaseSecurityNamedServiceConfig {
+public class ExceptionTranslationFilterConfig extends NamedFilterConfig {
 
     private static final long serialVersionUID = 1L;
 

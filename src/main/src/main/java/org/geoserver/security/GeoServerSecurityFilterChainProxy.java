@@ -17,6 +17,8 @@ import javax.servlet.http.HttpServletRequest;
 
 import org.geoserver.platform.GeoServerExtensions;
 import org.geoserver.security.config.SecurityManagerConfig;
+import org.geoserver.security.filter.GeoServerAnonymousAuthenticationFilter;
+import org.geoserver.security.filter.GeoServerSecurityMetadataSource;
 import org.geotools.util.logging.Logging;
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
@@ -123,7 +125,7 @@ public class GeoServerSecurityFilterChainProxy extends FilterChainProxy
                     }
 
                     //check for anonymous auth flag
-                    if (filter instanceof AnonymousAuthenticationFilter && !config.isAnonymousAuth()) {
+                    if (filter instanceof GeoServerAnonymousAuthenticationFilter && !config.isAnonymousAuth()) {
                         continue;
                     }
                     filters.add(filter);

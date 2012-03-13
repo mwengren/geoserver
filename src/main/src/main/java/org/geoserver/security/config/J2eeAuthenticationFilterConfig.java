@@ -16,7 +16,7 @@ import org.geoserver.security.GeoServerSecurityManager;
  * @author christian
  *
  */
-public class J2eeAuthenticationFilterConfig extends BaseSecurityNamedServiceConfig {
+public class J2eeAuthenticationFilterConfig extends NamedFilterConfig {
 
     private static final long serialVersionUID = 1L;
     

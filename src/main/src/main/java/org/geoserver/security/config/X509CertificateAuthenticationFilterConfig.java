@@ -23,7 +23,7 @@ import org.geoserver.security.GeoServerSecurityManager;
  * @author christian
  *
  */
-public class X509CertificateAuthenticationFilterConfig extends BaseSecurityNamedServiceConfig {
+public class X509CertificateAuthenticationFilterConfig extends NamedFilterConfig {
 
     private RoleSource roleSource;
     private String userGroupServiceName;

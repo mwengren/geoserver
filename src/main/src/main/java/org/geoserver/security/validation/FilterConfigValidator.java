@@ -10,13 +10,17 @@ import java.io.IOException;
 
 import org.geoserver.platform.GeoServerExtensions;
 import org.geoserver.security.GeoServerSecurityManager;
+import org.geoserver.security.config.AnonymousAuthenticationFilterConfig;
 import org.geoserver.security.config.BasicAuthenticationFilterConfig;
 import org.geoserver.security.config.CasAuthenticationFilterConfig;
 import org.geoserver.security.config.DigestAuthenticationFilterConfig;
 import org.geoserver.security.config.ExceptionTranslationFilterConfig;
 import org.geoserver.security.config.GeoServerRoleFilterConfig;
 import org.geoserver.security.config.J2eeAuthenticationFilterConfig;
+import org.geoserver.security.config.RememberMeAuthenticationFilterConfig;
 import org.geoserver.security.config.RequestHeaderAuthenticationFilterConfig;
+import org.geoserver.security.config.SecurityContextPersistenceFilterConfig;
+import org.geoserver.security.config.SecurityInterceptorFilterConfig;
 import org.geoserver.security.config.SecurityNamedServiceConfig;
 import org.geoserver.security.config.UsernamePasswordAuthenticationFilterConfig;
 import org.geoserver.security.config.X509CertificateAuthenticationFilterConfig;
@@ -83,7 +87,16 @@ public class FilterConfigValidator extends SecurityConfigValidator {
             validateFilterConfig((ExceptionTranslationFilterConfig)config);
         if (config instanceof CasAuthenticationFilterConfig)
             validateFilterConfig((CasAuthenticationFilterConfig)config);
+        if (config instanceof SecurityContextPersistenceFilterConfig)
+            validateFilterConfig((SecurityContextPersistenceFilterConfig)config);
+        if (config instanceof RememberMeAuthenticationFilterConfig)
+            validateFilterConfig((RememberMeAuthenticationFilterConfig)config);
+        if (config instanceof AnonymousAuthenticationFilterConfig)
+            validateFilterConfig((AnonymousAuthenticationFilterConfig)config);
+        if (config instanceof SecurityInterceptorFilterConfig)
+            validateFilterConfig((SecurityInterceptorFilterConfig)config);
 
+                                        
         
         // TODO, check rememberme        
 
@@ -103,7 +116,7 @@ public class FilterConfigValidator extends SecurityConfigValidator {
     
     protected void checkExistingRoleService (String roleServiceName) throws FilterConfigException {
         if (isNotEmpty(roleServiceName)==false)
-            throw createFilterException(FilterConfigException.ROLE_SERVICE_NEEDED);
+                return; // the active role service should be used 
         try {
             if (manager.listRoleServices().contains(roleServiceName)==false)
                 throw createFilterException(FilterConfigException.UNKNOWN_ROLE_SERVICE,
@@ -117,6 +130,29 @@ public class FilterConfigValidator extends SecurityConfigValidator {
     public void validateFilterConfig(BasicAuthenticationFilterConfig config) throws FilterConfigException {
         // Nothing to validate at the moment
     }
+    public void validateFilterConfig(SecurityContextPersistenceFilterConfig config) throws FilterConfigException {
+        // Nothing to validate at the moment
+    }
+    public void validateFilterConfig(RememberMeAuthenticationFilterConfig config) throws FilterConfigException {
+        // Nothing to validate at the moment
+    }
+    public void validateFilterConfig(AnonymousAuthenticationFilterConfig config) throws FilterConfigException {
+        // Nothing to validate at the moment
+    }
+
+    public void validateFilterConfig(SecurityInterceptorFilterConfig config) throws FilterConfigException {
+        
+        if (isNotEmpty(config.getSecurityMetadataSource())==false)
+                throw createFilterException(FilterConfigException.SECURITY_METADATA_SOURCE_NEEDED);
+        try {
+            GeoServerExtensions.bean(config.getSecurityMetadataSource());
+        } catch (NoSuchBeanDefinitionException ex) {
+            throw createFilterException(FilterConfigException.UNKNOWN_SECURITY_METADATA_SOURCE,
+                    config.getSecurityMetadataSource());
+        }
+    }
+
+    
     public void validateFilterConfig(DigestAuthenticationFilterConfig config) throws FilterConfigException {
         checkExistingUGService(config.getUserGroupServiceName());
         if (config.getNonceValiditySeconds() < 0)
@@ -192,7 +228,7 @@ public class FilterConfigValidator extends SecurityConfigValidator {
 
     }
     
-    public void validateFilterConfig(J2eeAuthenticationFilterConfig config) throws FilterConfigException {
+    public void validateFilterConfig(J2eeAuthenticationFilterConfig config) throws FilterConfigException {        
         checkExistingRoleService(config.getRoleServiceName());
     }
     

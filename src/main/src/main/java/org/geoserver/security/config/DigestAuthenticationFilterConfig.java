@@ -16,7 +16,7 @@ package org.geoserver.security.config;
  * @author mcr
  *
  */
-public class DigestAuthenticationFilterConfig extends BaseSecurityNamedServiceConfig{
+public class DigestAuthenticationFilterConfig extends NamedFilterConfig{
 
     private static final long serialVersionUID = 1L;
     private String userGroupServiceName;

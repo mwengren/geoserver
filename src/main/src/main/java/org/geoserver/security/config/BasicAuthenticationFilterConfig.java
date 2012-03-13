@@ -15,7 +15,7 @@ package org.geoserver.security.config;
  * @author mcr
  *
  */
-public class BasicAuthenticationFilterConfig extends BaseSecurityNamedServiceConfig {
+public class BasicAuthenticationFilterConfig extends NamedFilterConfig {
 
     private static final long serialVersionUID = 1L;
     private boolean useRememberMe;

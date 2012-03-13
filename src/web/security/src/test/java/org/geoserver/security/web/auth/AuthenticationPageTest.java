@@ -29,7 +29,8 @@ public class AuthenticationPageTest extends AbstractSecurityWicketTestSupport {
         List<String> selected = (List<String>) (page.get("form:authChain:authProviderNames")).getDefaultModelObject();
         assertEquals(1, selected.size());
         assertTrue(selected.contains("default"));
-        assertTrue(hasAuthProviderImpl(AnonymousAuthenticationProvider.class));
+        // not needed anymore
+        //assertTrue(hasAuthProviderImpl(AnonymousAuthenticationProvider.class));
 
         FormTester form = tester.newFormTester("form");
         form.setValue("anonymousAuth", false);
@@ -37,8 +38,9 @@ public class AuthenticationPageTest extends AbstractSecurityWicketTestSupport {
         form.submit("save");
         tester.assertNoErrorMessage();
 
-        assertEquals(false,
-            hasAuthProviderImpl(AnonymousAuthenticationProvider.class));
+        // not needed anymore
+        //assertEquals(false,
+        //    hasAuthProviderImpl(AnonymousAuthenticationProvider.class));
 
         boolean authProvFound = false;
         for (GeoServerAuthenticationProvider prov : getSecurityManager()

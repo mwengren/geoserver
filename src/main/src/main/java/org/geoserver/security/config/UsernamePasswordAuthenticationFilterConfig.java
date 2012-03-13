@@ -12,7 +12,7 @@ package org.geoserver.security.config;
  * @author mcr
  *
  */
-public class UsernamePasswordAuthenticationFilterConfig extends BaseSecurityNamedServiceConfig {
+public class UsernamePasswordAuthenticationFilterConfig extends NamedFilterConfig {
 
     public final static String DEFAULT_PASSWORD_PARAM="password";
     public final static String DEFAULT_USERNAME_PARAM="username";

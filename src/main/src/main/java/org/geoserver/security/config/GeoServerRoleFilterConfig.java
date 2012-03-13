@@ -14,7 +14,7 @@ import org.geoserver.security.filter.GeoServerRoleFilter;
  * @author mcr
  *
  */
-public class GeoServerRoleFilterConfig extends BaseSecurityNamedServiceConfig {
+public class GeoServerRoleFilterConfig extends NamedFilterConfig {
 
     private static final long serialVersionUID = 1L;
     private String httpResponseHeaderAttrForIncludedRoles;

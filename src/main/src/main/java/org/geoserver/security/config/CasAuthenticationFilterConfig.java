@@ -12,7 +12,7 @@ package org.geoserver.security.config;
  * @author mcr
  *
  */
-public class CasAuthenticationFilterConfig extends BaseSecurityNamedServiceConfig {
+public class CasAuthenticationFilterConfig extends NamedFilterConfig {
 
     private static final long serialVersionUID = 1L;
     

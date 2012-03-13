@@ -39,6 +39,7 @@
     <constructor-arg ref="authenticationManager"/>
   </bean>
 
+<!-- 
   <bean id="filterSecurityRestInterceptor"
       class="org.springframework.security.web.access.intercept.FilterSecurityInterceptor">
       <property name="authenticationManager" ref="authenticationManager" />
@@ -55,7 +56,7 @@
       </property>
       <property name="securityMetadataSource" ref="restFilterDefinitionMap"/>
   </bean>
-
+ -->
   <!--
       HTTP Method security rules.  This follows the same format as the normal DefinitionSource, but allows methods to be specified as well.
       Remember that rules are matched in order, so please put the most specific rules at the beginning of the list.
@@ -72,7 +73,6 @@
     and have the roles required.
     The securityMetadataSource provides a set of path along with the
     roles that the user must have in order to access the secured resource
-  -->
   <bean id="filterSecurityInterceptor"
     class="org.springframework.security.web.access.intercept.FilterSecurityInterceptor">    
     <property name="authenticationManager" ref="authenticationManager" />
@@ -94,6 +94,9 @@
         </sec:filter-security-metadata-source>
     </property>
   </bean>
+  -->
+  
+  <bean id="geoserverMetadataSource" class="org.geoserver.security.filter.GeoServerSecurityMetadataSource" />
 
   <!--   
     This filter integrates the authentication information in the http sessions, so it's
@@ -103,7 +106,6 @@
     This specific instance is configured with remember-me functionality, so that authentication
     information can be gathered from a cookie set on the browser, too.
     This version will create the user session if missing, it's meant for web console operation.
-  -->
   <bean id="securityContextAscFilter"
     class="org.springframework.security.web.context.SecurityContextPersistenceFilter">    
     <property name='securityContextRepository'>
@@ -112,13 +114,13 @@
        </bean>
     </property>
   </bean>
+  -->
 
   <!-- 
     Same as the one above, but this one uses a session if it's already there, otherwise
     it won't create it. This is meant to keep the overhead on service call low, but allow
     users that have already authenticated using a form based access to keep using that
     authentication when accessing services.
-  -->
   <bean id="securityContextNoAscFilter"
     class="org.springframework.security.web.context.SecurityContextPersistenceFilter">
     <property name='securityContextRepository'>
@@ -127,6 +129,7 @@
        </bean>
     </property>
   </bean>
+  -->
 
   <!--
     This filters processes logouts, removing both session informations, and the remember-me
@@ -181,26 +184,25 @@
     If authentication is missing from the SecurityContext, tries to put authentication
     information into the context using remember-me cookies. Will try to authenticate
     the contents of the cookie against the authentication manager
-  -->
   <bean id="rememberMeFilter"
     class="org.springframework.security.web.authentication.rememberme.RememberMeAuthenticationFilter">
     <property name="authenticationManager" ref="authenticationManager" />
     <property name="rememberMeServices" ref="rememberMeServices" />
   </bean>
+  -->
 
   <!-- 
     Puts default authentication informations in the security context, making sure
     we always get an anonymous user and anonymous role if all other authentication
     attempts failed
-  -->
-  
-  
+    
   <bean id="anonymousFilter"
     class="org.geoserver.security.filter.GeoServerAnonymousAuthenticationFilter">
     <property name="key" value="geoserver" />
     <property name="userAttribute" value="anonymousUser,dummy" />
   </bean>
-
+  -->
+  
   <!-- 
     Entry points for basic, digest, form based login. 
     A http 403, access denied entry point is needed for proxy authentication 
@@ -339,6 +341,10 @@
   <bean id="exceptionTranslationFilterProvider" class="org.geoserver.security.filter.GeoServerExceptionTranslationProvider"/>
   <bean id="usernamePasswordFilterProvider" class="org.geoserver.security.filter.GeoServerUserNamePasswordAuthenticationProvider"/>
   <bean id="x509FilterProvider" class="org.geoserver.security.filter.GeoServerX509CertificateAuthenticationProvider"/>
+  <bean id="contextPersistenceProvider" class="org.geoserver.security.filter.GeoServerSecurityContextPersistenceProvider"/>  
+  <bean id="rememberMeFilterProvider" class="org.geoserver.security.filter.GeoServerRememberMeAuthenticationProvider"/>
+  <bean id="anonymousFilterProvider" class="org.geoserver.security.filter.GeoServerAnonymousAuthenticationProvider"/>
+  <bean id="securityInterceptorFilterProvider" class="org.geoserver.security.filter.GeoServerSecurityInterceptorProvider"/>  
   <bean id="casFilterProvider" class="org.geoserver.security.filter.GeoServerCasAuthenticationProvider"/>
   
     	    	
