@@ -26,6 +26,10 @@ public class BasicAuthenticationFilterConfig extends NamedFilterConfig {
     public void setUseRememberMe(boolean useRememberMe) {
         this.useRememberMe = useRememberMe;
     }
-    
+
+    @Override
+    public  boolean providesAuthenticationEntryPoint() {
+        return true;
+    }
         
 }

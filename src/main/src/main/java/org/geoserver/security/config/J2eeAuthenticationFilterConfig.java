@@ -30,5 +30,11 @@ public class J2eeAuthenticationFilterConfig extends NamedFilterConfig {
     public void setRoleServiceName(String roleServiceName) {
         this.roleServiceName = roleServiceName;
     }
+    
+    @Override
+    public  boolean providesAuthenticationEntryPoint() {
+        return true;
+    }
+
 
 }

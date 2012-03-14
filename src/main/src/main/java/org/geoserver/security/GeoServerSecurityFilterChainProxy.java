@@ -33,6 +33,7 @@ public class GeoServerSecurityFilterChainProxy extends FilterChainProxy
 
     static ThreadLocal<HttpServletRequest> REQUEST = new ThreadLocal<HttpServletRequest>();
 
+    private boolean chainsInitialized;
 
     //security manager
     GeoServerSecurityManager securityManager;
@@ -43,6 +44,7 @@ public class GeoServerSecurityFilterChainProxy extends FilterChainProxy
     public GeoServerSecurityFilterChainProxy(GeoServerSecurityManager securityManager) {
         this.securityManager = securityManager;
         this.securityManager.addListener(this);
+        chainsInitialized=false;
        
     }
 
@@ -109,6 +111,7 @@ public class GeoServerSecurityFilterChainProxy extends FilterChainProxy
 
     void createFilterChain() {
 
+        
         SecurityManagerConfig config = securityManager.getSecurityConfig(); 
         GeoServerSecurityFilterChain filterChain = config.getFilterChain();
         
@@ -138,19 +141,25 @@ public class GeoServerSecurityFilterChainProxy extends FilterChainProxy
         }
 
         synchronized (this) {
+            // first, call destroy of all current filters        
+            if (chainsInitialized) {
+                for (Filter filter : obtainAllDefinedFilters()) {
+                    filter.destroy();
+                }
+            }
             setFilterChainMap(filterChainMap);
+            chainsInitialized=true;
         }
     }
 
     /**
-     * looks up a named filter, first trying a provided named filter based on configuration, and 
-     * then looking up a named bean in the application context.  
+     * looks up a named filter  
      */
     Filter lookupFilter(String filterName) throws IOException {
         Filter filter = securityManager.loadFilter(filterName);
-        if (filter == null) {
-            filter = (Filter) GeoServerExtensions.bean(filterName, appContext);
-        }
+//        if (filter == null) {
+//            filter = (Filter) GeoServerExtensions.bean(filterName, appContext);
+//        }
         return filter;
     }
 }

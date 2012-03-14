@@ -54,6 +54,7 @@ import org.geoserver.security.config.AnonymousAuthenticationFilterConfig;
 import org.geoserver.security.config.BasicAuthenticationFilterConfig;
 import org.geoserver.security.config.ExceptionTranslationFilterConfig;
 import org.geoserver.security.config.FileBasedSecurityServiceConfig;
+import org.geoserver.security.config.LogoutFilterConfig;
 import org.geoserver.security.config.PasswordPolicyConfig;
 import org.geoserver.security.config.RememberMeAuthenticationFilterConfig;
 import org.geoserver.security.config.SecurityAuthProviderConfig;
@@ -72,6 +73,7 @@ import org.geoserver.security.file.UserGroupFileWatcher;
 import org.geoserver.security.filter.GeoServerAnonymousAuthenticationFilter;
 import org.geoserver.security.filter.GeoServerBasicAuthenticationFilter;
 import org.geoserver.security.filter.GeoServerExceptionTranslationFilter;
+import org.geoserver.security.filter.GeoServerLogoutFilter;
 import org.geoserver.security.filter.GeoServerRememberMeAuthenticationFilter;
 import org.geoserver.security.filter.GeoServerSecurityContextPersistenceFilter;
 import org.geoserver.security.filter.GeoServerSecurityFilter;
@@ -1614,16 +1616,6 @@ public class GeoServerSecurityManager extends ProviderManager implements Applica
             bfConfig.setUseRememberMe(false);
             saveFilter(bfConfig);
         }
-        filterName = GeoServerSecurityFilterChain.DYNAMIC_EXCEPTION_TRANSLATION_OFILTER;
-        filter = loadFilter(filterName);
-        if (filter==null) {
-            ExceptionTranslationFilterConfig bfConfig= new ExceptionTranslationFilterConfig();
-            bfConfig.setClassName(GeoServerExceptionTranslationFilter.class.getName());
-            bfConfig.setName(filterName);
-            bfConfig.setAuthenticationEntryPointName(null);
-            bfConfig.setAccessDeniedErrorPage("/accessDenied.jsp");
-            saveFilter(bfConfig);
-        }
         filterName =GeoServerSecurityFilterChain.FORM_LOGIN_FILTER;
         filter = loadFilter(filterName);
         if (filter==null) {
@@ -1688,13 +1680,37 @@ public class GeoServerSecurityManager extends ProviderManager implements Applica
             siConfig.setSecurityMetadataSource("restFilterDefinitionMap");
             saveFilter(siConfig);
         }
+        filterName =GeoServerSecurityFilterChain.FORM_LOGOUT_FILTER;
+        filter = loadFilter(filterName);
+        if (filter==null) {
+            LogoutFilterConfig loConfig= new LogoutFilterConfig();
+            loConfig.setClassName(GeoServerLogoutFilter.class.getName());
+            loConfig.setName(filterName);
+            saveFilter(loConfig);
+        }
+        filterName = GeoServerSecurityFilterChain.DYNAMIC_EXCEPTION_TRANSLATION_FILTER;
+        filter = loadFilter(filterName);
+        if (filter==null) {
+            ExceptionTranslationFilterConfig bfConfig= new ExceptionTranslationFilterConfig();
+            bfConfig.setClassName(GeoServerExceptionTranslationFilter.class.getName());
+            bfConfig.setName(filterName);
+            bfConfig.setAuthenticationFilterName(null);
+            bfConfig.setAccessDeniedErrorPage("/accessDenied.jsp");
+            saveFilter(bfConfig);
+        }
+        filterName = GeoServerSecurityFilterChain.GUI_EXCEPTION_TRANSLATION_FILTER;
+        filter = loadFilter(filterName);
+        if (filter==null) {
+            ExceptionTranslationFilterConfig bfConfig= new ExceptionTranslationFilterConfig();
+            bfConfig.setClassName(GeoServerExceptionTranslationFilter.class.getName());
+            bfConfig.setName(filterName);
+            bfConfig.setAuthenticationFilterName(GeoServerSecurityFilterChain.FORM_LOGIN_FILTER);
+            bfConfig.setAccessDeniedErrorPage("/accessDenied.jsp");
+            saveFilter(bfConfig);
+        }
+
+
         
-
-
-
-
-
-
         //check for the default auth provider, create if necessary
         GeoServerAuthenticationProvider authProvider = (GeoServerAuthenticationProvider) 
             loadAuthenticationProvider(GeoServerAuthenticationProvider.DEFAULT_NAME);

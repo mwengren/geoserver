@@ -23,6 +23,7 @@ import org.springframework.security.cas.authentication.CasAuthenticationProvider
 import org.springframework.security.cas.web.CasAuthenticationEntryPoint;
 import org.springframework.security.cas.web.CasAuthenticationFilter;
 import org.springframework.security.core.userdetails.UserDetailsByNameServiceWrapper;
+import org.springframework.security.web.AuthenticationEntryPoint;
 
 /**
  * Named Cas Authentication Filter
@@ -31,7 +32,8 @@ import org.springframework.security.core.userdetails.UserDetailsByNameServiceWra
  *
  */
 public class GeoServerCasAuthenticationFilter extends GeoServerCompositeFilter {
-    private CasAuthenticationEntryPoint aep; 
+    private CasAuthenticationEntryPoint aep;
+    private CasAuthenticationProvider provider;
     @Override
     public void initializeFromConfig(SecurityNamedServiceConfig config) throws IOException {
         super.initializeFromConfig(config);
@@ -72,27 +74,37 @@ public class GeoServerCasAuthenticationFilter extends GeoServerCompositeFilter {
         };
         
                 
-        CasAuthenticationProvider provider = new CasAuthenticationProvider();
+        provider = new CasAuthenticationProvider();
         provider.setKey(config.getName());
         GeoServerUserGroupService ugService = getSecurityManager().loadUserGroupService(authConfig.getUserGroupServiceName());
         provider.setAuthenticationUserDetailsService(new UserDetailsByNameServiceWrapper(ugService));
         provider.setServiceProperties(sp);
         Cas20ServiceTicketValidator ticketValidator = new Cas20ServiceTicketValidator(authConfig.getTicketValidatorUrl());
-        provider.setTicketValidator(ticketValidator);
-
-        ProviderManager manager = new ProviderManager();
-        manager.getProviders().add(provider);
+        provider.setTicketValidator(ticketValidator);        
+        getSecurityManager().getProviders().add(provider);
+        
         try {
             provider.afterPropertiesSet();
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
-        filter.setAuthenticationManager(manager);
+        filter.setAuthenticationManager(getSecurityManager());
         filter.setAllowSessionCreation(false);
-
+        filter.setFilterProcessesUrl(CasAuthenticationFilterConfig.CAS_CHAIN_PATTERN);
         
         filter.afterPropertiesSet();
         getNestedFilters().add(filter);        
     }
+    
+    @Override
+    public AuthenticationEntryPoint getAuthenticationEntryPoint() {
+        return aep;
+    }
+
+    @Override
+    public void destroy() {
+        getSecurityManager().getProviders().remove(provider);
+    }
+
     
 }

@@ -34,4 +34,10 @@ public class UsernamePasswordAuthenticationFilterConfig extends NamedFilterConfi
     public void setUsernameParameterName(String usernameParameterName) {
         this.usernameParameterName = usernameParameterName;
     }        
+    
+    @Override
+    public  boolean providesAuthenticationEntryPoint() {
+        return true;
+    }
+
 }

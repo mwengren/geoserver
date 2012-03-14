@@ -44,6 +44,11 @@ public class X509CertificateAuthenticationFilterConfig extends NamedFilterConfig
         this.roleSource = roleSource;
     }
 
+    @Override
+    public  boolean providesAuthenticationEntryPoint() {
+        return true;
+    }
+
 
 
     public String getUserGroupServiceName() {

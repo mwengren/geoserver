@@ -14,9 +14,9 @@ import org.springframework.security.web.AuthenticationEntryPoint;
 /**
  * Configuration for exception translation filter
  * 
- * The property {@link #authenticationEntryPointName} is the Spring name 
- * of a {@link AuthenticationEntryPoint} object which is needed in case
- * of an {@link AuthenticationException}
+ * The property {@link #authenticationFilterName} is the name 
+ * of an authentication filter providing the  {@link AuthenticationEntryPoint} object.
+ * The entry point is needed in the case of of a {@link AuthenticationException} 
  * 
  * IMPORTANT: if no authentication entry point is given, {@link GeoServerExceptionTranslationFilter}
  * uses the entry point found in the servlet request  attribute 
@@ -33,19 +33,19 @@ public class ExceptionTranslationFilterConfig extends NamedFilterConfig {
 
     private static final long serialVersionUID = 1L;
 
-    private String authenticationEntryPointName;
+    private String authenticationFilterName;
     private String accessDeniedErrorPage;
     
-    public String getAuthenticationEntryPointName() {
-        return authenticationEntryPointName;
-    }
-    public void setAuthenticationEntryPointName(String authenticationEntryPointName) {
-        this.authenticationEntryPointName = authenticationEntryPointName;
-    }
     public String getAccessDeniedErrorPage() {
         return accessDeniedErrorPage;
     }
     public void setAccessDeniedErrorPage(String accessDeniedErrorPage) {
         this.accessDeniedErrorPage = accessDeniedErrorPage;
+    }
+    public String getAuthenticationFilterName() {
+        return authenticationFilterName;
+    }
+    public void setAuthenticationFilterName(String authenticationFilterName) {
+        this.authenticationFilterName = authenticationFilterName;
     }    
 }

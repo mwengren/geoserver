@@ -34,6 +34,7 @@ public class GeoServerSecurityFilterChain  {
     //public static final String SERVLET_API_SUPPORT_FILTER = "servletApiSupportFilter";
 
     public static final String FORM_LOGIN_FILTER = "formLoginFilter";
+    public static final String FORM_LOGOUT_FILTER = "formLogoutFilter";
 
     public static final String REMEMBER_ME_FILTER = "rememberMeFilter";
 
@@ -42,7 +43,8 @@ public class GeoServerSecurityFilterChain  {
     public static final String BASIC_AUTH_FILTER = "basicAuthFilter";
     public static final String BASIC_AUTH_NO_REMEMBER_ME_FILTER = "basicAuthNoRememberMeFilter";
 
-    public static final String DYNAMIC_EXCEPTION_TRANSLATION_OFILTER = "daynamicExceptionTranslationOwsFilter";
+    public static final String DYNAMIC_EXCEPTION_TRANSLATION_FILTER = "dynamicExceptionTranslationFilter";
+    public static final String GUI_EXCEPTION_TRANSLATION_FILTER = "guiExceptionTranslationFilter";
 
 
     //public static final String LOGOUT_FILTER = "logoutFilter";
@@ -50,14 +52,8 @@ public class GeoServerSecurityFilterChain  {
     public static final String FILTER_SECURITY_INTERCEPTOR = "filterSecurityInterceptor";
     public static final String FILTER_SECURITY_REST_INTERCEPTOR = "filterSecurityRestInterceptor";
     
-    // authentication entry points
-    public static final String ENTRY_POINT_BASIC="basicProcessingFilterEntryPoint";
-    public static final String ENTRY_POINT_DIGIST="digestProcessingFilterEntryPoint";
-    public static final String ENTRY_POINT_ACCESS_DENIED ="accessDeniedEntryPoint";
-    public static final String ENTRY_POINT_LOGIN_FORM="loginFormFilterEntryPoint";
  
-    
-    
+        
     public GeoServerSecurityFilterChain() {
         antPatterns = new ArrayList<String>();
         filterMap = new HashMap<String,ArrayList<String>>();   
@@ -85,40 +81,56 @@ public class GeoServerSecurityFilterChain  {
     public static GeoServerSecurityFilterChain getInitialChain() {
         GeoServerSecurityFilterChain chain = new GeoServerSecurityFilterChain();
         chain.setAntPatterns(createListFromStrings(
-                "/web/**","/j_spring_security_check/**","/j_spring_security_logout/**","/rest/**",
+                "/web/**","/j_spring_security_check","/j_spring_security_logout","/rest/**",
                 "/gwc/rest/web/**","/gwc/rest/**","/**"));
+        
+//        chain.filterMap.put("/web/**",
+//                createListFromStrings(SECURITY_CONTEXT_ASC_FILTER,  
+//                        FORM_LOGIN_FILTER,  REMEMBER_ME_FILTER, ANONYMOUS_FILTER, 
+//                        DYNAMIC_EXCEPTION_TRANSLATION_FILTER, FILTER_SECURITY_INTERCEPTOR));
         
         chain.filterMap.put("/web/**",
                 createListFromStrings(SECURITY_CONTEXT_ASC_FILTER,  
-                        FORM_LOGIN_FILTER,  REMEMBER_ME_FILTER, ANONYMOUS_FILTER, 
-                        DYNAMIC_EXCEPTION_TRANSLATION_OFILTER, FILTER_SECURITY_INTERCEPTOR));
+                        REMEMBER_ME_FILTER, ANONYMOUS_FILTER, 
+                        GUI_EXCEPTION_TRANSLATION_FILTER, FILTER_SECURITY_INTERCEPTOR));
+
         
-        chain.filterMap.put("/j_spring_security_check/**", 
-                createListFromStrings(SECURITY_CONTEXT_ASC_FILTER, 
-                 FORM_LOGIN_FILTER,  REMEMBER_ME_FILTER, 
-                ANONYMOUS_FILTER, DYNAMIC_EXCEPTION_TRANSLATION_OFILTER, FILTER_SECURITY_INTERCEPTOR));
+//        chain.filterMap.put("/j_spring_security_check/**", 
+//                createListFromStrings(SECURITY_CONTEXT_ASC_FILTER, 
+//                 FORM_LOGIN_FILTER,  REMEMBER_ME_FILTER, 
+//                ANONYMOUS_FILTER, DYNAMIC_EXCEPTION_TRANSLATION_FILTER, FILTER_SECURITY_INTERCEPTOR));
+        
+        chain.filterMap.put("/j_spring_security_check", 
+                    createListFromStrings(SECURITY_CONTEXT_ASC_FILTER, 
+                    FORM_LOGIN_FILTER));
+        
             
-        chain.filterMap.put("/j_spring_security_logout/**", 
+//        chain.filterMap.put("/j_spring_security_logout/**", 
+//                createListFromStrings(SECURITY_CONTEXT_ASC_FILTER, 
+//                FORM_LOGIN_FILTER, REMEMBER_ME_FILTER, 
+//                ANONYMOUS_FILTER, DYNAMIC_EXCEPTION_TRANSLATION_FILTER, FILTER_SECURITY_INTERCEPTOR));
+
+        chain.filterMap.put("/j_spring_security_logout", 
                 createListFromStrings(SECURITY_CONTEXT_ASC_FILTER, 
-                FORM_LOGIN_FILTER, REMEMBER_ME_FILTER, 
-                ANONYMOUS_FILTER, DYNAMIC_EXCEPTION_TRANSLATION_OFILTER, FILTER_SECURITY_INTERCEPTOR));
+                FORM_LOGOUT_FILTER));
+        
             
         chain.filterMap.put("/rest/**", 
                 createListFromStrings(SECURITY_CONTEXT_NO_ASC_FILTER, BASIC_AUTH_FILTER,
-                ANONYMOUS_FILTER, DYNAMIC_EXCEPTION_TRANSLATION_OFILTER, FILTER_SECURITY_REST_INTERCEPTOR));
+                ANONYMOUS_FILTER, DYNAMIC_EXCEPTION_TRANSLATION_FILTER, FILTER_SECURITY_REST_INTERCEPTOR));
 
         chain.filterMap.put("/gwc/rest/web/**",
                 createListFromStrings(ANONYMOUS_FILTER, 
-                        DYNAMIC_EXCEPTION_TRANSLATION_OFILTER, FILTER_SECURITY_INTERCEPTOR));
+                        DYNAMIC_EXCEPTION_TRANSLATION_FILTER, FILTER_SECURITY_INTERCEPTOR));
 
         chain.filterMap.put("/gwc/rest/**", 
                 createListFromStrings(SECURITY_CONTEXT_NO_ASC_FILTER, 
-                BASIC_AUTH_NO_REMEMBER_ME_FILTER, DYNAMIC_EXCEPTION_TRANSLATION_OFILTER, 
+                BASIC_AUTH_NO_REMEMBER_ME_FILTER, DYNAMIC_EXCEPTION_TRANSLATION_FILTER, 
                 FILTER_SECURITY_REST_INTERCEPTOR));
 
          chain.filterMap.put("/**", 
                  createListFromStrings(SECURITY_CONTEXT_NO_ASC_FILTER, BASIC_AUTH_FILTER, 
-                ANONYMOUS_FILTER, DYNAMIC_EXCEPTION_TRANSLATION_OFILTER, FILTER_SECURITY_INTERCEPTOR));        
+                ANONYMOUS_FILTER, DYNAMIC_EXCEPTION_TRANSLATION_FILTER, FILTER_SECURITY_INTERCEPTOR));        
          
         return chain;
     }

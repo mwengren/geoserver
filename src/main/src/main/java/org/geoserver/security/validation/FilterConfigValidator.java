@@ -7,6 +7,8 @@
 package org.geoserver.security.validation;
 
 import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
 
 import org.geoserver.platform.GeoServerExtensions;
 import org.geoserver.security.GeoServerSecurityManager;
@@ -17,6 +19,8 @@ import org.geoserver.security.config.DigestAuthenticationFilterConfig;
 import org.geoserver.security.config.ExceptionTranslationFilterConfig;
 import org.geoserver.security.config.GeoServerRoleFilterConfig;
 import org.geoserver.security.config.J2eeAuthenticationFilterConfig;
+import org.geoserver.security.config.LogoutFilterConfig;
+import org.geoserver.security.config.NamedFilterConfig;
 import org.geoserver.security.config.RememberMeAuthenticationFilterConfig;
 import org.geoserver.security.config.RequestHeaderAuthenticationFilterConfig;
 import org.geoserver.security.config.SecurityContextPersistenceFilterConfig;
@@ -25,6 +29,7 @@ import org.geoserver.security.config.SecurityNamedServiceConfig;
 import org.geoserver.security.config.UsernamePasswordAuthenticationFilterConfig;
 import org.geoserver.security.config.X509CertificateAuthenticationFilterConfig;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
+import org.springframework.util.StringUtils;
 
 /**
  * Validator for filter configuration objects
@@ -95,7 +100,8 @@ public class FilterConfigValidator extends SecurityConfigValidator {
             validateFilterConfig((AnonymousAuthenticationFilterConfig)config);
         if (config instanceof SecurityInterceptorFilterConfig)
             validateFilterConfig((SecurityInterceptorFilterConfig)config);
-
+        if (config instanceof LogoutFilterConfig)
+            validateFilterConfig((LogoutFilterConfig)config);
                                         
         
         // TODO, check rememberme        
@@ -126,7 +132,9 @@ public class FilterConfigValidator extends SecurityConfigValidator {
         }        
     }
 
-    
+    public void validateFilterConfig(LogoutFilterConfig config) throws FilterConfigException {
+        // Nothing to validate at the moment
+    }    
     public void validateFilterConfig(BasicAuthenticationFilterConfig config) throws FilterConfigException {
         // Nothing to validate at the moment
     }
@@ -237,18 +245,63 @@ public class FilterConfigValidator extends SecurityConfigValidator {
         if (isNotEmpty(config.getAccessDeniedErrorPage())==false) {
             throw createFilterException(FilterConfigException.ACCESS_DENIED_PAGE_NEEDED);
         }
-        if (isNotEmpty(config.getAuthenticationEntryPointName())) {
+        
+        if (isNotEmpty(config.getAuthenticationFilterName())) {            
             try {
-                GeoServerExtensions.bean(config.getAuthenticationEntryPointName());
-            } catch (NoSuchBeanDefinitionException ex) {
-                throw createFilterException(FilterConfigException.INVALID_ENTRY_POINT,
-                        config.getAuthenticationEntryPointName());
+                SecurityNamedServiceConfig filterConfig = manager.loadFilterConfig(config.getAuthenticationFilterName());
+                if (filterConfig==null)
+                    throw createFilterException(FilterConfigException.INVALID_ENTRY_POINT,
+                            config.getAuthenticationFilterName());
+                
+                boolean valid=false;
+                if (filterConfig instanceof NamedFilterConfig) {
+                    if (((NamedFilterConfig) filterConfig).providesAuthenticationEntryPoint())
+                        valid=true;
+                }
+                if (!valid) {
+                    throw createFilterException(FilterConfigException.NO_AUTH_ENTRY_POINT,
+                            config.getAuthenticationFilterName());                    
+                }
+            } catch (IOException ex) {
+                throw new RuntimeException(ex);
             }
         }
     }
 
     public void validateFilterConfig(CasAuthenticationFilterConfig config) throws FilterConfigException {
-        // TODO
+        
+        if (StringUtils.hasLength(config.getService())==false)
+                throw  createFilterException(FilterConfigException.CAS_SERVICE_URL_REQUIRED);
+        
+        try {
+            new URL(config.getService());
+        } catch (MalformedURLException ex) {
+            throw  createFilterException(FilterConfigException.CAS_SERVICE_URL_MALFORMED);
+        }
+
+        if (config.getService().endsWith(CasAuthenticationFilterConfig.CAS_CHAIN_PATTERN)==false) {
+            throw  createFilterException(FilterConfigException.CAS_SERVICE_URL_SUFFIX,
+                    CasAuthenticationFilterConfig.CAS_CHAIN_PATTERN);
+        }
+        
+        if (StringUtils.hasLength(config.getLoginUrl())==false)
+            throw  createFilterException(FilterConfigException.CAS_SERVER_URL_REQUIRED);
+    
+        try {
+            new URL(config.getLoginUrl());
+        } catch (MalformedURLException ex) {
+            throw  createFilterException(FilterConfigException.CAS_SERVER_URL_MALFORMED);
+        }
+
+        if (StringUtils.hasLength(config.getTicketValidatorUrl())==false)
+            throw  createFilterException(FilterConfigException.CAS_TICKETVALIDATOR_URL_REQUIRED);
+    
+        try {
+            new URL(config.getTicketValidatorUrl());
+        } catch (MalformedURLException ex) {
+            throw  createFilterException(FilterConfigException.CAS_TICKETVALIDATOR_URL_MALFORMED);
+        }
+        
     }
 
 

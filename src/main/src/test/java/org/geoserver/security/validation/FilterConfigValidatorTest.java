@@ -2,7 +2,9 @@ package org.geoserver.security.validation;
 
 import java.util.logging.Logger;
 
+import org.geoserver.security.GeoServerSecurityFilterChain;
 import org.geoserver.security.GeoServerSecurityTestSupport;
+import org.geoserver.security.config.CasAuthenticationFilterConfig;
 import org.geoserver.security.config.DigestAuthenticationFilterConfig;
 import org.geoserver.security.config.ExceptionTranslationFilterConfig;
 import org.geoserver.security.config.GeoServerRoleFilterConfig;
@@ -11,6 +13,7 @@ import org.geoserver.security.config.RequestHeaderAuthenticationFilterConfig;
 import org.geoserver.security.config.SecurityInterceptorFilterConfig;
 import org.geoserver.security.config.UsernamePasswordAuthenticationFilterConfig;
 import org.geoserver.security.config.X509CertificateAuthenticationFilterConfig;
+import org.geoserver.security.filter.GeoServerCasAuthenticationFilter;
 import org.geoserver.security.filter.GeoServerDigestAuthenticationFilter;
 import org.geoserver.security.filter.GeoServerExceptionTranslationFilter;
 import org.geoserver.security.filter.GeoServerJ2eeAuthenticationFilter;
@@ -296,7 +299,7 @@ public class FilterConfigValidatorTest extends GeoServerSecurityTestSupport {
         assertTrue(failed);
         
         config.setAccessDeniedErrorPage("blabla");
-        config.setAuthenticationEntryPointName("unknown");
+        config.setAuthenticationFilterName("unknown");
         failed = false;                                        
         try {
             getSecurityManager().saveFilter(config);
@@ -308,7 +311,23 @@ public class FilterConfigValidatorTest extends GeoServerSecurityTestSupport {
             failed=true;
         }
         assertTrue(failed);
-        config.setAuthenticationEntryPointName(null);        
+        
+        config.setAccessDeniedErrorPage("blabla");
+        config.setAuthenticationFilterName(GeoServerSecurityFilterChain.FILTER_SECURITY_INTERCEPTOR);
+        failed = false;                                        
+        try {
+            getSecurityManager().saveFilter(config);
+        } catch (FilterConfigException ex){
+            assertEquals(FilterConfigException.NO_AUTH_ENTRY_POINT,ex.getId());
+            assertEquals(1,ex.getArgs().length);
+            assertEquals(GeoServerSecurityFilterChain.FILTER_SECURITY_INTERCEPTOR,ex.getArgs()[0]);
+            LOGGER.info(ex.getMessage());            
+            failed=true;
+        }
+        assertTrue(failed);
+
+        
+        config.setAuthenticationFilterName(null);        
         getSecurityManager().saveFilter(config);
     }
 
@@ -421,6 +440,100 @@ public class FilterConfigValidatorTest extends GeoServerSecurityTestSupport {
         config.setRoleConverterName(null);
         getSecurityManager().saveFilter(config);
 
+    }
+
+    public void testCasFilterConfigValidation() throws Exception{
+        CasAuthenticationFilterConfig config = new CasAuthenticationFilterConfig();
+        config.setClassName(GeoServerCasAuthenticationFilter.class.getName());
+        config.setName("testCAS");
+
+        boolean failed = false;                                        
+        try {
+            getSecurityManager().saveFilter(config);
+        } catch (FilterConfigException ex){
+            assertEquals(FilterConfigException.CAS_SERVICE_URL_REQUIRED,ex.getId());
+            assertEquals(0,ex.getArgs().length);
+            LOGGER.info(ex.getMessage());            
+            failed=true;
+        }
+        assertTrue(failed);
+        
+        config.setService("blabla");
+        failed = false;                                        
+        try {
+            getSecurityManager().saveFilter(config);
+        } catch (FilterConfigException ex){
+            assertEquals(FilterConfigException.CAS_SERVICE_URL_MALFORMED,ex.getId());
+            assertEquals(0,ex.getArgs().length);
+            LOGGER.info(ex.getMessage());            
+            failed=true;
+        }
+        assertTrue(failed);
+        
+        config.setService("http://localhost/geoserver");
+        failed = false;                                        
+        try {
+            getSecurityManager().saveFilter(config);
+        } catch (FilterConfigException ex){
+            assertEquals(FilterConfigException.CAS_SERVICE_URL_SUFFIX,ex.getId());
+            assertEquals(1,ex.getArgs().length);
+            assertEquals(CasAuthenticationFilterConfig.CAS_CHAIN_PATTERN,ex.getArgs()[0]);
+            LOGGER.info(ex.getMessage());            
+            failed=true;
+        }
+        assertTrue(failed);
+
+        config.setService("http://localhost/geoserver"+CasAuthenticationFilterConfig.CAS_CHAIN_PATTERN);
+        failed = false;                                        
+        try {
+            getSecurityManager().saveFilter(config);
+        } catch (FilterConfigException ex){
+            assertEquals(FilterConfigException.CAS_SERVER_URL_REQUIRED,ex.getId());
+            assertEquals(0,ex.getArgs().length);
+            LOGGER.info(ex.getMessage());            
+            failed=true;
+        }
+        assertTrue(failed);
+        
+        failed = false;
+        config.setLoginUrl("blabla");
+        try {
+            getSecurityManager().saveFilter(config);
+        } catch (FilterConfigException ex){
+            assertEquals(FilterConfigException.CAS_SERVER_URL_MALFORMED,ex.getId());
+            assertEquals(0,ex.getArgs().length);
+            LOGGER.info(ex.getMessage());            
+            failed=true;
+        }
+        assertTrue(failed);
+
+        failed = false;
+        config.setLoginUrl("http://localhost/cas/login");
+        try {
+            getSecurityManager().saveFilter(config);
+        } catch (FilterConfigException ex){
+            assertEquals(FilterConfigException.CAS_TICKETVALIDATOR_URL_REQUIRED,ex.getId());
+            assertEquals(0,ex.getArgs().length);
+            LOGGER.info(ex.getMessage());            
+            failed=true;
+        }
+        assertTrue(failed);
+
+        failed = false;
+        config.setTicketValidatorUrl("blabla");
+        try {
+            getSecurityManager().saveFilter(config);
+        } catch (FilterConfigException ex){
+            assertEquals(FilterConfigException.CAS_TICKETVALIDATOR_URL_MALFORMED,ex.getId());
+            assertEquals(0,ex.getArgs().length);
+            LOGGER.info(ex.getMessage());            
+            failed=true;
+        }
+        assertTrue(failed);
+        
+        config.setTicketValidatorUrl("http://localhost/cas");
+        getSecurityManager().saveFilter(config);
+        
     }
 
 

@@ -12,7 +12,6 @@ import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 
-import org.geoserver.platform.GeoServerExtensions;
 import org.geoserver.security.config.ExceptionTranslationFilterConfig;
 import org.geoserver.security.config.SecurityNamedServiceConfig;
 import org.springframework.security.web.AuthenticationEntryPoint;
@@ -71,11 +70,9 @@ public class GeoServerExceptionTranslationFilter extends GeoServerCompositeFilte
             
         };
         
-        // TODO, Justin, is this correct
-        if (StringUtils.hasLength(authConfig.getAuthenticationEntryPointName())) {
-            AuthenticationEntryPoint ep = (AuthenticationEntryPoint) 
-                GeoServerExtensions.bean(authConfig.getAuthenticationEntryPointName());
-            filter.setAuthenticationEntryPoint(ep);
+        if (StringUtils.hasLength(authConfig.getAuthenticationFilterName())) {
+            GeoServerSecurityFilter authFilter = getSecurityManager().loadFilter(authConfig.getAuthenticationFilterName());
+            filter.setAuthenticationEntryPoint(authFilter.getAuthenticationEntryPoint());
         }
                         
         if (StringUtils.hasLength(authConfig.getAccessDeniedErrorPage())) {

@@ -128,5 +128,9 @@ public abstract class GeoServerAbstractPreAuthenticationFilter extends GeoServer
         this.authenticationDetailsSource = authenticationDetailsSource;
     }
     
+    @Override
+    public AuthenticationEntryPoint getAuthenticationEntryPoint() {
+        return aep;
+    }
     
 }

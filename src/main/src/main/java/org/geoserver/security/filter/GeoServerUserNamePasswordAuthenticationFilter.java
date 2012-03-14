@@ -14,16 +14,13 @@ import javax.servlet.ServletResponse;
 import org.geoserver.platform.GeoServerExtensions;
 import org.geoserver.security.config.SecurityNamedServiceConfig;
 import org.geoserver.security.config.UsernamePasswordAuthenticationFilterConfig;
+import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint;
 import org.springframework.security.web.authentication.RememberMeServices;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationFailureHandler;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
-import org.springframework.security.web.authentication.logout.LogoutFilter;
-import org.springframework.security.web.authentication.logout.LogoutHandler;
-import org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler;
-import org.springframework.security.web.servletapi.SecurityContextHolderAwareRequestFilter;
 
 /**
  * User name / password authentication filter
@@ -34,9 +31,7 @@ import org.springframework.security.web.servletapi.SecurityContextHolderAwareReq
  */
 public class GeoServerUserNamePasswordAuthenticationFilter extends GeoServerCompositeFilter {
 
-    public static final String URL_AFTER_LOGOUT="/web/";
     public static final String URL_FOR_LOGIN = "/j_spring_security_check";
-    public static final String URL_FOR_LOGOUT= "/j_spring_security_logout";
     public static final String URL_LOGIN_SUCCCESS = "/";
     public static final String URL_LOGIN_FAILURE = "/web/?wicket:bookmarkablePage=:org.geoserver.web.GeoServerLoginPage&amp;error=true";
     public static final String URL_LOGIN_FORM="/admin/login.do";
@@ -62,18 +57,6 @@ public class GeoServerUserNamePasswordAuthenticationFilter extends GeoServerComp
         RememberMeServices rms = (RememberMeServices) GeoServerExtensions
                 .bean("rememberMeServices");
 
-        // add logout filter
-        LogoutFilter logoutFilter = new LogoutFilter(URL_AFTER_LOGOUT, (LogoutHandler) rms,
-                new SecurityContextLogoutHandler());
-        logoutFilter.setFilterProcessesUrl(URL_FOR_LOGOUT);
-        
-        try {
-            logoutFilter.afterPropertiesSet();
-        } catch (ServletException e1) {
-            throw new IOException(e1);
-        }
-        getNestedFilters().add(logoutFilter);
-
         // add login filter
         UsernamePasswordAuthenticationFilter filter = new UsernamePasswordAuthenticationFilter(){
 
@@ -84,7 +67,7 @@ public class GeoServerUserNamePasswordAuthenticationFilter extends GeoServerComp
                 super.doFilter(req, res, chain);
             }            
         };
-;
+
 
         filter.setPasswordParameter(upConfig.getPasswordParameterName());
         filter.setUsernameParameter(upConfig.getUsernameParameterName());
@@ -111,13 +94,18 @@ public class GeoServerUserNamePasswordAuthenticationFilter extends GeoServerComp
         filter.afterPropertiesSet();
         getNestedFilters().add(filter);
 
-        // TODO, is this necessary
-        SecurityContextHolderAwareRequestFilter contextAwareFilter = new SecurityContextHolderAwareRequestFilter();
-        try {
-            contextAwareFilter.afterPropertiesSet();
-        } catch (ServletException e) {
-            throw new IOException(e);
-        }
-        getNestedFilters().add(contextAwareFilter);
+//        SecurityContextHolderAwareRequestFilter contextAwareFilter = new SecurityContextHolderAwareRequestFilter();
+//        try {
+//            contextAwareFilter.afterPropertiesSet();
+//        } catch (ServletException e) {
+//            throw new IOException(e);
+//        }
+//        getNestedFilters().add(contextAwareFilter);
     }
+    
+    @Override
+    public AuthenticationEntryPoint getAuthenticationEntryPoint() {
+        return aep;
+    }
+
 }

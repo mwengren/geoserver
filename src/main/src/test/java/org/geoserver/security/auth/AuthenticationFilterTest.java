@@ -36,14 +36,17 @@ import org.geoserver.security.GeoServerUserGroupStore;
 import org.geoserver.security.config.BasicAuthenticationFilterConfig;
 import org.geoserver.security.config.DigestAuthenticationFilterConfig;
 import org.geoserver.security.config.J2eeAuthenticationFilterConfig;
+import org.geoserver.security.config.LogoutFilterConfig;
 import org.geoserver.security.config.RequestHeaderAuthenticationFilterConfig;
-import org.geoserver.security.config.X509CertificateAuthenticationFilterConfig;
 import org.geoserver.security.config.RequestHeaderAuthenticationFilterConfig.RoleSource;
 import org.geoserver.security.config.SecurityManagerConfig;
 import org.geoserver.security.config.UsernamePasswordAuthenticationFilterConfig;
+import org.geoserver.security.config.X509CertificateAuthenticationFilterConfig;
 import org.geoserver.security.filter.GeoServerBasicAuthenticationFilter;
+import org.geoserver.security.filter.GeoServerCompositeFilter;
 import org.geoserver.security.filter.GeoServerDigestAuthenticationFilter;
 import org.geoserver.security.filter.GeoServerJ2eeAuthenticationFilter;
+import org.geoserver.security.filter.GeoServerLogoutFilter;
 import org.geoserver.security.filter.GeoServerRequestHeaderAuthenticationFilter;
 import org.geoserver.security.filter.GeoServerUserNamePasswordAuthenticationFilter;
 import org.geoserver.security.filter.GeoServerX509CertificateAuthenticationFilter;
@@ -73,6 +76,7 @@ public class AuthenticationFilterTest extends AbstractAuthenticationProviderTest
     public final static String testFilterName6 = "formLoginTestFilter";
     public final static String testFilterName7 = "formLoginTestFilterWithRememberMe";
     public final static String testFilterName8 = "x509TestFilter";
+    public final static String testFilterName9 = "logoutTestFilter";
 
 
     public final static String testProviderName = "basicAuthTestProvider";
@@ -143,7 +147,7 @@ public class AuthenticationFilterTest extends AbstractAuthenticationProviderTest
         prepareFiterChain(pattern,
             GeoServerSecurityFilterChain.SECURITY_CONTEXT_ASC_FILTER,    
             testFilterName,
-            GeoServerSecurityFilterChain.DYNAMIC_EXCEPTION_TRANSLATION_OFILTER,
+            GeoServerSecurityFilterChain.DYNAMIC_EXCEPTION_TRANSLATION_FILTER,
             GeoServerSecurityFilterChain.FILTER_SECURITY_INTERCEPTOR);
 
 
@@ -283,7 +287,7 @@ public class AuthenticationFilterTest extends AbstractAuthenticationProviderTest
         updateUser("ug1", testUserName, true);
         
         // Test anonymous
-        insertAnonymousFilter(GeoServerSecurityFilterChain.DYNAMIC_EXCEPTION_TRANSLATION_OFILTER);
+        insertAnonymousFilter(GeoServerSecurityFilterChain.DYNAMIC_EXCEPTION_TRANSLATION_FILTER);
         request= createRequest("/foo/bar");
         response= new MockHttpServletResponse();
         chain = new MockFilterChain();                        
@@ -305,7 +309,7 @@ public class AuthenticationFilterTest extends AbstractAuthenticationProviderTest
         prepareFiterChain(pattern,
             GeoServerSecurityFilterChain.SECURITY_CONTEXT_ASC_FILTER,    
             testFilterName3,
-            GeoServerSecurityFilterChain.DYNAMIC_EXCEPTION_TRANSLATION_OFILTER,
+            GeoServerSecurityFilterChain.DYNAMIC_EXCEPTION_TRANSLATION_FILTER,
             GeoServerSecurityFilterChain.FILTER_SECURITY_INTERCEPTOR);
 
 
@@ -404,7 +408,7 @@ public class AuthenticationFilterTest extends AbstractAuthenticationProviderTest
         assertTrue(auth.getAuthorities().contains(new GeoServerRole(derivedRole)));
         
         // Test anonymous
-        insertAnonymousFilter(GeoServerSecurityFilterChain.DYNAMIC_EXCEPTION_TRANSLATION_OFILTER);
+        insertAnonymousFilter(GeoServerSecurityFilterChain.DYNAMIC_EXCEPTION_TRANSLATION_FILTER);
         request= createRequest("/foo/bar");
         response= new MockHttpServletResponse();
         chain = new MockFilterChain();                        
@@ -433,7 +437,7 @@ public class AuthenticationFilterTest extends AbstractAuthenticationProviderTest
         prepareFiterChain(pattern,
             GeoServerSecurityFilterChain.SECURITY_CONTEXT_ASC_FILTER,    
             testFilterName4,
-            GeoServerSecurityFilterChain.DYNAMIC_EXCEPTION_TRANSLATION_OFILTER,
+            GeoServerSecurityFilterChain.DYNAMIC_EXCEPTION_TRANSLATION_FILTER,
             GeoServerSecurityFilterChain.FILTER_SECURITY_INTERCEPTOR);
 
 
@@ -514,7 +518,7 @@ public class AuthenticationFilterTest extends AbstractAuthenticationProviderTest
         assertNull(SecurityContextHolder.getContext().getAuthentication());
         
         // Test anonymous
-        insertAnonymousFilter(GeoServerSecurityFilterChain.DYNAMIC_EXCEPTION_TRANSLATION_OFILTER);
+        insertAnonymousFilter(GeoServerSecurityFilterChain.DYNAMIC_EXCEPTION_TRANSLATION_FILTER);
         request= createRequest("/foo/bar");
         response= new MockHttpServletResponse();
         chain = new MockFilterChain();                        
@@ -567,7 +571,7 @@ public class AuthenticationFilterTest extends AbstractAuthenticationProviderTest
         prepareFiterChain(pattern,
                 GeoServerSecurityFilterChain.SECURITY_CONTEXT_ASC_FILTER,    
                 testFilterName2,
-                GeoServerSecurityFilterChain.DYNAMIC_EXCEPTION_TRANSLATION_OFILTER,
+                GeoServerSecurityFilterChain.DYNAMIC_EXCEPTION_TRANSLATION_FILTER,
                 GeoServerSecurityFilterChain.FILTER_SECURITY_INTERCEPTOR);
 
 
@@ -708,7 +712,7 @@ public class AuthenticationFilterTest extends AbstractAuthenticationProviderTest
 
 
         // Test anonymous
-        insertAnonymousFilter(GeoServerSecurityFilterChain.DYNAMIC_EXCEPTION_TRANSLATION_OFILTER);
+        insertAnonymousFilter(GeoServerSecurityFilterChain.DYNAMIC_EXCEPTION_TRANSLATION_FILTER);
         request= createRequest("/foo/bar");
         response= new MockHttpServletResponse();
         chain = new MockFilterChain();                        
@@ -730,7 +734,7 @@ public class AuthenticationFilterTest extends AbstractAuthenticationProviderTest
             GeoServerSecurityFilterChain.SECURITY_CONTEXT_ASC_FILTER,    
             testFilterName5,
             GeoServerSecurityFilterChain.REMEMBER_ME_FILTER,
-            GeoServerSecurityFilterChain.DYNAMIC_EXCEPTION_TRANSLATION_OFILTER,
+            GeoServerSecurityFilterChain.DYNAMIC_EXCEPTION_TRANSLATION_FILTER,
             GeoServerSecurityFilterChain.FILTER_SECURITY_INTERCEPTOR);
     
     
@@ -846,14 +850,28 @@ public class AuthenticationFilterTest extends AbstractAuthenticationProviderTest
         
     }
 
-    protected void prepareFormLoginFilterForTest() {
-        GeoServerUserNamePasswordAuthenticationFilter authFilter =
-                (GeoServerUserNamePasswordAuthenticationFilter)
-                getProxy().getFilters(pattern).get(1);
-        UsernamePasswordAuthenticationFilter authFilter2 = (UsernamePasswordAuthenticationFilter) authFilter.getNestedFilters().get(1);
-        authFilter2.setFilterProcessesUrl("/foo/j_spring_security_check");
-        LogoutFilter authFilter3 = (LogoutFilter) authFilter.getNestedFilters().get(0);
-        authFilter3.setFilterProcessesUrl("/foo/j_spring_security_logout");
+    protected void prepareFormFiltersForTest() {
+        
+         GeoServerCompositeFilter authFilter =
+                (GeoServerCompositeFilter)
+                getProxy().getFilters("/j_spring_security_foo_check").get(1);
+        
+        if (authFilter instanceof GeoServerUserNamePasswordAuthenticationFilter) {
+            UsernamePasswordAuthenticationFilter authFilter2 = (UsernamePasswordAuthenticationFilter) 
+                    authFilter.getNestedFilters().get(0);
+            authFilter2.setFilterProcessesUrl("/j_spring_security_foo_check");
+        }
+
+        authFilter =
+                (GeoServerCompositeFilter)
+                getProxy().getFilters("/j_spring_security_foo_logout").get(1);
+
+        
+        if (authFilter instanceof GeoServerLogoutFilter) {
+            LogoutFilter authFilter2 = (LogoutFilter) 
+                    authFilter.getNestedFilters().get(0);
+            authFilter2.setFilterProcessesUrl("/j_spring_security_foo_logout");
+        }
         
     }
     
@@ -865,16 +883,28 @@ public class AuthenticationFilterTest extends AbstractAuthenticationProviderTest
         config.setUsernameParameterName("username");
         config.setPasswordParameterName("password");
         config.setName(testFilterName6);
-        
         getSecurityManager().saveFilter(config);
-        prepareFiterChain(pattern,
-            GeoServerSecurityFilterChain.SECURITY_CONTEXT_ASC_FILTER,    
-            testFilterName6,
-            GeoServerSecurityFilterChain.DYNAMIC_EXCEPTION_TRANSLATION_OFILTER,
-            GeoServerSecurityFilterChain.FILTER_SECURITY_INTERCEPTOR);
-        prepareFormLoginFilterForTest();
         
+        LogoutFilterConfig loConfig = new LogoutFilterConfig();
+        loConfig.setClassName(GeoServerLogoutFilter.class.getName());
+        loConfig.setName(testFilterName9);
+        getSecurityManager().saveFilter(loConfig);
+        
+        prepareFiterChain(pattern,
+            GeoServerSecurityFilterChain.SECURITY_CONTEXT_ASC_FILTER,
+            GeoServerSecurityFilterChain.GUI_EXCEPTION_TRANSLATION_FILTER,
+            GeoServerSecurityFilterChain.FILTER_SECURITY_INTERCEPTOR);
 
+        
+        prepareFiterChain("/j_spring_security_foo_check",
+                GeoServerSecurityFilterChain.SECURITY_CONTEXT_ASC_FILTER,    
+                testFilterName6);
+
+        prepareFiterChain("/j_spring_security_foo_logout",
+                GeoServerSecurityFilterChain.SECURITY_CONTEXT_ASC_FILTER,    
+                testFilterName9);
+        
+        prepareFormFiltersForTest();        
         SecurityContextHolder.getContext().setAuthentication(null);
         
         
@@ -897,7 +927,7 @@ public class AuthenticationFilterTest extends AbstractAuthenticationProviderTest
         
         
         // check success
-        request= createRequest("foo/j_spring_security_check");
+        request= createRequest("/j_spring_security_foo_check");
         response= new MockHttpServletResponse();
         chain = new MockFilterChain();
         request.setMethod("POST");
@@ -918,8 +948,24 @@ public class AuthenticationFilterTest extends AbstractAuthenticationProviderTest
         assertTrue(auth.getAuthorities().contains(new GeoServerRole(rootRole)));
         assertTrue(auth.getAuthorities().contains(new GeoServerRole(derivedRole)));
 
+        // Test logout                
+                
+        request= createRequest("/j_spring_security_foo_logout");
+        response= new MockHttpServletResponse();
+        chain = new MockFilterChain();        
+        
+        getProxy().doFilter(request, response, chain);
+        assertEquals(HttpServletResponse.SC_OK, response.getErrorCode());
+        assertTrue(response.wasRedirectSent());
+        tmp = response.getHeader("Location");
+        assertNotNull(tmp);
+        assertTrue(tmp.endsWith(GeoServerLogoutFilter.URL_AFTER_LOGOUT));
+        assertNull(SecurityContextHolder.getContext().getAuthentication());
+
+        
+        
         // test invalid password
-        request= createRequest("foo/j_spring_security_check");
+        request= createRequest("/j_spring_security_foo_check");
         response= new MockHttpServletResponse();
         chain = new MockFilterChain();
         request.setMethod("POST");
@@ -936,7 +982,7 @@ public class AuthenticationFilterTest extends AbstractAuthenticationProviderTest
         assertNull(SecurityContextHolder.getContext().getAuthentication());
         
         // check unknown user
-        request= createRequest("foo/j_spring_security_check");
+        request= createRequest("/j_spring_security_foo_check");
         response= new MockHttpServletResponse();
         chain = new MockFilterChain();
         request.setMethod("POST");
@@ -953,7 +999,7 @@ public class AuthenticationFilterTest extends AbstractAuthenticationProviderTest
         assertNull(SecurityContextHolder.getContext().getAuthentication());
 
         // check root user
-        request= createRequest("foo/j_spring_security_check");
+        request= createRequest("/j_spring_security_foo_check");
         response= new MockHttpServletResponse();
         chain = new MockFilterChain();
         request.setMethod("POST");
@@ -974,7 +1020,7 @@ public class AuthenticationFilterTest extends AbstractAuthenticationProviderTest
         assertTrue(auth.getAuthorities().contains(GeoServerRole.ADMIN_ROLE));
         
         // check root user with wrong password
-        request= createRequest("foo/j_spring_security_check");
+        request= createRequest("/j_spring_security_foo_check");
         response= new MockHttpServletResponse();
         chain = new MockFilterChain();
         request.setMethod("POST");
@@ -992,7 +1038,7 @@ public class AuthenticationFilterTest extends AbstractAuthenticationProviderTest
         
         // check disabled user
         updateUser("ug1", testUserName, false);
-        request= createRequest("foo/j_spring_security_check");
+        request= createRequest("/j_spring_security_foo_check");
         response= new MockHttpServletResponse();
         chain = new MockFilterChain();
         request.setMethod("POST");
@@ -1010,7 +1056,7 @@ public class AuthenticationFilterTest extends AbstractAuthenticationProviderTest
         updateUser("ug1", testUserName, true);
         
         // Test anonymous
-        insertAnonymousFilter(GeoServerSecurityFilterChain.DYNAMIC_EXCEPTION_TRANSLATION_OFILTER);
+        insertAnonymousFilter(GeoServerSecurityFilterChain.DYNAMIC_EXCEPTION_TRANSLATION_FILTER);
         request= createRequest("foo/bar");
         response= new MockHttpServletResponse();
         chain = new MockFilterChain();
@@ -1019,44 +1065,45 @@ public class AuthenticationFilterTest extends AbstractAuthenticationProviderTest
         // Anonymous context is not stored in http session, no further testing
         removeAnonymousFilter();
 
-
-        // Test logout                
-        request= createRequest("/foo/j_spring_security_logout");
-        response= new MockHttpServletResponse();
-        chain = new MockFilterChain();        
         
-        getProxy().doFilter(request, response, chain);
-        assertEquals(HttpServletResponse.SC_OK, response.getErrorCode());
-        assertTrue(response.wasRedirectSent());
-        tmp = response.getHeader("Location");
-        assertNotNull(tmp);
-        assertTrue(tmp.endsWith(GeoServerUserNamePasswordAuthenticationFilter.URL_LOGIN_FORM));
-        ctx = (SecurityContext)request.getSession(true).getAttribute(
-                HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY);        
-        assertNull(ctx);
-        assertNull(SecurityContextHolder.getContext().getAuthentication());
 
     }
+
     
     public void testFormLoginWithRememberMe() throws Exception{
-
+        
+        
         UsernamePasswordAuthenticationFilterConfig config = new UsernamePasswordAuthenticationFilterConfig();
         config.setClassName(GeoServerUserNamePasswordAuthenticationFilter.class.getName());
         config.setUsernameParameterName("username");
         config.setPasswordParameterName("password");
         config.setName(testFilterName7);
-        
         getSecurityManager().saveFilter(config);
-        prepareFiterChain(pattern,
-            GeoServerSecurityFilterChain.SECURITY_CONTEXT_ASC_FILTER,    
-            testFilterName7,
-            GeoServerSecurityFilterChain.REMEMBER_ME_FILTER,
-            GeoServerSecurityFilterChain.DYNAMIC_EXCEPTION_TRANSLATION_OFILTER,
-            GeoServerSecurityFilterChain.FILTER_SECURITY_INTERCEPTOR);
-        prepareFormLoginFilterForTest();
         
+        LogoutFilterConfig loConfig = new LogoutFilterConfig();
+        loConfig.setClassName(GeoServerLogoutFilter.class.getName());
+        loConfig.setName(testFilterName9);
+        getSecurityManager().saveFilter(loConfig);
+        
+        prepareFiterChain(pattern,
+            GeoServerSecurityFilterChain.SECURITY_CONTEXT_ASC_FILTER,
+            GeoServerSecurityFilterChain.REMEMBER_ME_FILTER,
+            GeoServerSecurityFilterChain.GUI_EXCEPTION_TRANSLATION_FILTER,
+            GeoServerSecurityFilterChain.FILTER_SECURITY_INTERCEPTOR);
+        
+        prepareFiterChain("/j_spring_security_foo_logout",
+                GeoServerSecurityFilterChain.SECURITY_CONTEXT_ASC_FILTER,            
+                testFilterName9);
+        
+        prepareFiterChain("/j_spring_security_foo_check",
+                GeoServerSecurityFilterChain.SECURITY_CONTEXT_ASC_FILTER,    
+                testFilterName7);
 
+        
+        prepareFormFiltersForTest();        
         SecurityContextHolder.getContext().setAuthentication(null);
+
+        
 
         // Test entry point                
         MockHttpServletRequest request= createRequest("/foo/bar");
@@ -1073,8 +1120,9 @@ public class AuthenticationFilterTest extends AbstractAuthenticationProviderTest
                 HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY);        
         assertNull(ctx);
         assertNull(SecurityContextHolder.getContext().getAuthentication());                    
-        
-        request= createRequest("foo/j_spring_security_check");
+
+        //check success
+        request= createRequest("/j_spring_security_foo_check");
         request.setupAddParameter("_spring_security_remember_me", "yes");
         response= new MockHttpServletResponse();
         chain = new MockFilterChain();
@@ -1099,10 +1147,25 @@ public class AuthenticationFilterTest extends AbstractAuthenticationProviderTest
         Cookie cookie = (Cookie) response.getCookies().get(0);
         assertNotNull(cookie.getValue());
         
-             
+          
+        // check logout
+        request= createRequest("/j_spring_security_foo_logout");
+        response= new MockHttpServletResponse();
+        chain = new MockFilterChain();        
+        
+        getProxy().doFilter(request, response, chain);
+        assertEquals(HttpServletResponse.SC_OK, response.getErrorCode());
+        assertTrue(response.wasRedirectSent());
+        tmp = response.getHeader("Location");
+        assertNotNull(tmp);
+        assertTrue(tmp.endsWith(GeoServerLogoutFilter.URL_AFTER_LOGOUT));
+        assertNull(SecurityContextHolder.getContext().getAuthentication());
+        Cookie cancelCookie = (Cookie) response.getCookies().get(0);
+        assertNull(cancelCookie.getValue());
+
 
         // check no remember me for root user
-        request= createRequest("foo/j_spring_security_check");
+        request= createRequest("/j_spring_security_foo_check");
         request.setupAddParameter("_spring_security_remember_me", "yes");
         response= new MockHttpServletResponse();
         chain = new MockFilterChain();
@@ -1136,29 +1199,11 @@ public class AuthenticationFilterTest extends AbstractAuthenticationProviderTest
         assertTrue(tmp.endsWith(GeoServerUserNamePasswordAuthenticationFilter.URL_LOGIN_FORM));
         // check for cancel cookie
         assertEquals(1,response.getCookies().size());
-        Cookie cancelCookie = (Cookie) response.getCookies().get(0);
+        cancelCookie = (Cookie) response.getCookies().get(0);
         assertNull(cancelCookie.getValue());
         updateUser("ug1", testUserName, true);
        
-
-        // Test logout                
-        request= createRequest("/foo/j_spring_security_logout");
-        //request.setupAddParameter("_spring_security_remember_me", "yes");
-        request.addCookie(cookie);
-        response= new MockHttpServletResponse();
-        chain = new MockFilterChain();                
-        getProxy().doFilter(request, response, chain);
-        assertEquals(HttpServletResponse.SC_OK, response.getErrorCode());
-        assertTrue(response.wasRedirectSent());
-        tmp = response.getHeader("Location");
-        assertNotNull(tmp);
-        assert(tmp.endsWith(GeoServerUserNamePasswordAuthenticationFilter.URL_AFTER_LOGOUT));
-        cancelCookie = (Cookie) response.getCookies().get(0);
-        assertNull(cancelCookie.getValue());
-        ctx = (SecurityContext)request.getSession(true).getAttribute(
-                HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY);        
-        assertNull(ctx);
-        assertNull(SecurityContextHolder.getContext().getAuthentication());
+        
 
     }
 
@@ -1176,7 +1221,7 @@ public class AuthenticationFilterTest extends AbstractAuthenticationProviderTest
         prepareFiterChain(pattern,
             GeoServerSecurityFilterChain.SECURITY_CONTEXT_ASC_FILTER,    
             testFilterName8,
-            GeoServerSecurityFilterChain.DYNAMIC_EXCEPTION_TRANSLATION_OFILTER,
+            GeoServerSecurityFilterChain.DYNAMIC_EXCEPTION_TRANSLATION_FILTER,
             GeoServerSecurityFilterChain.FILTER_SECURITY_INTERCEPTOR);
 
 
@@ -1257,7 +1302,7 @@ public class AuthenticationFilterTest extends AbstractAuthenticationProviderTest
         assertNull(SecurityContextHolder.getContext().getAuthentication());
         
         // Test anonymous
-        insertAnonymousFilter(GeoServerSecurityFilterChain.DYNAMIC_EXCEPTION_TRANSLATION_OFILTER);
+        insertAnonymousFilter(GeoServerSecurityFilterChain.DYNAMIC_EXCEPTION_TRANSLATION_FILTER);
         request= createRequest("/foo/bar");
         response= new MockHttpServletResponse();
         chain = new MockFilterChain();                        
@@ -1433,7 +1478,7 @@ public class AuthenticationFilterTest extends AbstractAuthenticationProviderTest
                 GeoServerSecurityFilterChain.SECURITY_CONTEXT_ASC_FILTER,
                 testFilterName,
                 testFilterName2,
-                GeoServerSecurityFilterChain.DYNAMIC_EXCEPTION_TRANSLATION_OFILTER,
+                GeoServerSecurityFilterChain.DYNAMIC_EXCEPTION_TRANSLATION_FILTER,
                 GeoServerSecurityFilterChain.FILTER_SECURITY_INTERCEPTOR);
 
 
@@ -1496,5 +1541,12 @@ public class AuthenticationFilterTest extends AbstractAuthenticationProviderTest
         assertTrue(auth.getAuthorities().contains(new GeoServerRole(rootRole)));
         assertTrue(auth.getAuthorities().contains(new GeoServerRole(derivedRole)));
 
+    }
+    
+    protected MockHttpServletRequest createRequest(String url) {
+        MockHttpServletRequest request = super.createRequest(url);
+        request.setPathInfo(null);
+        request.setQueryString(null);
+        return request;        
     }
 }

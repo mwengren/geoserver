@@ -17,6 +17,7 @@ import org.geoserver.security.GeoServerSecurityManager;
 import org.geoserver.security.HttpDigestUserDetailsServiceWrapper;
 import org.geoserver.security.config.DigestAuthenticationFilterConfig;
 import org.geoserver.security.config.SecurityNamedServiceConfig;
+import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.authentication.www.DigestAuthenticationEntryPoint;
 import org.springframework.security.web.authentication.www.DigestAuthenticationFilter;
 
@@ -77,4 +78,9 @@ public class GeoServerDigestAuthenticationFilter extends GeoServerCompositeFilte
         getNestedFilters().add(filter);        
     }
     
+    @Override
+    public AuthenticationEntryPoint getAuthenticationEntryPoint() {
+        return aep;
+    }
+
 }

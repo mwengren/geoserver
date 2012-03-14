@@ -90,6 +90,10 @@ public class RequestHeaderAuthenticationFilterConfig extends NamedFilterConfig {
         this.roleConverterName = roleConverterName;
     }
 
+    @Override
+    public  boolean providesAuthenticationEntryPoint() {
+        return true;
+    }
 
     public String getRoleServiceName() {
         return roleServiceName;

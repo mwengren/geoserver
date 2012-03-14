@@ -36,4 +36,9 @@ public class DigestAuthenticationFilterConfig extends NamedFilterConfig{
         this.userGroupServiceName = userGroupServiceName;
     }
     
+    @Override
+    public  boolean providesAuthenticationEntryPoint() {
+        return true;
+    }
+
 }

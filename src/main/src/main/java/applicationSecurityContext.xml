@@ -344,6 +344,7 @@
   <bean id="contextPersistenceProvider" class="org.geoserver.security.filter.GeoServerSecurityContextPersistenceProvider"/>  
   <bean id="rememberMeFilterProvider" class="org.geoserver.security.filter.GeoServerRememberMeAuthenticationProvider"/>
   <bean id="anonymousFilterProvider" class="org.geoserver.security.filter.GeoServerAnonymousAuthenticationProvider"/>
+  <bean id="logoutFilterProvider" class="org.geoserver.security.filter.GeoServerLogoutProvider"/>  
   <bean id="securityInterceptorFilterProvider" class="org.geoserver.security.filter.GeoServerSecurityInterceptorProvider"/>  
   <bean id="casFilterProvider" class="org.geoserver.security.filter.GeoServerCasAuthenticationProvider"/>
   

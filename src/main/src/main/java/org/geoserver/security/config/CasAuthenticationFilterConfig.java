@@ -15,6 +15,7 @@ package org.geoserver.security.config;
 public class CasAuthenticationFilterConfig extends NamedFilterConfig {
 
     private static final long serialVersionUID = 1L;
+    public final static String CAS_CHAIN_PATTERN = "/j_spring_cas_security_check";
     
     private String userGroupServiceName;
      
@@ -110,5 +111,9 @@ public class CasAuthenticationFilterConfig extends NamedFilterConfig {
         this.userGroupServiceName = userGroupServiceName;
     }
     
-        
+    @Override
+    public  boolean providesAuthenticationEntryPoint() {
+        return true;
+    }
+ 
 }
