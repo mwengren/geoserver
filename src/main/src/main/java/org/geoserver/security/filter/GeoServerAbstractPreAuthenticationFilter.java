@@ -18,10 +18,12 @@ import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.geoserver.security.auth.AuthenticationCacheImpl;
 import org.geoserver.security.config.SecurityNamedServiceConfig;
 import org.geoserver.security.impl.GeoServerRole;
 import org.geoserver.security.impl.GeoServerUser;
 import org.springframework.security.authentication.AuthenticationDetailsSource;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.authentication.Http403ForbiddenEntryPoint;
@@ -34,7 +36,8 @@ import org.springframework.security.web.authentication.preauth.PreAuthenticatedA
  * @author christian
  *
  */
-public abstract class GeoServerAbstractPreAuthenticationFilter extends GeoServerSecurityFilter {
+public abstract class GeoServerAbstractPreAuthenticationFilter extends GeoServerSecurityFilter 
+    implements AuthenticationCachingFilter {
 
     
     private AuthenticationDetailsSource authenticationDetailsSource = new WebAuthenticationDetailsSource();
@@ -54,8 +57,14 @@ public abstract class GeoServerAbstractPreAuthenticationFilter extends GeoServer
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
             throws IOException, ServletException {
 
+        String cacheKey=authenticateFromCache(this, (HttpServletRequest) request);
+
         if (SecurityContextHolder.getContext().getAuthentication()==null) {
             doAuthenticate((HttpServletRequest) request, (HttpServletResponse) response);
+            
+            Authentication postAuthentication = SecurityContextHolder.getContext().getAuthentication();
+            if (postAuthentication != null && cacheKey!=null)
+                AuthenticationCacheImpl.get().put(getName(), cacheKey,postAuthentication);                                
         }
         
         request.setAttribute(GeoServerSecurityFilter.AUTHENTICATION_ENTRY_POINT_HEADER, aep);
@@ -133,4 +142,11 @@ public abstract class GeoServerAbstractPreAuthenticationFilter extends GeoServer
         return aep;
     }
     
+    @Override
+    public String getCacheKey(HttpServletRequest request) {
+        String retval = getPreAuthenticatedPrincipal(request);
+        if (GeoServerUser.ROOT_USERNAME.equals(retval))
+            return null;
+        return retval;
+    }
 }

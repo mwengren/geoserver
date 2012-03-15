@@ -7,13 +7,17 @@ package org.geoserver.security.filter;
 import javax.servlet.Filter;
 import javax.servlet.FilterConfig;
 import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
 
 import org.geoserver.security.GeoServerSecurityManager;
 import org.geoserver.security.GeoServerSecurityProvider;
+import org.geoserver.security.auth.AuthenticationCacheImpl;
 import org.geoserver.security.config.SecurityManagerConfig;
 import org.geoserver.security.impl.AbstractGeoServerSecurityService;
 import org.springframework.beans.factory.BeanNameAware;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.AuthenticationEntryPoint;
 
 /**
@@ -69,4 +73,34 @@ public abstract class GeoServerSecurityFilter extends AbstractGeoServerSecurityS
     public void destroy() {
     }
 
+    /**
+     * Tries to authenticate from cache
+     * if a key can be derived and the {@link Authentication} object
+     * is not in the cache, the key will be returned.
+     * 
+     * A not <code>null</code> return value indicates a 
+     * missing cache entry
+     *  
+     * 
+     * @param filter
+     * @param request
+     * @return
+     */
+    protected String authenticateFromCache(AuthenticationCachingFilter filter,HttpServletRequest request) {
+    
+        Authentication authFromCache=null;
+        String cacheKey=null;
+        if (SecurityContextHolder.getContext().getAuthentication()==null) {
+            cacheKey = filter.getCacheKey(request);
+            if (cacheKey!=null) { 
+                authFromCache  = AuthenticationCacheImpl.get().get(getName(), cacheKey);
+                if (authFromCache!=null)
+                    SecurityContextHolder.getContext().setAuthentication(authFromCache);
+                else
+                    return cacheKey;
+            }
+                
+        }
+        return null;     
+    }
 }

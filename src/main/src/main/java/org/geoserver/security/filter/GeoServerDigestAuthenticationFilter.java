@@ -7,19 +7,27 @@ package org.geoserver.security.filter;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
+import java.util.Map;
 
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
+import javax.servlet.http.HttpServletRequest;
 
 import org.geoserver.security.GeoServerSecurityManager;
 import org.geoserver.security.HttpDigestUserDetailsServiceWrapper;
+import org.geoserver.security.auth.AuthenticationCacheImpl;
 import org.geoserver.security.config.DigestAuthenticationFilterConfig;
 import org.geoserver.security.config.SecurityNamedServiceConfig;
+import org.geoserver.security.impl.DigestAuthUtils;
+import org.geoserver.security.impl.GeoServerUser;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.authentication.www.DigestAuthenticationEntryPoint;
 import org.springframework.security.web.authentication.www.DigestAuthenticationFilter;
+import org.springframework.util.StringUtils;
 
 /**
  * Named Digest Authentication Filter
@@ -27,7 +35,8 @@ import org.springframework.security.web.authentication.www.DigestAuthenticationF
  * @author mcr
  *
  */
-public class GeoServerDigestAuthenticationFilter extends GeoServerCompositeFilter {
+public class GeoServerDigestAuthenticationFilter extends GeoServerCompositeFilter
+    implements AuthenticationCachingFilter{
     
     private DigestAuthenticationEntryPoint aep;
     @Override
@@ -56,8 +65,8 @@ public class GeoServerDigestAuthenticationFilter extends GeoServerCompositeFilte
             public void doFilter(ServletRequest req, ServletResponse res, FilterChain chain)
                     throws IOException, ServletException {
                 req.setAttribute(GeoServerSecurityFilter.AUTHENTICATION_ENTRY_POINT_HEADER, aep);
-                super.doFilter(req, res, chain);
-                    
+                
+                super.doFilter(req, res, chain);                
             }            
         };
 
@@ -83,4 +92,39 @@ public class GeoServerDigestAuthenticationFilter extends GeoServerCompositeFilte
         return aep;
     }
 
+    @Override
+    public String getCacheKey(HttpServletRequest request) {
+        String header = request.getHeader("Authorization");
+
+        if ((header != null) && header.startsWith("Digest ")) {
+            String section212response = header.substring(7);
+
+            String[] headerEntries = DigestAuthUtils.splitIgnoringQuotes(section212response, ',');
+            Map<String,String> headerMap = DigestAuthUtils.splitEachArrayElementAndCreateMap(headerEntries, "=", "\"");
+            
+            String username = headerMap.get("username");
+            String realm = headerMap.get("realm");
+            String nonce = headerMap.get("nonce");
+            String responseDigest = headerMap.get("response");
+            
+            if (StringUtils.hasLength(username)== false || 
+                StringUtils.hasLength(realm)== false ||
+                StringUtils.hasLength(nonce)== false ||
+                StringUtils.hasLength(responseDigest)== false)
+                return null;
+            
+            if (GeoServerUser.ROOT_USERNAME.equals(username))
+                return null;
+            
+            StringBuffer buff = new StringBuffer();
+            buff.append(username).append(":");
+            buff.append(realm).append(":");
+            buff.append(nonce).append(":");
+            buff.append(responseDigest).append(":");
+            return buff.toString();
+        } else {
+            return null;
+        }
+            
+    }
 }

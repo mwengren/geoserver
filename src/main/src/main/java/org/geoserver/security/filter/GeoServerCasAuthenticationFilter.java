@@ -11,13 +11,13 @@ import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
+import javax.servlet.http.HttpServletRequest;
 
 import org.geoserver.security.GeoServerUserGroupService;
 import org.geoserver.security.config.CasAuthenticationFilterConfig;
 import org.geoserver.security.config.SecurityNamedServiceConfig;
+import org.geoserver.security.impl.GeoServerUser;
 import org.jasig.cas.client.validation.Cas20ServiceTicketValidator;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.cas.ServiceProperties;
 import org.springframework.security.cas.authentication.CasAuthenticationProvider;
 import org.springframework.security.cas.web.CasAuthenticationEntryPoint;
@@ -31,7 +31,8 @@ import org.springframework.security.web.AuthenticationEntryPoint;
  * @author mcr
  *
  */
-public class GeoServerCasAuthenticationFilter extends GeoServerCompositeFilter {
+public class GeoServerCasAuthenticationFilter extends GeoServerCompositeFilter implements 
+     AuthenticationCachingFilter{
     private CasAuthenticationEntryPoint aep;
     private CasAuthenticationProvider provider;
     @Override
@@ -104,6 +105,13 @@ public class GeoServerCasAuthenticationFilter extends GeoServerCompositeFilter {
     @Override
     public void destroy() {
         getSecurityManager().getProviders().remove(provider);
+    }
+
+    @Override
+    public String getCacheKey(HttpServletRequest request) {
+        // TODO, return ticket ?
+        // GeoServerUser.ROOT_USERNAME.equals...
+        return null;
     }
 
     
