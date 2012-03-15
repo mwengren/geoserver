@@ -5,23 +5,52 @@
 package org.geoserver.security.web.group;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
+import org.apache.wicket.WicketRuntimeException;
+import org.apache.wicket.markup.html.form.Form;
 import org.geoserver.security.GeoServerRoleStore;
+import org.geoserver.security.GeoServerUserGroupService;
 import org.geoserver.security.GeoServerUserGroupStore;
 import org.geoserver.security.impl.GeoServerRole;
+import org.geoserver.security.impl.GeoServerUser;
 import org.geoserver.security.impl.GeoServerUserGroup;
 import org.geoserver.security.validation.RoleStoreValidationWrapper;
 import org.geoserver.security.validation.UserGroupStoreValidationWrapper;
+import org.geoserver.security.web.user.UserListProvider;
+import org.geoserver.security.web.user.UserTablePanel;
+import org.geoserver.web.wicket.GeoServerDataProvider;
 
 public class EditGroupPage extends AbstractGroupPage {
 
-    public EditGroupPage(String userGroupServiceName,GeoServerUserGroup group) {
+    public EditGroupPage(String userGroupServiceName,final GeoServerUserGroup group) {
         super(userGroupServiceName, group.copy()); //copy before passing into parent
 
-        //name not changable on edit 
+        //name not changeable on edit 
         get("form:groupname").setEnabled(false);
+
+        ((Form)get("form")).add(new UserTablePanel("users", userGroupServiceName, 
+            new GeoServerDataProvider<GeoServerUser>() {
+            @Override
+            protected List<GeoServerDataProvider.Property<GeoServerUser>> getProperties() {
+                return Arrays.asList(UserListProvider.USERNAME);
+            }
+
+            @Override
+            protected List<GeoServerUser> getItems() {
+                GeoServerUserGroupService ugService = 
+                        getUserGroupService(EditGroupPage.this.userGroupServiceName);
+                try {
+                    return new ArrayList<GeoServerUser>(ugService.getUsersForGroup(group));
+                } catch (IOException e) {
+                    throw new WicketRuntimeException(e);
+                } 
+            }
+        }).setFilterable(false));
     }
 
     @Override
