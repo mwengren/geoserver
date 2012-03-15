@@ -246,6 +246,11 @@ public class FilterConfigValidator extends SecurityConfigValidator {
             throw createFilterException(FilterConfigException.ACCESS_DENIED_PAGE_NEEDED);
         }
         
+        if (config.getAccessDeniedErrorPage().startsWith("/")==false) {
+            throw createFilterException(FilterConfigException.ACCESS_DENIED_PAGE_PREFIX);
+        }
+
+        
         if (isNotEmpty(config.getAuthenticationFilterName())) {            
             try {
                 SecurityNamedServiceConfig filterConfig = manager.loadFilterConfig(config.getAuthenticationFilterName());
@@ -301,6 +306,8 @@ public class FilterConfigValidator extends SecurityConfigValidator {
         } catch (MalformedURLException ex) {
             throw  createFilterException(FilterConfigException.CAS_TICKETVALIDATOR_URL_MALFORMED);
         }
+        
+        checkExistingUGService(config.getUserGroupServiceName());
         
     }
 

@@ -304,6 +304,20 @@ public class FilterConfigValidatorTest extends GeoServerSecurityTestSupport {
         try {
             getSecurityManager().saveFilter(config);
         } catch (FilterConfigException ex){
+            assertEquals(FilterConfigException.ACCESS_DENIED_PAGE_PREFIX,ex.getId());
+            assertEquals(0,ex.getArgs().length);
+            LOGGER.info(ex.getMessage());            
+            failed=true;
+        }
+        assertTrue(failed);
+
+                
+        config.setAccessDeniedErrorPage("/denied.jsp");
+        config.setAuthenticationFilterName("unknown");
+        failed = false;                                        
+        try {
+            getSecurityManager().saveFilter(config);
+        } catch (FilterConfigException ex){
             assertEquals(FilterConfigException.INVALID_ENTRY_POINT,ex.getId());
             assertEquals(1,ex.getArgs().length);
             assertEquals("unknown",ex.getArgs()[0]);
@@ -311,8 +325,7 @@ public class FilterConfigValidatorTest extends GeoServerSecurityTestSupport {
             failed=true;
         }
         assertTrue(failed);
-        
-        config.setAccessDeniedErrorPage("blabla");
+                
         config.setAuthenticationFilterName(GeoServerSecurityFilterChain.FILTER_SECURITY_INTERCEPTOR);
         failed = false;                                        
         try {
@@ -530,8 +543,34 @@ public class FilterConfigValidatorTest extends GeoServerSecurityTestSupport {
             failed=true;
         }
         assertTrue(failed);
-        
+
         config.setTicketValidatorUrl("http://localhost/cas");
+        failed = false;                                        
+        try {
+            getSecurityManager().saveFilter(config);
+        } catch (FilterConfigException ex){
+            assertEquals(FilterConfigException.USER_GROUP_SERVICE_NEEDED,ex.getId());
+            assertEquals(0,ex.getArgs().length);
+            LOGGER.info(ex.getMessage());
+            
+            failed=true;
+        }
+        assertTrue(failed);
+        
+        config.setUserGroupServiceName("blabla");
+        failed = false;                                        
+        try {
+            getSecurityManager().saveFilter(config);
+        } catch (FilterConfigException ex){
+            assertEquals(FilterConfigException.UNKNOWN_USER_GROUP_SERVICE,ex.getId());
+            assertEquals(1,ex.getArgs().length);
+            assertEquals("blabla",ex.getArgs()[0]);
+            LOGGER.info(ex.getMessage());            
+            failed=true;
+        }
+        assertTrue(failed);
+
+        config.setUserGroupServiceName(XMLUserGroupService.DEFAULT_NAME);                        
         getSecurityManager().saveFilter(config);
         
     }

@@ -26,20 +26,14 @@ import java.util.Set;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletResponse;
 
-import org.geoserver.security.GeoServerAuthenticationProvider;
-import org.geoserver.security.GeoServerRoleService;
-import org.geoserver.security.GeoServerRoleStore;
 import org.geoserver.security.GeoServerSecurityFilterChain;
 import org.geoserver.security.GeoServerSecurityManager;
-import org.geoserver.security.GeoServerUserGroupService;
-import org.geoserver.security.GeoServerUserGroupStore;
 import org.geoserver.security.config.BasicAuthenticationFilterConfig;
 import org.geoserver.security.config.DigestAuthenticationFilterConfig;
 import org.geoserver.security.config.J2eeAuthenticationFilterConfig;
 import org.geoserver.security.config.LogoutFilterConfig;
 import org.geoserver.security.config.RequestHeaderAuthenticationFilterConfig;
 import org.geoserver.security.config.RequestHeaderAuthenticationFilterConfig.RoleSource;
-import org.geoserver.security.config.SecurityManagerConfig;
 import org.geoserver.security.config.UsernamePasswordAuthenticationFilterConfig;
 import org.geoserver.security.config.X509CertificateAuthenticationFilterConfig;
 import org.geoserver.security.filter.GeoServerBasicAuthenticationFilter;
@@ -79,62 +73,9 @@ public class AuthenticationFilterTest extends AbstractAuthenticationProviderTest
     public final static String testFilterName9 = "logoutTestFilter";
 
 
-    public final static String testProviderName = "basicAuthTestProvider";
-    public final static String testUserName = "user1";
-    public final static String testPassword = "pw1";
-    public final static String rootRole = "RootRole";
-    public final static String derivedRole = "DerivedRole";
-    public final static String pattern = "/foo/**";
     
     
-    @Override
-    protected void setUpInternal() throws Exception {
-        super.setUpInternal();
-        createServices();
-    }
-    
-    protected void createServices() throws Exception{
-        
-        GeoServerRoleService rservice = createRoleService("rs1");
-        GeoServerRoleStore rstore = rservice.createStore();
-        GeoServerRole root, derived;
-        rstore.addRole(root=rstore.createRoleObject(rootRole));
-        rstore.addRole(derived=rstore.createRoleObject(derivedRole));
-        rstore.setParentRole(derived, root);
-        rstore.associateRoleToUser(derived, testUserName);
-        rstore.store();
-        
-        SecurityManagerConfig mconfig = getSecurityManager().loadSecurityConfig();
-        mconfig.setRoleServiceName("rs1");
-        getSecurityManager().saveSecurityConfig(mconfig);
-        
-        GeoServerUserGroupService ugservice = createUserGroupService("ug1");
-        GeoServerUserGroupStore ugstore = ugservice.createStore();
-        GeoServerUser u1 = ugstore.createUserObject(testUserName, testPassword, true);
-        ugstore.addUser(u1);
-        GeoServerUser u2 = ugstore.createUserObject("abc@xyz.com", "abc", true);
-        ugstore.addUser(u2);
-
-        ugstore.store();
-        
-        GeoServerAuthenticationProvider prov = createAuthProvider(testProviderName, ugservice.getName());
-        prepareAuthProviders(prov.getName());        
-        
-    }
-    
-    protected void insertAnonymousFilter(String beforName) throws Exception{
-        SecurityManagerConfig mconfig = getSecurityManager().loadSecurityConfig();
-        mconfig.getFilterChain().insertBefore(pattern,GeoServerSecurityFilterChain.ANONYMOUS_FILTER,beforName);
-        getSecurityManager().saveSecurityConfig(mconfig);        
-    }
-    
-    protected void removeAnonymousFilter() throws Exception{
-        SecurityManagerConfig mconfig = getSecurityManager().loadSecurityConfig();
-        mconfig.getFilterChain().getFilterMap().get(pattern).remove(GeoServerSecurityFilterChain.ANONYMOUS_FILTER);
-        getSecurityManager().saveSecurityConfig(mconfig);        
-    }
-
-    
+     
     public void testBasicAuth() throws Exception{
         
                 
@@ -1543,10 +1484,4 @@ public class AuthenticationFilterTest extends AbstractAuthenticationProviderTest
 
     }
     
-    protected MockHttpServletRequest createRequest(String url) {
-        MockHttpServletRequest request = super.createRequest(url);
-        request.setPathInfo(null);
-        request.setQueryString(null);
-        return request;        
-    }
 }

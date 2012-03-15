@@ -10,6 +10,8 @@ import java.util.ArrayList;
 import org.geoserver.platform.GeoServerExtensions;
 import org.geoserver.security.GeoServerAuthenticationProvider;
 import org.geoserver.security.GeoServerRoleService;
+import org.geoserver.security.GeoServerRoleStore;
+import org.geoserver.security.GeoServerSecurityFilterChain;
 import org.geoserver.security.GeoServerSecurityFilterChainProxy;
 import org.geoserver.security.GeoServerUserGroupService;
 import org.geoserver.security.GeoServerUserGroupStore;
@@ -27,9 +29,66 @@ import org.geoserver.security.impl.MemoryUserGroupService;
 import org.geoserver.security.password.PasswordValidator;
 import org.springframework.security.core.Authentication;
 
+import com.mockrunner.mock.web.MockHttpServletRequest;
+
 public abstract class AbstractAuthenticationProviderTest extends AbstractSecurityServiceTest {
 
+    
+    public final static String testUserName = "user1";
+    public final static String testPassword = "pw1";
+    public final static String rootRole = "RootRole";
+    public final static String derivedRole = "DerivedRole";
+    public final static String pattern = "/foo/**";
+    public final static String testProviderName = "testAuthenticationProvider";
 
+    @Override
+    protected void setUpInternal() throws Exception {
+        super.setUpInternal();
+        createServices();
+    }
+    
+    protected void createServices() throws Exception{
+        
+        GeoServerRoleService rservice = createRoleService("rs1");
+        GeoServerRoleStore rstore = rservice.createStore();
+        GeoServerRole root, derived;
+        rstore.addRole(root=rstore.createRoleObject(rootRole));
+        rstore.addRole(derived=rstore.createRoleObject(derivedRole));
+        rstore.setParentRole(derived, root);
+        rstore.associateRoleToUser(derived, testUserName);
+        rstore.store();
+        
+        SecurityManagerConfig mconfig = getSecurityManager().loadSecurityConfig();
+        mconfig.setRoleServiceName("rs1");
+        getSecurityManager().saveSecurityConfig(mconfig);
+        
+        GeoServerUserGroupService ugservice = createUserGroupService("ug1");
+        GeoServerUserGroupStore ugstore = ugservice.createStore();
+        GeoServerUser u1 = ugstore.createUserObject(testUserName, testPassword, true);
+        ugstore.addUser(u1);
+        GeoServerUser u2 = ugstore.createUserObject("abc@xyz.com", "abc", true);
+        ugstore.addUser(u2);
+
+        ugstore.store();
+        
+        GeoServerAuthenticationProvider prov = createAuthProvider(testProviderName, ugservice.getName());
+        prepareAuthProviders(prov.getName());        
+        
+    }
+    
+    protected void insertAnonymousFilter(String beforName) throws Exception{
+        SecurityManagerConfig mconfig = getSecurityManager().loadSecurityConfig();
+        mconfig.getFilterChain().insertBefore(pattern,GeoServerSecurityFilterChain.ANONYMOUS_FILTER,beforName);
+        getSecurityManager().saveSecurityConfig(mconfig);        
+    }
+    
+    protected void removeAnonymousFilter() throws Exception{
+        SecurityManagerConfig mconfig = getSecurityManager().loadSecurityConfig();
+        mconfig.getFilterChain().getFilterMap().get(pattern).remove(GeoServerSecurityFilterChain.ANONYMOUS_FILTER);
+        getSecurityManager().saveSecurityConfig(mconfig);        
+    }
+
+    
     public GeoServerAuthenticationProvider createAuthProvider(String name, String userGroupServiceName) 
         throws Exception {
         UsernamePasswordAuthenticationProviderConfig config = new
@@ -125,4 +184,13 @@ public abstract class AbstractAuthenticationProviderTest extends AbstractSecurit
     GeoServerSecurityFilterChainProxy getProxy() {
         return GeoServerExtensions.bean(GeoServerSecurityFilterChainProxy.class);
     }
+    
+    @Override
+    protected MockHttpServletRequest createRequest(String url) {
+        MockHttpServletRequest request = super.createRequest(url);
+        request.setPathInfo(null);
+        request.setQueryString(null);
+        return request;        
+    }
+
 }
