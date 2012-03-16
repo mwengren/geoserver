@@ -63,18 +63,8 @@ public class GeoServerCasAuthenticationFilter extends GeoServerCompositeFilter i
         
         
         
-        CasAuthenticationFilter filter = new CasAuthenticationFilter() {
+        CasAuthenticationFilter filter = new CasAuthenticationFilter();
 
-            @Override
-            public void doFilter(ServletRequest req, ServletResponse res, FilterChain chain)
-                    throws IOException, ServletException {
-                
-                req.setAttribute(GeoServerSecurityFilter.AUTHENTICATION_ENTRY_POINT_HEADER, aep);
-                super.doFilter(req, res, chain);
-            }            
-        };
-        
-                
         provider = new CasAuthenticationProvider();
         provider.setKey(config.getName());
         GeoServerUserGroupService ugService = getSecurityManager().loadUserGroupService(authConfig.getUserGroupServiceName());
@@ -96,6 +86,15 @@ public class GeoServerCasAuthenticationFilter extends GeoServerCompositeFilter i
         filter.afterPropertiesSet();
         getNestedFilters().add(filter);        
     }
+    
+    @Override
+    public void doFilter(ServletRequest req, ServletResponse res, FilterChain chain)
+            throws IOException, ServletException {
+        
+        req.setAttribute(GeoServerSecurityFilter.AUTHENTICATION_ENTRY_POINT_HEADER, aep);
+        super.doFilter(req, res, chain);
+    }            
+
     
     @Override
     public AuthenticationEntryPoint getAuthenticationEntryPoint() {

@@ -61,16 +61,7 @@ public class GeoServerBasicAuthenticationFilter extends GeoServerCompositeFilter
         BasicAuthenticationFilterConfig authConfig = 
                 (BasicAuthenticationFilterConfig) config;
         
-        BasicAuthenticationFilter filter = new BasicAuthenticationFilter() {
-
-            @Override
-            public void doFilter(ServletRequest req, ServletResponse res, FilterChain chain)
-                    throws IOException, ServletException {
-                
-                req.setAttribute(GeoServerSecurityFilter.AUTHENTICATION_ENTRY_POINT_HEADER, aep);
-                super.doFilter(req, res, chain);
-            }            
-        };
+        BasicAuthenticationFilter filter = new BasicAuthenticationFilter(); 
         filter.setAuthenticationManager(getSecurityManager());
         filter.setIgnoreFailure(false);
         filter.setAuthenticationEntryPoint(aep);                
@@ -91,6 +82,15 @@ public class GeoServerBasicAuthenticationFilter extends GeoServerCompositeFilter
     public AuthenticationEntryPoint getAuthenticationEntryPoint() {
         return aep;
     }
+    
+    @Override
+    public void doFilter(ServletRequest req, ServletResponse res, FilterChain chain)
+            throws IOException, ServletException {
+        
+        req.setAttribute(GeoServerSecurityFilter.AUTHENTICATION_ENTRY_POINT_HEADER, aep);
+        super.doFilter(req, res, chain);
+    }            
+
 
     /**
      * returns username:md5(password:filtername)

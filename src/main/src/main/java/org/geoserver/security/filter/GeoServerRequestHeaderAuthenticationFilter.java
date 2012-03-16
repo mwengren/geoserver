@@ -88,7 +88,7 @@ public class GeoServerRequestHeaderAuthenticationFilter extends GeoServerAbstrac
     public String getRoleServiceName() {
         return roleServiceName;
     }
-
+    
     public void setRoleServiceName(String roleServiceName) {
         this.roleServiceName = roleServiceName;
     }
@@ -229,6 +229,15 @@ public class GeoServerRequestHeaderAuthenticationFilter extends GeoServerAbstrac
         return roles;        
     }
 
+
+    @Override
+    public String getCacheKey(HttpServletRequest request) {
+        
+        // caching does not make sense if everything is in the header
+        if (RoleSource.HEADER.equals(getRoleSource())) 
+            return null;        
+        return super.getCacheKey(request);
+    }
 
 
     

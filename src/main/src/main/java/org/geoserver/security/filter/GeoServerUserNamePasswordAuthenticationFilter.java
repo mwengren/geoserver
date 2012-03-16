@@ -5,7 +5,6 @@
 package org.geoserver.security.filter;
 
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
@@ -13,13 +12,10 @@ import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
-import javax.servlet.http.HttpServletRequest;
 
 import org.geoserver.platform.GeoServerExtensions;
 import org.geoserver.security.config.SecurityNamedServiceConfig;
 import org.geoserver.security.config.UsernamePasswordAuthenticationFilterConfig;
-import org.geoserver.security.impl.GeoServerUser;
-import org.springframework.security.core.codec.Hex;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint;
 import org.springframework.security.web.authentication.RememberMeServices;
@@ -27,7 +23,6 @@ import org.springframework.security.web.authentication.SimpleUrlAuthenticationFa
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
-import org.springframework.util.StringUtils;
 
 /**
  * User name / password authentication filter
@@ -36,8 +31,7 @@ import org.springframework.util.StringUtils;
  * @author christian
  * 
  */
-public class GeoServerUserNamePasswordAuthenticationFilter extends GeoServerCompositeFilter 
-        implements AuthenticationCachingFilter {
+public class GeoServerUserNamePasswordAuthenticationFilter extends GeoServerCompositeFilter {
 
     public static final String URL_FOR_LOGIN = "/j_spring_security_check";
     public static final String URL_LOGIN_SUCCCESS = "/";
@@ -46,8 +40,6 @@ public class GeoServerUserNamePasswordAuthenticationFilter extends GeoServerComp
     
     
     private LoginUrlAuthenticationEntryPoint aep;
-    private String usernameParameter;
-    private String passwordParameter;
     protected MessageDigest digest;
 
 
@@ -78,19 +70,11 @@ public class GeoServerUserNamePasswordAuthenticationFilter extends GeoServerComp
                 .bean("rememberMeServices");
 
         // add login filter
-        UsernamePasswordAuthenticationFilter filter = new UsernamePasswordAuthenticationFilter(){
-
-            @Override
-            public void doFilter(ServletRequest req, ServletResponse res, FilterChain chain)
-                    throws IOException, ServletException {
-                req.setAttribute(GeoServerSecurityFilter.AUTHENTICATION_ENTRY_POINT_HEADER, aep);
-                super.doFilter(req, res, chain);
-            }            
-        };
+        UsernamePasswordAuthenticationFilter filter = new UsernamePasswordAuthenticationFilter();
 
 
-        filter.setPasswordParameter(passwordParameter=upConfig.getPasswordParameterName());
-        filter.setUsernameParameter(usernameParameter=upConfig.getUsernameParameterName());
+        filter.setPasswordParameter(upConfig.getPasswordParameterName());
+        filter.setUsernameParameter(upConfig.getUsernameParameterName());
         filter.setAuthenticationManager(getSecurityManager());
 
         filter.setRememberMeServices(rms);
@@ -113,7 +97,6 @@ public class GeoServerUserNamePasswordAuthenticationFilter extends GeoServerComp
 
         filter.afterPropertiesSet();
         getNestedFilters().add(filter);
-
 //        SecurityContextHolderAwareRequestFilter contextAwareFilter = new SecurityContextHolderAwareRequestFilter();
 //        try {
 //            contextAwareFilter.afterPropertiesSet();
@@ -128,32 +111,39 @@ public class GeoServerUserNamePasswordAuthenticationFilter extends GeoServerComp
         return aep;
     }
 
+    @Override
+    public void doFilter(ServletRequest req, ServletResponse res, FilterChain chain)
+            throws IOException, ServletException {
+        req.setAttribute(GeoServerSecurityFilter.AUTHENTICATION_ENTRY_POINT_HEADER, aep);
+        super.doFilter(req, res, chain);
+    }            
+
     /** 
      * returns username:md5(password:filtername)
      */
-    @Override
-    public String getCacheKey(HttpServletRequest request) {
-        String uname = request.getParameter(usernameParameter);
-        String passwd = request.getParameter(passwordParameter);
-        if (!StringUtils.hasLength(uname)) return null;
-        if (!StringUtils.hasLength(passwd)) return null;
-        
-        if (GeoServerUser.ROOT_USERNAME.equals(uname)) 
-            return null;
-
-        StringBuffer buff = new StringBuffer(passwd);
-        buff.append(":");
-        buff.append(getName());
-        String digestString = null;
-        try {
-            digestString = new String(Hex.encode(digest.digest(buff.toString().getBytes("utf-8"))));
-        } catch (UnsupportedEncodingException e) {
-            throw new RuntimeException(e);
-        }        
-        buff = new StringBuffer(uname);
-        buff.append(":");
-        buff.append(digestString);
-        return buff.toString();        
-    }
+//    @Override
+//    public String getCacheKey(HttpServletRequest request) {
+//        String uname = request.getParameter(usernameParameter);
+//        String passwd = request.getParameter(passwordParameter);
+//        if (!StringUtils.hasLength(uname)) return null;
+//        if (!StringUtils.hasLength(passwd)) return null;
+//        
+//        if (GeoServerUser.ROOT_USERNAME.equals(uname)) 
+//            return null;
+//
+//        StringBuffer buff = new StringBuffer(passwd);
+//        buff.append(":");
+//        buff.append(getName());
+//        String digestString = null;
+//        try {
+//            digestString = new String(Hex.encode(digest.digest(buff.toString().getBytes("utf-8"))));
+//        } catch (UnsupportedEncodingException e) {
+//            throw new RuntimeException(e);
+//        }        
+//        buff = new StringBuffer(uname);
+//        buff.append(":");
+//        buff.append(digestString);
+//        return buff.toString();        
+//    }
 
 }

@@ -45,6 +45,7 @@ import org.geoserver.config.util.XStreamPersister;
 import org.geoserver.config.util.XStreamPersisterFactory;
 import org.geoserver.platform.ContextLoadedEvent;
 import org.geoserver.platform.GeoServerExtensions;
+import org.geoserver.security.auth.AuthenticationCacheImpl;
 import org.geoserver.security.auth.GeoServerRootAuthenticationProvider;
 import org.geoserver.security.auth.UsernamePasswordAuthenticationProvider;
 import org.geoserver.security.concurrent.LockingKeyStoreProvider;
@@ -1087,6 +1088,8 @@ public class GeoServerSecurityManager extends ProviderManager implements Applica
         else { 
             validator.validateModifiedFilter(config,
                     filterHelper.loadConfig(config.getName()));
+            // remove all cached authentications for this filter
+            AuthenticationCacheImpl.get().removeAll(config.getName());
             if (securityConfig.getFilterChain().
                     patternsContainingFilter(config.getName()).isEmpty()==false)
                 fireChanged=true;
@@ -1118,6 +1121,7 @@ public class GeoServerSecurityManager extends ProviderManager implements Applica
                         GeoServerSecurityFilter.class,
                         config.getClassName());
         validator.validateRemoveFilter(config);        
+        AuthenticationCacheImpl.get().removeAll(config.getName());
         filterHelper.removeConfig(config.getName());
     }
 

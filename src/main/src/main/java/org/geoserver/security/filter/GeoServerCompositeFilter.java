@@ -27,11 +27,14 @@ import org.springframework.security.core.context.SecurityContextHolder;
  *
  */
 public class GeoServerCompositeFilter extends GeoServerSecurityFilter {
+
+    public final static String CACHE_KEY_ATTRIBUTE="_geoserver_security_cache_key";
+    public final static String CACHE_KEY_IDLE_SECS="_geoserver_security_cache_key_idle_secs";
+    public final static String CACHE_KEY_LIVE_SECS="_geoserver_security_cache_key_live_secs";
     
     protected  class NestedFilterChain implements FilterChain {
         private final FilterChain originalChain;
         private int currentPosition = 0;
-        private final static String CacheKeyAttribue="_geoserver_security_cache_key";
 
         private NestedFilterChain( FilterChain chain) {
             this.originalChain = chain;
@@ -45,16 +48,23 @@ public class GeoServerCompositeFilter extends GeoServerSecurityFilter {
                 String cacheKey=authenticateFromCache((AuthenticationCachingFilter) 
                         GeoServerCompositeFilter.this, (HttpServletRequest) request);
                 if (cacheKey!=null)
-                    request.setAttribute(CacheKeyAttribue, cacheKey);
+                    request.setAttribute(CACHE_KEY_ATTRIBUTE, cacheKey);
             }
             
             if (nestedFilters == null || currentPosition == nestedFilters.size()) {                
                 Authentication postAuthentication = SecurityContextHolder.getContext().getAuthentication();
-                String cacheKey=(String) request.getAttribute(CacheKeyAttribue);
+                String cacheKey=(String) request.getAttribute(CACHE_KEY_ATTRIBUTE);
                 if (postAuthentication != null && cacheKey!=null) {
-                    AuthenticationCacheImpl.get().put(getName(), cacheKey,postAuthentication);
-                    request.setAttribute(CacheKeyAttribue, null);
+                    Integer idle_secs = (Integer) request.getAttribute(CACHE_KEY_IDLE_SECS);
+                    Integer live_secs = (Integer) request.getAttribute(CACHE_KEY_LIVE_SECS);
+                    
+                    AuthenticationCacheImpl.get().put(getName(), cacheKey,postAuthentication,idle_secs,live_secs);                    
                 }
+               // clean up request attributes in any case,
+                request.setAttribute(CACHE_KEY_ATTRIBUTE, null);
+                request.setAttribute(CACHE_KEY_IDLE_SECS, null);
+                request.setAttribute(CACHE_KEY_LIVE_SECS, null);
+
                 originalChain.doFilter(request, response);
             } else {
                 currentPosition++;

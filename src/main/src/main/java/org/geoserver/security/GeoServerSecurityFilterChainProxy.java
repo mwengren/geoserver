@@ -16,6 +16,7 @@ import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 
 import org.geoserver.platform.GeoServerExtensions;
+import org.geoserver.security.auth.AuthenticationCacheImpl;
 import org.geoserver.security.config.SecurityManagerConfig;
 import org.geoserver.security.filter.GeoServerAnonymousAuthenticationFilter;
 import org.geoserver.security.filter.GeoServerSecurityMetadataSource;
@@ -147,6 +148,8 @@ public class GeoServerSecurityFilterChainProxy extends FilterChainProxy
                     filter.destroy();
                 }
             }
+            // empty cache since filter config  will change
+            AuthenticationCacheImpl.get().removeAll();
             setFilterChainMap(filterChainMap);
             chainsInitialized=true;
         }

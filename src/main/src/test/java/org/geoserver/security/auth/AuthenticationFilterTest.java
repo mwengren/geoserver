@@ -6,22 +6,7 @@
 
 package org.geoserver.security.auth;
 
-import java.math.BigInteger;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
-import java.security.NoSuchProviderException;
 import java.security.Principal;
-import java.security.PublicKey;
-import java.security.SignatureException;
-import java.security.cert.CertificateEncodingException;
-import java.security.cert.CertificateException;
-import java.security.cert.CertificateExpiredException;
-import java.security.cert.CertificateNotYetValidException;
-import java.security.cert.X509Certificate;
-import java.text.MessageFormat;
-import java.util.Date;
-import java.util.Map;
-import java.util.Set;
 
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletResponse;
@@ -37,14 +22,12 @@ import org.geoserver.security.config.RequestHeaderAuthenticationFilterConfig.Rol
 import org.geoserver.security.config.UsernamePasswordAuthenticationFilterConfig;
 import org.geoserver.security.config.X509CertificateAuthenticationFilterConfig;
 import org.geoserver.security.filter.GeoServerBasicAuthenticationFilter;
-import org.geoserver.security.filter.GeoServerCompositeFilter;
 import org.geoserver.security.filter.GeoServerDigestAuthenticationFilter;
 import org.geoserver.security.filter.GeoServerJ2eeAuthenticationFilter;
 import org.geoserver.security.filter.GeoServerLogoutFilter;
 import org.geoserver.security.filter.GeoServerRequestHeaderAuthenticationFilter;
 import org.geoserver.security.filter.GeoServerUserNamePasswordAuthenticationFilter;
 import org.geoserver.security.filter.GeoServerX509CertificateAuthenticationFilter;
-import org.geoserver.security.impl.DigestAuthUtils;
 import org.geoserver.security.impl.GeoServerRole;
 import org.geoserver.security.impl.GeoServerUser;
 import org.geotools.data.Base64;
@@ -52,8 +35,6 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.security.web.authentication.logout.LogoutFilter;
 import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 
 import com.mockrunner.mock.web.MockFilterChain;
@@ -472,35 +453,6 @@ public class AuthenticationFilterTest extends AbstractAuthenticationProviderTest
     }        
 
 
-    protected String clientDigestString(String serverDigestString, String username, String password, String method) {
-        String section212response = serverDigestString.substring(7);
-        String[] headerEntries = DigestAuthUtils.splitIgnoringQuotes(section212response, ',');
-        Map<String,String> headerMap = DigestAuthUtils.splitEachArrayElementAndCreateMap(headerEntries, "=", "\"");
-
-        String realm = headerMap.get("realm");
-        String qop= headerMap.get("qop");
-        String nonce= headerMap.get("nonce");
-        
-        String uri="/foo/bar";
-        String nc="00000001";
-        String cnonce="0a4f113b";
-        String  opaque="5ccc069c403ebaf9f0171e9517f40e41";
-        
-        String responseString = DigestAuthUtils.generateDigest(
-                false, username, realm, password, method, 
-                uri, qop, nonce, nc, cnonce);
-        
-        String template = "Digest username=\"{0}\",realm=\"{1}\"";
-        template+=",nonce=\"{2}\",uri=\"{3}\"";
-        template+=",qop=\"{4}\",nc=\"{5}\"";
-        template+=",cnonce=\"{6}\",response=\"{7}\"";
-        template+=",opaque=\"{8}\"";
-                
-        return MessageFormat.format(template, 
-                username,realm,nonce,uri,qop,nc,cnonce,responseString,opaque);
-        
-    }
-    
     public void testDigestAuth() throws Exception{
 
         DigestAuthenticationFilterConfig config = new DigestAuthenticationFilterConfig();
@@ -791,31 +743,6 @@ public class AuthenticationFilterTest extends AbstractAuthenticationProviderTest
         
     }
 
-    protected void prepareFormFiltersForTest() {
-        
-         GeoServerCompositeFilter authFilter =
-                (GeoServerCompositeFilter)
-                getProxy().getFilters("/j_spring_security_foo_check").get(1);
-        
-        if (authFilter instanceof GeoServerUserNamePasswordAuthenticationFilter) {
-            UsernamePasswordAuthenticationFilter authFilter2 = (UsernamePasswordAuthenticationFilter) 
-                    authFilter.getNestedFilters().get(0);
-            authFilter2.setFilterProcessesUrl("/j_spring_security_foo_check");
-        }
-
-        authFilter =
-                (GeoServerCompositeFilter)
-                getProxy().getFilters("/j_spring_security_foo_logout").get(1);
-
-        
-        if (authFilter instanceof GeoServerLogoutFilter) {
-            LogoutFilter authFilter2 = (LogoutFilter) 
-                    authFilter.getNestedFilters().get(0);
-            authFilter2.setFilterProcessesUrl("/j_spring_security_foo_logout");
-        }
-        
-    }
-    
     public void testFormLogin() throws Exception {
             
             
@@ -1255,151 +1182,6 @@ public class AuthenticationFilterTest extends AbstractAuthenticationProviderTest
                 
     }      
     
-    protected void setCertifacteForUser(final String userName, MockHttpServletRequest request) {
-        X509Certificate x509 = new X509Certificate() {
-
-            @Override
-            public Set<String> getCriticalExtensionOIDs() {
-                return null;
-            }
-
-            @Override
-            public byte[] getExtensionValue(String arg0) {
-                return null;
-            }
-
-            @Override
-            public Set<String> getNonCriticalExtensionOIDs() {
-                return null;
-            }
-
-            @Override
-            public boolean hasUnsupportedCriticalExtension() {
-                return false;
-            }
-
-            @Override
-            public void checkValidity() throws CertificateExpiredException,
-                    CertificateNotYetValidException {
-            }
-
-            @Override
-            public void checkValidity(Date arg0) throws CertificateExpiredException,
-                    CertificateNotYetValidException {
-            }
-
-            @Override
-            public int getBasicConstraints() {
-                return 0;
-            }
-
-            @Override
-            public Principal getIssuerDN() {
-                return null;
-            }
-
-            @Override
-            public boolean[] getIssuerUniqueID() {
-                return null;
-            }
-
-            @Override
-            public boolean[] getKeyUsage() {
-                return null;
-            }
-
-            @Override
-            public Date getNotAfter() {
-                return null;
-            }
-
-            @Override
-            public Date getNotBefore() {
-                return null;
-            }
-
-            @Override
-            public BigInteger getSerialNumber() {
-                return null;
-            }
-
-            @Override
-            public String getSigAlgName() {
-                return null;
-            }
-
-            @Override
-            public String getSigAlgOID() {
-                return null;
-            }
-
-            @Override
-            public byte[] getSigAlgParams() {
-                return null;
-            }
-
-            @Override
-            public byte[] getSignature() {
-                return null;
-            }
-
-            @Override
-            public Principal getSubjectDN() {
-                return new Principal () {
-                 @Override
-                public String getName() {
-                     return "cn="+userName+",ou=ou1";
-                     }   
-                };
-            }
-
-            @Override
-            public boolean[] getSubjectUniqueID() {
-                return null;
-            }
-
-            @Override
-            public byte[] getTBSCertificate() throws CertificateEncodingException {
-                return null;
-            }
-
-            @Override
-            public int getVersion() {
-                return 0;
-            }
-
-            @Override
-            public byte[] getEncoded() throws CertificateEncodingException {
-                return null;
-            }
-
-            @Override
-            public PublicKey getPublicKey() {
-                return null;
-            }
-
-            @Override
-            public String toString() {
-                return null;
-            }
-
-            @Override
-            public void verify(PublicKey arg0) throws CertificateException,
-                    NoSuchAlgorithmException, InvalidKeyException, NoSuchProviderException,
-                    SignatureException {
-            }
-
-            @Override
-            public void verify(PublicKey arg0, String arg1) throws CertificateException,
-                    NoSuchAlgorithmException, InvalidKeyException, NoSuchProviderException,
-                    SignatureException {
-            }
-            
-        };
-        request.setAttribute("javax.servlet.request.X509Certificate", 
-                new X509Certificate[]{x509});
-    }
-
     public void testCascadingFilters() throws Exception{
 
         BasicAuthenticationFilterConfig bconfig = new BasicAuthenticationFilterConfig();

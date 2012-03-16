@@ -18,7 +18,8 @@ import com.ibm.jvm.util.ByteArrayOutputStream;
 
 
 /**
- * Implementation for testing, no timing 
+ * Implementation for testing. All {@link Authentication} objects are stored
+ * serialized to be prepared for clustering. 
  * 
  * @author mcr
  *
@@ -28,14 +29,23 @@ public class TestingAuthenticationCache implements AuthenticationCache {
     Map<String,Map<String,byte[]>> cache =
             new HashMap<String, Map<String,byte[]>>();
     
+    public static Integer DEFAULT_IDLE_SECS = 60;
+    public static Integer DEFAULT_LIVE_SECS = 600;
+    
+    Map<String,Map<String,Integer[]>> expireMap =
+            new HashMap<String,Map<String, Integer[]>>();
+
+    
     @Override
     public void removeAll() {
         cache.clear();
+        expireMap.clear();
     }
 
     @Override
     public void removeAll(String filterName) {
         cache.remove(filterName);
+        expireMap.remove(filterName);
     }
 
     @Override
@@ -43,7 +53,10 @@ public class TestingAuthenticationCache implements AuthenticationCache {
         Map<String,byte[]> map = cache.get(filterName);
         if (map!=null)
             map.remove(cacheKey);
-        
+
+        Map<String,Integer[]> map2 = expireMap.get(filterName);
+        if (map2!=null)
+            map.remove(cacheKey);
     }
 
     @Override
@@ -54,11 +67,31 @@ public class TestingAuthenticationCache implements AuthenticationCache {
         else
             return null;
     }
+    
+    public Integer[] getExpireTimes(String filterName, String cacheKey) {
+        Integer[] result = null;
+        Map<String,Integer[]> map = expireMap.get(filterName);        
+        if (map!=null)
+            result = map.get(cacheKey);
+        if (result==null)
+            return new Integer[] {DEFAULT_IDLE_SECS,DEFAULT_LIVE_SECS};
+        return result;
+    }
+
+    
 
     @Override
     public void put(String filterName, String cacheKey, Authentication auth,
             Integer timeToIdleSeconds, Integer timeToLiveSeconds) {        
         put(filterName,cacheKey,auth);
+        if (timeToIdleSeconds !=null || timeToLiveSeconds !=null) {
+            Map<String,Integer[]> map = expireMap.get(filterName);
+            if (map==null) {
+                map = new HashMap<String,Integer[]>();
+                expireMap.put(filterName, map);
+            }
+            map.put(cacheKey, new Integer[] {timeToIdleSeconds,timeToLiveSeconds});            
+        }
     }
 
     @Override

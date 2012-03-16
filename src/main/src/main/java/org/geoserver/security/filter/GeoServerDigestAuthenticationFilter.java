@@ -59,16 +59,7 @@ public class GeoServerDigestAuthenticationFilter extends GeoServerCompositeFilte
             throw new IOException(e);
         }
         
-        DigestAuthenticationFilter filter = new DigestAuthenticationFilter(){
-
-            @Override
-            public void doFilter(ServletRequest req, ServletResponse res, FilterChain chain)
-                    throws IOException, ServletException {
-                req.setAttribute(GeoServerSecurityFilter.AUTHENTICATION_ENTRY_POINT_HEADER, aep);
-                
-                super.doFilter(req, res, chain);                
-            }            
-        };
+        DigestAuthenticationFilter filter = new DigestAuthenticationFilter();
 
         filter.setCreateAuthenticatedToken(true);
         filter.setPasswordAlreadyEncoded(true);
@@ -86,7 +77,19 @@ public class GeoServerDigestAuthenticationFilter extends GeoServerCompositeFilte
         filter.afterPropertiesSet();
         getNestedFilters().add(filter);        
     }
-    
+
+    @Override
+    public void doFilter(ServletRequest req, ServletResponse res, FilterChain chain)
+            throws IOException, ServletException {
+        req.setAttribute(GeoServerSecurityFilter.AUTHENTICATION_ENTRY_POINT_HEADER, aep);
+        Integer validity = aep.getNonceValiditySeconds();
+        // upper limits in the cache, makes no sense to cache an expired authentication token
+        req.setAttribute(GeoServerCompositeFilter.CACHE_KEY_IDLE_SECS,validity);
+        req.setAttribute(GeoServerCompositeFilter.CACHE_KEY_LIVE_SECS,validity);
+        
+        super.doFilter(req, res, chain);                
+    }            
+
     @Override
     public AuthenticationEntryPoint getAuthenticationEntryPoint() {
         return aep;
@@ -120,7 +123,7 @@ public class GeoServerDigestAuthenticationFilter extends GeoServerCompositeFilte
             buff.append(username).append(":");
             buff.append(realm).append(":");
             buff.append(nonce).append(":");
-            buff.append(responseDigest).append(":");
+            buff.append(responseDigest);
             return buff.toString();
         } else {
             return null;
