@@ -21,8 +21,8 @@ import org.geoserver.security.GeoServerSecurityManager;
 import org.geoserver.security.config.BasicAuthenticationFilterConfig;
 import org.geoserver.security.config.SecurityNamedServiceConfig;
 import org.geoserver.security.impl.GeoServerUser;
-import org.springframework.security.core.codec.Base64;
-import org.springframework.security.core.codec.Hex;
+import org.springframework.security.crypto.codec.Base64;
+import org.springframework.security.crypto.codec.Hex;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.authentication.RememberMeServices;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
@@ -61,17 +61,13 @@ public class GeoServerBasicAuthenticationFilter extends GeoServerCompositeFilter
         BasicAuthenticationFilterConfig authConfig = 
                 (BasicAuthenticationFilterConfig) config;
         
-        BasicAuthenticationFilter filter = new BasicAuthenticationFilter(); 
-        filter.setAuthenticationManager(getSecurityManager());
-        filter.setIgnoreFailure(false);
-        filter.setAuthenticationEntryPoint(aep);                
+        BasicAuthenticationFilter filter = new BasicAuthenticationFilter(getSecurityManager(),aep); 
 
         // TODO, Justin, is this correct
         if (authConfig.isUseRememberMe()) {             
             filter.setRememberMeServices((RememberMeServices)
                     GeoServerExtensions.bean("rememberMeServices"));
-            WebAuthenticationDetailsSource s = new WebAuthenticationDetailsSource();
-            s.setClazz(GeoServerWebAuthenticationDetails.class);
+            GeoServerWebAuthenticationDetailsSource s = new GeoServerWebAuthenticationDetailsSource();
             filter.setAuthenticationDetailsSource(s);
         }
         filter.afterPropertiesSet();

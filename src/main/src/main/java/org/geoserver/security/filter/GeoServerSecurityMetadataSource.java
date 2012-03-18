@@ -13,9 +13,8 @@ import java.util.List;
 import org.springframework.security.access.ConfigAttribute;
 import org.springframework.security.access.SecurityConfig;
 import org.springframework.security.web.access.intercept.DefaultFilterInvocationSecurityMetadataSource;
-import org.springframework.security.web.access.intercept.RequestKey;
-import org.springframework.security.web.util.AntUrlPathMatcher;
-import org.springframework.security.web.util.UrlMatcher;
+import org.springframework.security.web.util.AntPathRequestMatcher;
+import org.springframework.security.web.util.RequestMatcher;
 
 /**
  * Justin, nasty hack to get rid of the spring bean
@@ -28,24 +27,25 @@ import org.springframework.security.web.util.UrlMatcher;
  */
 public class GeoServerSecurityMetadataSource extends DefaultFilterInvocationSecurityMetadataSource {
 
-    static UrlMatcher matcher;
-    static LinkedHashMap<RequestKey, Collection<ConfigAttribute>> requestMap;
+    
+    static LinkedHashMap<RequestMatcher, Collection<ConfigAttribute>> requestMap;
     static {
-        matcher = new AntUrlPathMatcher(true);
-        requestMap= new LinkedHashMap<RequestKey, Collection<ConfigAttribute>>();
-        RequestKey key = new RequestKey("/config/**");
+        
+        requestMap= new LinkedHashMap<RequestMatcher, Collection<ConfigAttribute>>();
+        
+        RequestMatcher matcher = new AntPathRequestMatcher("/config/**");                
         List<ConfigAttribute> list = new ArrayList<ConfigAttribute>();
         list.add(new SecurityConfig("ROLE_ADMINISTRATOR"));
-        requestMap.put(key,list);
+        requestMap.put(matcher,list);
 
-        key = new RequestKey("/**");
+        matcher = new AntPathRequestMatcher("/**");
         list = new ArrayList<ConfigAttribute>();
         list.add(new SecurityConfig("IS_AUTHENTICATED_ANONYMOUSLY"));
-        requestMap.put(key,list);                
+        requestMap.put(matcher,list);                
     };
     
     public GeoServerSecurityMetadataSource() {
-        super(matcher,requestMap);
+        super(requestMap);
         /*
         <sec:intercept-url pattern="/config/**" access="ROLE_ADMINISTRATOR"/>
         <sec:intercept-url pattern="/**" access="IS_AUTHENTICATED_ANONYMOUSLY"/>

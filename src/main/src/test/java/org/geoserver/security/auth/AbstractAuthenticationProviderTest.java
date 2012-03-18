@@ -78,6 +78,7 @@ public abstract class AbstractAuthenticationProviderTest extends AbstractSecurit
         rstore.addRole(derived=rstore.createRoleObject(derivedRole));
         rstore.setParentRole(derived, root);
         rstore.associateRoleToUser(derived, testUserName);
+        rstore.associateRoleToUser(derived, "castest");
         rstore.store();
         
         SecurityManagerConfig mconfig = getSecurityManager().loadSecurityConfig();
@@ -90,6 +91,9 @@ public abstract class AbstractAuthenticationProviderTest extends AbstractSecurit
         ugstore.addUser(u1);
         GeoServerUser u2 = ugstore.createUserObject("abc@xyz.com", "abc", true);
         ugstore.addUser(u2);
+        GeoServerUser u3 = ugstore.createUserObject("castest", "castest", true);
+        ugstore.addUser(u3);
+
 
         ugstore.store();
         
@@ -203,7 +207,7 @@ public abstract class AbstractAuthenticationProviderTest extends AbstractSecurit
         ugstore.store();
     }
     
-    GeoServerSecurityFilterChainProxy getProxy() {
+    protected GeoServerSecurityFilterChainProxy getProxy() {
         return GeoServerExtensions.bean(GeoServerSecurityFilterChainProxy.class);
     }
     

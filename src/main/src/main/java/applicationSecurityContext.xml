@@ -283,7 +283,8 @@
   -->
   <bean id="authenticationManager" class="org.geoserver.security.GeoServerSecurityManager"
      depends-on="extensions">
-    <constructor-arg ref="dataDirectory"/>  	  
+    <constructor-arg ref="dataDirectory"/>
+    <property name="eraseCredentialsAfterAuthentication" value="false"/>  	  
   </bean>
   <alias name="authenticationManager" alias="geoServerSecurityManager"/>
 
@@ -346,7 +347,7 @@
   <bean id="anonymousFilterProvider" class="org.geoserver.security.filter.GeoServerAnonymousAuthenticationProvider"/>
   <bean id="logoutFilterProvider" class="org.geoserver.security.filter.GeoServerLogoutProvider"/>  
   <bean id="securityInterceptorFilterProvider" class="org.geoserver.security.filter.GeoServerSecurityInterceptorProvider"/>  
-  <bean id="casFilterProvider" class="org.geoserver.security.filter.GeoServerCasAuthenticationProvider"/>
+  <bean id="casFilterProvider" class="org.geoserver.security.cas.GeoServerCasAuthenticationProvider"/>
   
     	    	
   <bean id="urlMasterPasswordProvider" 

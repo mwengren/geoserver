@@ -20,7 +20,7 @@ import org.geoserver.security.password.PasswordEncodingType;
 import org.geoserver.security.password.UserDetailsPasswordWrapper;
 import org.springframework.dao.DataAccessException;
 import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.codec.Hex;
+import org.springframework.security.crypto.codec.Hex;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;

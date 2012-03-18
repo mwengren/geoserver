@@ -22,7 +22,6 @@ import org.springframework.security.web.authentication.RememberMeServices;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationFailureHandler;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 
 /**
  * User name / password authentication filter
@@ -78,8 +77,7 @@ public class GeoServerUserNamePasswordAuthenticationFilter extends GeoServerComp
         filter.setAuthenticationManager(getSecurityManager());
 
         filter.setRememberMeServices(rms);
-        WebAuthenticationDetailsSource s = new WebAuthenticationDetailsSource();
-        s.setClazz(GeoServerWebAuthenticationDetails.class);
+        GeoServerWebAuthenticationDetailsSource s = new GeoServerWebAuthenticationDetailsSource();
         filter.setAuthenticationDetailsSource(s);
 
         filter.setAllowSessionCreation(false);

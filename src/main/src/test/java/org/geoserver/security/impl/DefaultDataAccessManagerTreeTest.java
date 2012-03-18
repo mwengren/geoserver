@@ -5,6 +5,7 @@ import static org.easymock.EasyMock.createNiceMock;
 import static org.easymock.EasyMock.expect;
 import static org.easymock.EasyMock.replay;
 
+import java.util.Arrays;
 import java.util.Properties;
 import java.util.Set;
 
@@ -44,13 +45,13 @@ public class DefaultDataAccessManagerTreeTest extends TestCase {
                 createNiceMock(WorkspaceInfo.class)).anyTimes();
         replay(catalog);
 
-        rwUser = new TestingAuthenticationToken("rw", "supersecret", new GrantedAuthority[] {
-                new GeoServerRole("READER"), new GeoServerRole("WRITER") });
+        rwUser = new TestingAuthenticationToken("rw", "supersecret", Arrays.asList(new GrantedAuthority[] {
+                new GeoServerRole("READER"), new GeoServerRole("WRITER") }));
         roUser = new TestingAuthenticationToken("ro", "supersecret",
-                new GrantedAuthority[] { new GeoServerRole("READER") });
+                Arrays.asList(new GrantedAuthority[] { new GeoServerRole("READER") }));
         anonymous = new TestingAuthenticationToken("anonymous", null);
-        milUser = new TestingAuthenticationToken("military", "supersecret", new GrantedAuthority[] {
-                new GeoServerRole("MILITARY") });
+        milUser = new TestingAuthenticationToken("military", "supersecret", Arrays.asList(new GrantedAuthority[] {
+                new GeoServerRole("MILITARY") }));
 
     }
 

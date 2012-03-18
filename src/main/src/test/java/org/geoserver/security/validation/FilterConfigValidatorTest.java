@@ -4,7 +4,8 @@ import java.util.logging.Logger;
 
 import org.geoserver.security.GeoServerSecurityFilterChain;
 import org.geoserver.security.GeoServerSecurityTestSupport;
-import org.geoserver.security.config.CasAuthenticationFilterConfig;
+import org.geoserver.security.cas.CasAuthenticationFilterConfig;
+import org.geoserver.security.cas.GeoServerCasAuthenticationFilter;
 import org.geoserver.security.config.DigestAuthenticationFilterConfig;
 import org.geoserver.security.config.ExceptionTranslationFilterConfig;
 import org.geoserver.security.config.GeoServerRoleFilterConfig;
@@ -13,7 +14,6 @@ import org.geoserver.security.config.RequestHeaderAuthenticationFilterConfig;
 import org.geoserver.security.config.SecurityInterceptorFilterConfig;
 import org.geoserver.security.config.UsernamePasswordAuthenticationFilterConfig;
 import org.geoserver.security.config.X509CertificateAuthenticationFilterConfig;
-import org.geoserver.security.filter.GeoServerCasAuthenticationFilter;
 import org.geoserver.security.filter.GeoServerDigestAuthenticationFilter;
 import org.geoserver.security.filter.GeoServerExceptionTranslationFilter;
 import org.geoserver.security.filter.GeoServerJ2eeAuthenticationFilter;

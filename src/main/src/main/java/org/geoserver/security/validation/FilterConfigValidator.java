@@ -12,9 +12,9 @@ import java.net.URL;
 
 import org.geoserver.platform.GeoServerExtensions;
 import org.geoserver.security.GeoServerSecurityManager;
+import org.geoserver.security.cas.CasAuthenticationFilterConfig;
 import org.geoserver.security.config.AnonymousAuthenticationFilterConfig;
 import org.geoserver.security.config.BasicAuthenticationFilterConfig;
-import org.geoserver.security.config.CasAuthenticationFilterConfig;
 import org.geoserver.security.config.DigestAuthenticationFilterConfig;
 import org.geoserver.security.config.ExceptionTranslationFilterConfig;
 import org.geoserver.security.config.GeoServerRoleFilterConfig;

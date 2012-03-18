@@ -84,9 +84,9 @@ public class GeoServerTokenBasedRememberMeServices extends TokenBasedRememberMeS
         if (user instanceof RememberMeUserDetails)
             user = ((RememberMeUserDetails) user).getWrappedObject();
         
-        Collection<GrantedAuthority> roles = null;
+        Collection<GrantedAuthority> roles = new HashSet<GrantedAuthority>();
         if (user.getAuthorities().contains(GeoServerRole.AUTHENTICATED_ROLE)) {
-            roles = user.getAuthorities();
+            roles.addAll(user.getAuthorities());
         } else {
             roles = new HashSet<GrantedAuthority>();
             roles.addAll(user.getAuthorities());

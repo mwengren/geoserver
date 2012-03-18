@@ -31,7 +31,7 @@ public class UserDetailsWrapper implements UserDetails {
         this.details = details;
     }
     
-    public Collection<GrantedAuthority> getAuthorities() {
+    public Collection<? extends GrantedAuthority> getAuthorities() {
         return details.getAuthorities();
     }
 

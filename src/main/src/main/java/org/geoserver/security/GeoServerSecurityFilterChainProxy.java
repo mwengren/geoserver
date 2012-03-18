@@ -25,7 +25,10 @@ import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.security.web.FilterChainProxy;
+import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.AnonymousAuthenticationFilter;
+import org.springframework.security.web.util.AntPathRequestMatcher;
+import org.springframework.security.web.util.RequestMatcher;
 
 public class GeoServerSecurityFilterChainProxy extends FilterChainProxy 
     implements SecurityManagerListener, ApplicationContextAware  {
@@ -116,7 +119,7 @@ public class GeoServerSecurityFilterChainProxy extends FilterChainProxy
         SecurityManagerConfig config = securityManager.getSecurityConfig(); 
         GeoServerSecurityFilterChain filterChain = config.getFilterChain();
         
-        Map<Object,List<Filter>> filterChainMap = new LinkedHashMap<Object,List<Filter>>();
+        Map<RequestMatcher,List<Filter>> filterChainMap = new LinkedHashMap<RequestMatcher,List<Filter>>();
                 
         for (String pattern : filterChain.getAntPatterns()) {
             List<Filter> filters = new ArrayList<Filter>();
@@ -138,18 +141,22 @@ public class GeoServerSecurityFilterChainProxy extends FilterChainProxy
                     LOGGER.log(Level.SEVERE, "Error loading filter: " + filterName, ex);
                 }
             }
-            filterChainMap.put(pattern, filters);
+            filterChainMap.put(new AntPathRequestMatcher(pattern), filters);
         }
 
         synchronized (this) {
             // first, call destroy of all current filters        
             if (chainsInitialized) {
-                for (Filter filter : obtainAllDefinedFilters()) {
-                    filter.destroy();
+                for (SecurityFilterChain chain : getFilterChains()) {
+                    for (Filter filter: chain.getFilters()) {
+                        filter.destroy();
+                    }
                 }
             }
             // empty cache since filter config  will change
             AuthenticationCacheImpl.get().removeAll();
+            // TODO Justin, this method is deprecated without replacement, I fear 
+            // this is a show stopper for the next spring security version, any idea
             setFilterChainMap(filterChainMap);
             chainsInitialized=true;
         }
