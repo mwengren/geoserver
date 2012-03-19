@@ -16,7 +16,6 @@ import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 
-import org.geoserver.security.auth.AuthenticationCacheImpl;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 
@@ -55,10 +54,11 @@ public class GeoServerCompositeFilter extends GeoServerSecurityFilter {
                 Authentication postAuthentication = SecurityContextHolder.getContext().getAuthentication();
                 String cacheKey=(String) request.getAttribute(CACHE_KEY_ATTRIBUTE);
                 if (postAuthentication != null && cacheKey!=null) {
-                    Integer idle_secs = (Integer) request.getAttribute(CACHE_KEY_IDLE_SECS);
-                    Integer live_secs = (Integer) request.getAttribute(CACHE_KEY_LIVE_SECS);
-                    
-                    AuthenticationCacheImpl.get().put(getName(), cacheKey,postAuthentication,idle_secs,live_secs);                    
+                    Integer idleSecs = (Integer) request.getAttribute(CACHE_KEY_IDLE_SECS);
+                    Integer liveSecs = (Integer) request.getAttribute(CACHE_KEY_LIVE_SECS);
+
+                    getSecurityManager().getAuthenticationCache().put(
+                        getName(), cacheKey,postAuthentication,idleSecs,liveSecs);
                 }
                // clean up request attributes in any case,
                 request.setAttribute(CACHE_KEY_ATTRIBUTE, null);

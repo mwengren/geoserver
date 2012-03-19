@@ -15,18 +15,14 @@ import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 
-import org.geoserver.platform.GeoServerExtensions;
-import org.geoserver.security.auth.AuthenticationCacheImpl;
 import org.geoserver.security.config.SecurityManagerConfig;
 import org.geoserver.security.filter.GeoServerAnonymousAuthenticationFilter;
-import org.geoserver.security.filter.GeoServerSecurityMetadataSource;
 import org.geotools.util.logging.Logging;
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.security.web.FilterChainProxy;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.AnonymousAuthenticationFilter;
 import org.springframework.security.web.util.AntPathRequestMatcher;
 import org.springframework.security.web.util.RequestMatcher;
 
@@ -154,7 +150,8 @@ public class GeoServerSecurityFilterChainProxy extends FilterChainProxy
                 }
             }
             // empty cache since filter config  will change
-            AuthenticationCacheImpl.get().removeAll();
+            securityManager.getAuthenticationCache().removeAll();
+
             // TODO Justin, this method is deprecated without replacement, I fear 
             // this is a show stopper for the next spring security version, any idea
             setFilterChainMap(filterChainMap);

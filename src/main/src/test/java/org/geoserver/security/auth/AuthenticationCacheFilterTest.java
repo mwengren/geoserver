@@ -7,6 +7,9 @@
 package org.geoserver.security.auth;
 
 import java.security.Principal;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -46,19 +49,16 @@ public class AuthenticationCacheFilterTest extends AbstractAuthenticationProvide
     public final static String testFilterName5 = "basicAuthTestFilterWithRememberMe";
     public final static String testFilterName8 = "x509TestFilter";
 
-
-    @Override
-    protected void setUpInternal() throws Exception {
-        super.setUpInternal();
-        AuthenticationCacheImpl.Singleton=new TestingAuthenticationCache();        
-    }
-
+    protected String[] getSpringContextLocations() {
+        List<String> list = new ArrayList<String>(Arrays.asList(super.getSpringContextLocations()));
+        list.add(getClass().getResource(getClass().getSimpleName() + "-context.xml").toString());
+        return list.toArray(new String[list.size()]);
+    };
 
     TestingAuthenticationCache getCache() {
-        return (TestingAuthenticationCache) AuthenticationCacheImpl.Singleton;
+        return (TestingAuthenticationCache) getSecurityManager().getAuthenticationCache();
     }
-     
-    
+
     Authentication getAuth(String filterName, String user, Integer idleTime, Integer liveTime) {
         
         Map<String,byte[]> map= getCache().cache.get(filterName);

@@ -11,7 +11,6 @@ import javax.servlet.http.HttpServletRequest;
 
 import org.geoserver.security.GeoServerSecurityManager;
 import org.geoserver.security.GeoServerSecurityProvider;
-import org.geoserver.security.auth.AuthenticationCacheImpl;
 import org.geoserver.security.config.SecurityManagerConfig;
 import org.geoserver.security.impl.AbstractGeoServerSecurityService;
 import org.springframework.beans.factory.BeanNameAware;
@@ -93,7 +92,7 @@ public abstract class GeoServerSecurityFilter extends AbstractGeoServerSecurityS
         if (SecurityContextHolder.getContext().getAuthentication()==null) {
             cacheKey = filter.getCacheKey(request);
             if (cacheKey!=null) { 
-                authFromCache  = AuthenticationCacheImpl.get().get(getName(), cacheKey);
+                authFromCache = getSecurityManager().getAuthenticationCache().get(getName(), cacheKey);
                 if (authFromCache!=null)
                     SecurityContextHolder.getContext().setAuthentication(authFromCache);
                 else

@@ -5,33 +5,15 @@
 
 package org.geoserver.security.auth;
 
-import org.geoserver.platform.GeoServerExtensions;
 import org.springframework.security.core.Authentication;
 
 /**
  * @author mcr
  *
- * TODO, Justin, how to integrate correctly ?
- *
  * Null implementation doing nothing
  */
 public class AuthenticationCacheImpl implements AuthenticationCache {
 
-    
-    static AuthenticationCache Singleton;
-    
-    public static AuthenticationCache get() {
-        if (Singleton!=null)
-            return Singleton;
-        
-        Singleton = GeoServerExtensions.bean(AuthenticationCache.class);
-        
-        if  (Singleton==null)
-            Singleton=new AuthenticationCacheImpl();
-        
-        return Singleton;
-    }
-    
     @Override
     public void removeAll() {
     }

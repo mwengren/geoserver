@@ -45,6 +45,7 @@ import org.geoserver.config.util.XStreamPersister;
 import org.geoserver.config.util.XStreamPersisterFactory;
 import org.geoserver.platform.ContextLoadedEvent;
 import org.geoserver.platform.GeoServerExtensions;
+import org.geoserver.security.auth.AuthenticationCache;
 import org.geoserver.security.auth.AuthenticationCacheImpl;
 import org.geoserver.security.auth.GeoServerRootAuthenticationProvider;
 import org.geoserver.security.auth.UsernamePasswordAuthenticationProvider;
@@ -214,11 +215,13 @@ public class GeoServerSecurityManager extends ProviderManager implements Applica
     boolean initialized = false;
 
     /** keystore provider, loaded lazily */
-    KeyStoreProvider keyStoreProvider;
+    volatile KeyStoreProvider keyStoreProvider;
 
-    
     /** generator of random passwords */
     RandomPasswordProvider randomPasswdProvider = new RandomPasswordProvider();
+
+    /** authentication cache */
+    volatile AuthenticationCache authCache;
 
     public static final String REALM="GeoServer Realm";
     
@@ -435,6 +438,22 @@ public class GeoServerSecurityManager extends ProviderManager implements Applica
 
     public RandomPasswordProvider getRandomPassworddProvider() {
         return randomPasswdProvider;
+    }
+
+    public AuthenticationCache getAuthenticationCache() {
+        if (authCache == null) {
+            synchronized (this) {
+                if (authCache == null) {
+                    authCache = lookupAuthenticationCache();
+                }
+            }
+        }
+        return authCache;
+    }
+
+    AuthenticationCache lookupAuthenticationCache() {
+        AuthenticationCache authCache = GeoServerExtensions.bean(AuthenticationCache.class);
+        return authCache != null ? authCache : new AuthenticationCacheImpl();
     }
 
     /**
@@ -1089,7 +1108,7 @@ public class GeoServerSecurityManager extends ProviderManager implements Applica
             validator.validateModifiedFilter(config,
                     filterHelper.loadConfig(config.getName()));
             // remove all cached authentications for this filter
-            AuthenticationCacheImpl.get().removeAll(config.getName());
+            getAuthenticationCache().removeAll(config.getName());
             if (securityConfig.getFilterChain().
                     patternsContainingFilter(config.getName()).isEmpty()==false)
                 fireChanged=true;
@@ -1121,7 +1140,7 @@ public class GeoServerSecurityManager extends ProviderManager implements Applica
                         GeoServerSecurityFilter.class,
                         config.getClassName());
         validator.validateRemoveFilter(config);        
-        AuthenticationCacheImpl.get().removeAll(config.getName());
+        getAuthenticationCache().removeAll(config.getName());
         filterHelper.removeConfig(config.getName());
     }
 

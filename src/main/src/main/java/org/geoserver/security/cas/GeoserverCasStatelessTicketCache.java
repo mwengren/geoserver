@@ -18,22 +18,22 @@ import org.springframework.security.cas.authentication.StatelessTicketCache;
  *
  */
 public class GeoserverCasStatelessTicketCache implements StatelessTicketCache {
+
+    protected AuthenticationCache authCache;
     protected String filterName;
-    
-    
-    public GeoserverCasStatelessTicketCache(String filterName) {
+
+    public GeoserverCasStatelessTicketCache(String filterName, AuthenticationCache authCache) {
         this.filterName=filterName;
+        this.authCache = authCache;
     }
     @Override
     public CasAuthenticationToken getByTicketId(String serviceTicket) {
-        AuthenticationCache cache = AuthenticationCacheImpl.get();
-        return (CasAuthenticationToken) cache.get(filterName,serviceTicket);
+        return (CasAuthenticationToken) authCache.get(filterName,serviceTicket);
     }
 
     @Override
     public void putTicketInCache(CasAuthenticationToken token) {
-        AuthenticationCache cache = AuthenticationCacheImpl.get();
-        cache.put(filterName,token.getCredentials().toString(), token);
+        authCache.put(filterName,token.getCredentials().toString(), token);
     }
 
     @Override
@@ -43,8 +43,7 @@ public class GeoserverCasStatelessTicketCache implements StatelessTicketCache {
 
     @Override
     public void removeTicketFromCache(String serviceTicket) {
-        AuthenticationCache cache = AuthenticationCacheImpl.get();
-        cache.remove(filterName,serviceTicket);
+        authCache.remove(filterName,serviceTicket);
     }
 
 }

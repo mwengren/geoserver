@@ -81,8 +81,9 @@ public class GeoServerSecurityFilterChain  {
     public static GeoServerSecurityFilterChain getInitialChain() {
         GeoServerSecurityFilterChain chain = new GeoServerSecurityFilterChain();
         chain.setAntPatterns(createListFromStrings(
-                "/web/**","/j_spring_security_check","/j_spring_security_logout","/rest/**",
-                "/gwc/rest/web/**","/gwc/rest/**","/**"));
+                "/web/**","/j_spring_security_check","/j_spring_security_check/**",
+                "/j_spring_security_logout","/j_spring_security_logout/**",
+                "/rest/**", "/gwc/rest/web/**","/gwc/rest/**","/**"));
         
 //        chain.filterMap.put("/web/**",
 //                createListFromStrings(SECURITY_CONTEXT_ASC_FILTER,  
@@ -103,6 +104,9 @@ public class GeoServerSecurityFilterChain  {
         chain.filterMap.put("/j_spring_security_check", 
                     createListFromStrings(SECURITY_CONTEXT_ASC_FILTER, 
                     FORM_LOGIN_FILTER));
+        chain.filterMap.put("/j_spring_security_check/**", 
+                createListFromStrings(SECURITY_CONTEXT_ASC_FILTER, 
+                FORM_LOGIN_FILTER));
         
             
 //        chain.filterMap.put("/j_spring_security_logout/**", 
@@ -114,6 +118,9 @@ public class GeoServerSecurityFilterChain  {
                 createListFromStrings(SECURITY_CONTEXT_ASC_FILTER, 
                 FORM_LOGOUT_FILTER));
         
+        chain.filterMap.put("/j_spring_security_logout/**", 
+                createListFromStrings(SECURITY_CONTEXT_ASC_FILTER, 
+                FORM_LOGOUT_FILTER));
             
         chain.filterMap.put("/rest/**", 
                 createListFromStrings(SECURITY_CONTEXT_NO_ASC_FILTER, BASIC_AUTH_FILTER,

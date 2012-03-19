@@ -46,7 +46,7 @@ public abstract class GeoServerAbstractPreAuthenticationFilter extends GeoServer
     
     @Override
     public void initializeFromConfig(SecurityNamedServiceConfig config) throws IOException {
-        super.initializeFromConfig(config);                                                
+        super.initializeFromConfig(config);
     }
 
     
@@ -63,8 +63,9 @@ public abstract class GeoServerAbstractPreAuthenticationFilter extends GeoServer
             doAuthenticate((HttpServletRequest) request, (HttpServletResponse) response);
             
             Authentication postAuthentication = SecurityContextHolder.getContext().getAuthentication();
-            if (postAuthentication != null && cacheKey!=null)
-                AuthenticationCacheImpl.get().put(getName(), cacheKey,postAuthentication);                                
+            if (postAuthentication != null && cacheKey!=null) {
+                getSecurityManager().getAuthenticationCache().put(getName(), cacheKey,postAuthentication);
+            }
         }
         
         request.setAttribute(GeoServerSecurityFilter.AUTHENTICATION_ENTRY_POINT_HEADER, aep);
