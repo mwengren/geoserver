@@ -11,6 +11,7 @@ import java.util.Collection;
 import javax.servlet.http.HttpServletRequest;
 
 import org.geoserver.security.GeoServerAuthenticationProvider;
+import org.geoserver.security.GeoServerSecurityManager;
 import org.geoserver.security.GeoServerUserGroupService;
 import org.geoserver.security.config.SecurityNamedServiceConfig;
 import org.geoserver.security.impl.GeoServerRole;
@@ -26,7 +27,7 @@ import org.springframework.security.core.GrantedAuthority;
  * This user hat the administrator role {@link GeoServerRole#ADMIN_ROLE}
  * No other users are authenticated.
  * 
- * The password must match  {@link MasterPasswordProvider#getMasterPassword()}
+ * The password is checked using  {@link GeoServerSecurityManager#checkMasterPassword(String)}
  * 
  * If the password does not match, NO {@link BadCredentialsException} is thrown.
  * Maybe there is a user in one of the {@link GeoServerUserGroupService} objects

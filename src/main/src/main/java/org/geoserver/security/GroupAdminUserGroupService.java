@@ -4,19 +4,17 @@
  */
 package org.geoserver.security;
 
+import static org.geoserver.security.validation.UserGroupServiceException.USER_IN_OTHER_GROUP_NOT_MODIFIABLE_$1;
+
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.List;
 import java.util.SortedSet;
 
 import org.geoserver.security.impl.GeoServerRole;
 import org.geoserver.security.impl.GeoServerUser;
 import org.geoserver.security.impl.GeoServerUserGroup;
-import org.geoserver.security.impl.GroupAdminProperty;
 import org.geoserver.security.validation.PasswordPolicyException;
 import org.geoserver.security.validation.UserGroupServiceException;
-
-import static org.geoserver.security.validation.UserGroupServiceException.USER_IN_OTHER_GROUP_NOT_MODIFIABLE_$1;
 
 /**
  * User group service wrapper that filters contents based on an authenticated group administrator.
@@ -29,35 +27,21 @@ import static org.geoserver.security.validation.UserGroupServiceException.USER_I
  */
 public class GroupAdminUserGroupService extends AuthorizingUserGroupService {
 
-    GeoServerUser user;
-    volatile List<String> groups;
+    List<String> groups;
     
-    GroupAdminUserGroupService(GeoServerUserGroupService delegate, GeoServerUser user) {
+    GroupAdminUserGroupService(GeoServerUserGroupService delegate, List<String> groups) {
         super(delegate);
-        this.user = user;
-    }
-
-    List<String> groups() {
-        if (groups == null) {
-            synchronized (this) {
-                if (groups == null) {
-                    //calculate the group list
-                    groups = 
-                        Arrays.asList(GroupAdminProperty.get(user.getProperties()));
-                }
-            }
-        }
-        return groups;
+        this.groups = groups;
     }
 
     @Override
     public GeoServerUserGroupStore createStore() throws IOException {
-        return new GroupAdminUserGroupService(delegate.createStore(), user);
+        return new GroupAdminUserGroupService(delegate.createStore(), groups);
     }
 
     @Override
     public int getGroupCount() throws IOException {
-        return groups().size();
+        return groups.size();
     }
 
     @Override
@@ -67,7 +51,7 @@ public class GroupAdminUserGroupService extends AuthorizingUserGroupService {
 
     @Override
     protected GeoServerUserGroup filterGroup(GeoServerUserGroup group) {
-        if (groups().contains(group.getGroupname())) {
+        if (groups.contains(group.getGroupname())) {
             return group;
         }
         return null;
@@ -92,7 +76,6 @@ public class GroupAdminUserGroupService extends AuthorizingUserGroupService {
             return;
         }
 
-        List<String> groups = groups();
         for (GeoServerUserGroup userGroup : userGroups) {
             if (!groups.contains(userGroup.getGroupname())) {
                 String msg = new UserGroupServiceException(USER_IN_OTHER_GROUP_NOT_MODIFIABLE_$1, 

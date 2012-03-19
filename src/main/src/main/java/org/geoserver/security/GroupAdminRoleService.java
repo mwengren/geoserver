@@ -5,15 +5,12 @@
 package org.geoserver.security;
 
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.SortedSet;
 
 import org.geoserver.security.impl.GeoServerRole;
-import org.geoserver.security.impl.GeoServerUser;
-import org.geoserver.security.impl.GroupAdminProperty;
 
 /**
  * Role service wrapper that filters contents based on an authenticated group administrator.
@@ -26,15 +23,12 @@ import org.geoserver.security.impl.GroupAdminProperty;
  */
 public class GroupAdminRoleService extends AuthorizingRoleService {
 
-    /** the group admin user */
-    GeoServerUser user;
-
     /** groups the user admins, lazily calculated */
-    volatile List<String> groups;
+    List<String> groups;
 
-    public GroupAdminRoleService(GeoServerRoleService delegate, GeoServerUser user) {
+    public GroupAdminRoleService(GeoServerRoleService delegate, List<String> groups) {
         super(delegate);
-        this.user = user; 
+        this.groups = groups;
     }
 
     public boolean canCreateStore() {
@@ -43,19 +37,6 @@ public class GroupAdminRoleService extends AuthorizingRoleService {
 
     public GeoServerRoleStore createStore() throws IOException {
         return null;
-    }
-
-    List<String> groups() {
-        if (groups == null) {
-            synchronized (this) {
-                if (groups == null) {
-                    //calculate the group list
-                    groups = 
-                        Arrays.asList(GroupAdminProperty.get(user.getProperties()));
-                }
-            }
-        }
-        return groups;
     }
 
     @Override
@@ -72,7 +53,7 @@ public class GroupAdminRoleService extends AuthorizingRoleService {
 
     @Override
     protected boolean filterGroup(String groupname) {
-        return !groups().contains(groupname);
+        return !groups.contains(groupname);
     }
 
     @Override
