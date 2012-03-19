@@ -54,10 +54,6 @@ public abstract class SimpleAjaxLink<T> extends Panel {
     }
     
     protected IAjaxCallDecorator getAjaxCallDecorator() {
-<<<<<<< HEAD
-       // System.out.println(label.getDefaultModelObject());
-=======
->>>>>>> jdeolive/security
         return null;
     }
 
