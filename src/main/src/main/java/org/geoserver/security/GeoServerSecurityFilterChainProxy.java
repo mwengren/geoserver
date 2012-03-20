@@ -111,7 +111,10 @@ public class GeoServerSecurityFilterChainProxy extends FilterChainProxy
 
     void createFilterChain() {
 
-        
+        if (!securityManager.isInitialized()) {
+            //nothing to do
+        }
+
         SecurityManagerConfig config = securityManager.getSecurityConfig(); 
         GeoServerSecurityFilterChain filterChain = config.getFilterChain();
         

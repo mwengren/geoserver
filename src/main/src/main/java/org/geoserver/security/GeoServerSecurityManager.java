@@ -328,6 +328,7 @@ public class GeoServerSecurityManager extends ProviderManager implements Applica
     void init() throws Exception {
         init(loadMasterPasswordConfig());
         init(loadSecurityConfig());
+        fireChanged();
     }
 
     void init(SecurityManagerConfig config) throws Exception {
@@ -1113,11 +1114,12 @@ public class GeoServerSecurityManager extends ProviderManager implements Applica
                     patternsContainingFilter(config.getName()).isEmpty()==false)
                 fireChanged=true;
             
-        }                
-        
+        }
+
         filterHelper.saveConfig(config);
-        if (fireChanged)
+        if (fireChanged) {
             fireChanged();
+        }
     }
     
     /**
