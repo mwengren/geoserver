@@ -33,11 +33,8 @@ import org.springframework.security.web.AuthenticationEntryPoint;
  * 
  */
 public abstract class GeoServerSecurityFilter extends AbstractGeoServerSecurityService
+    implements Filter, BeanNameAware {
 
-
-    implements Filter,BeanNameAware {
-
-    
     /**
      * Geoserver authentication filter should set an {@link AuthenticationEntryPoint} using
      * this servlet attribute name.

@@ -4,7 +4,7 @@
  */
 package org.geoserver.security.cas;
 
-import org.geoserver.security.config.NamedFilterConfig;
+import org.geoserver.security.config.SecurityFilterConfig;
 
 
 /**
@@ -14,7 +14,7 @@ import org.geoserver.security.config.NamedFilterConfig;
  * @author mcr
  *
  */
-public class CasAuthenticationFilterConfig extends NamedFilterConfig {
+public class CasAuthenticationFilterConfig extends SecurityFilterConfig {
 
     private static final long serialVersionUID = 1L;
     public final static String CAS_CHAIN_PATTERN = "/j_spring_cas_security_check";

@@ -7,34 +7,31 @@ package org.geoserver.security.config;
 
 import org.geoserver.security.GeoServerRoleConverter;
 import org.geoserver.security.GeoServerSecurityManager;
+import org.geoserver.security.filter.GeoServerRequestHeaderAuthenticationFilter;
 
 /**
- * Configuration for pre authentication using http request headers
+ * {@link GeoServerRequestHeaderAuthenticationFilter} configuration object.
  * 
+ * <p>
  * {@link #getPrincipalHeaderAttribute()} is the name of the header 
  * containing the principal name.
- * 
- * {@link #getRoleSource()} determines how to calculate the roles
- * 
- * 1) {@link RoleSource#UGService}
- * Roles are calculated using the named user group service
- * {@link #getUserGroupServiceName()}
- * 
- * 2) {@link RoleSource#RoleService}
- * Roles are calculated using the named role service
- * {@link #getRoleServiceName()}. If no role service is given, the 
- * default is {@link GeoServerSecurityManager#getActiveRoleService()}
- * 
- * 3) {@link RoleSource#HEADER}
- * Roles are calculated using the content of {@link #getRolesHeaderAttribute()}
- * parsed by {@link #getRoleConverterName()}. if no converter is given,
- * roles are parsed by the default converter {@link GeoServerRoleConverter}
- *  
+ * </p>
+ *<p>
+ * {@link #getRoleSource()} determines how to calculate the roles:
+ * <ol>
+ * <li>{@link RoleSource#UserGroupService} - Roles are calculated using the named user group service
+ *     {@link #getUserGroupServiceName()}</li>
+ * <li>{@link RoleSource#RoleService} - Roles are calculated using the named role service
+ *     {@link #getRoleServiceName()}. If no role service is given, the default is 
+ *     {@link GeoServerSecurityManager#getActiveRoleService()}</li>
+ * <li>{@link RoleSource#Header} - Roles are calculated using the content of 
+ *     {@link #getRolesHeaderAttribute()} parsed by {@link #getRoleConverterName()}. if no converter 
+ *     is given, roles are parsed by the default converter {@link GeoServerRoleConverter}</li>
  * 
  * @author christian
- *
  */
-public class RequestHeaderAuthenticationFilterConfig extends NamedFilterConfig {
+public class RequestHeaderAuthenticationFilterConfig extends SecurityFilterConfig 
+    implements SecurityAuthFilterConfig {
 
     private RoleSource roleSource;
     private String principalHeaderAttribute;
@@ -45,7 +42,7 @@ public class RequestHeaderAuthenticationFilterConfig extends NamedFilterConfig {
 
     
     public static enum  RoleSource{
-        HEADER,UGService,RoleService;
+        Header,UserGroupService,RoleService;
     } ;
     
     private static final long serialVersionUID = 1L;

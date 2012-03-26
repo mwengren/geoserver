@@ -28,6 +28,7 @@ import org.geoserver.web.wicket.HelpLink;
 public class UserGroupRoleServicesPage extends AbstractSecurityPage {
 
     public UserGroupRoleServicesPage() {
+        //add(new ServicesPanel("panel"));
         List<ITab> tabs = new ArrayList();
         tabs.add(new AbstractTab(new StringResourceModel("services", this, null)) {
             @Override

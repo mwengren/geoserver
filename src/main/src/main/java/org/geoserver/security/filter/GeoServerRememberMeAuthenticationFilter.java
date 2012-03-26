@@ -18,7 +18,9 @@ import org.springframework.security.web.authentication.rememberme.RememberMeAuth
  * @author mcr
  *
  */
-public class GeoServerRememberMeAuthenticationFilter extends GeoServerCompositeFilter {
+public class GeoServerRememberMeAuthenticationFilter extends GeoServerCompositeFilter 
+    implements GeoServerAuthenticationFilter {
+
     @Override
     public void initializeFromConfig(SecurityNamedServiceConfig config) throws IOException {
         super.initializeFromConfig(config);

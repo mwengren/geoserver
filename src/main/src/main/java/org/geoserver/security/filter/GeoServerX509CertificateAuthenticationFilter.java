@@ -29,12 +29,12 @@ import org.springframework.security.web.authentication.preauth.x509.SubjectDnX50
 import org.springframework.security.web.authentication.preauth.x509.X509PrincipalExtractor;
 
 /**
- * J2EE Authentication Filter
+ * X509 Authentication Filter
  * 
  * @author mcr
  *
  */
-public class GeoServerX509CertificateAuthenticationFilter extends GeoServerAbstractPreAuthenticationFilter {
+public class GeoServerX509CertificateAuthenticationFilter extends GeoServerPreAuthenticationFilter {
     
     private X509PrincipalExtractor principalExtractor;
     private RoleSource roleSource;
@@ -93,7 +93,7 @@ public class GeoServerX509CertificateAuthenticationFilter extends GeoServerAbstr
             principal=null;
         
         try {
-            if (principal!=null && RoleSource.UGService.equals(getRoleSource())) {
+            if (principal!=null && RoleSource.UserGroupService.equals(getRoleSource())) {
                 GeoServerUserGroupService service = getSecurityManager().loadUserGroupService(getUserGroupServiceName());
                 GeoServerUser u = service.getUserByUsername(principal);
                 if (u!=null && u.isEnabled()==false)
@@ -110,7 +110,7 @@ public class GeoServerX509CertificateAuthenticationFilter extends GeoServerAbstr
 
         if (RoleSource.RoleService.equals(getRoleSource())) 
             return getRolesFromRoleService(request, principal);
-        if (RoleSource.UGService.equals(getRoleSource())) 
+        if (RoleSource.UserGroupService.equals(getRoleSource())) 
             return getRolesFromUserGroupService(request, principal);
         
         throw new RuntimeException("Never should reach this point");

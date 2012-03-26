@@ -140,7 +140,11 @@ public class GeoServerSecurityFilterChainProxy extends FilterChainProxy
                     LOGGER.log(Level.SEVERE, "Error loading filter: " + filterName, ex);
                 }
             }
-            filterChainMap.put(new AntPathRequestMatcher(pattern), filters);
+            //JD: we probably want to actually have seperate filter instances for each pattern 
+            // component
+            for (String p : pattern.split(",")) {
+                filterChainMap.put(new AntPathRequestMatcher(p), filters);
+            }
         }
 
         synchronized (this) {

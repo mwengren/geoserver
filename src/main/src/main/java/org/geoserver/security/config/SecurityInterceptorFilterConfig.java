@@ -34,7 +34,7 @@ class="org.springframework.security.web.access.intercept.FilterSecurityIntercept
 */
 
 
-public class SecurityInterceptorFilterConfig extends NamedFilterConfig {
+public class SecurityInterceptorFilterConfig extends SecurityFilterConfig {
 
     private static final long serialVersionUID = 1L;
     private boolean allowIfAllAbstainDecisions;

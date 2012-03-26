@@ -62,6 +62,7 @@ import org.geoserver.security.config.RememberMeAuthenticationFilterConfig;
 import org.geoserver.security.config.SecurityAuthProviderConfig;
 import org.geoserver.security.config.SecurityConfig;
 import org.geoserver.security.config.SecurityContextPersistenceFilterConfig;
+import org.geoserver.security.config.SecurityFilterConfig;
 import org.geoserver.security.config.SecurityInterceptorFilterConfig;
 import org.geoserver.security.config.SecurityManagerConfig;
 import org.geoserver.security.config.SecurityNamedServiceConfig;
@@ -72,6 +73,7 @@ import org.geoserver.security.config.UsernamePasswordAuthenticationProviderConfi
 import org.geoserver.security.file.FileWatcher;
 import org.geoserver.security.file.RoleFileWatcher;
 import org.geoserver.security.file.UserGroupFileWatcher;
+import org.geoserver.security.filter.GeoServerPreAuthenticationFilter;
 import org.geoserver.security.filter.GeoServerAnonymousAuthenticationFilter;
 import org.geoserver.security.filter.GeoServerBasicAuthenticationFilter;
 import org.geoserver.security.filter.GeoServerExceptionTranslationFilter;
@@ -1066,10 +1068,34 @@ public class GeoServerSecurityManager extends ProviderManager implements Applica
     }
 
     /**
-     * Lists all available authentication provider configurations.
+     * Lists all available filter configurations.
      */
     public SortedSet<String> listFilters() throws IOException {
         return listFiles(getFilterRoot());
+    }
+
+    /**
+     * Lists all available pre authentication filter configurations whose implentation class 
+     * is an instance of the specified class.
+     */
+    public SortedSet<String> listFilters(Class<?> type) throws IOException {
+        SortedSet<String> configs = new TreeSet<String>();
+        for (String name : listFilters()) {
+            SecurityFilterConfig config = (SecurityFilterConfig) loadFilterConfig(name);
+            if (config.getClassName() == null) {
+                continue;
+            }
+
+            try {
+                if (type.isAssignableFrom(Class.forName(config.getClassName()))) {
+                    configs.add(config.getName());
+                }
+            } catch (ClassNotFoundException e) {
+                //ignore and continue
+                LOGGER.log(Level.WARNING, e.getMessage(), e);
+            }
+        }
+        return configs;
     }
 
     /**
@@ -1087,7 +1113,7 @@ public class GeoServerSecurityManager extends ProviderManager implements Applica
      * 
      * @param name The name of the authentication provider service configuration.
      */
-    public SecurityNamedServiceConfig loadFilterConfig(String name) throws IOException {
+    public SecurityFilterConfig loadFilterConfig(String name) throws IOException {
         return filterHelper.loadConfig(name);
     }
 
@@ -1632,7 +1658,7 @@ public class GeoServerSecurityManager extends ProviderManager implements Applica
             bfConfig.setUseRememberMe(true);
             saveFilter(bfConfig);
         }
-        filterName = GeoServerSecurityFilterChain.BASIC_AUTH_NO_REMEMBER_ME_FILTER;
+        /*filterName = GeoServerSecurityFilterChain.BASIC_AUTH_NO_REMEMBER_ME_FILTER;
         filter = loadFilter(filterName);                  
         if (filter==null) {
             BasicAuthenticationFilterConfig bfConfig = new BasicAuthenticationFilterConfig();
@@ -1640,7 +1666,7 @@ public class GeoServerSecurityManager extends ProviderManager implements Applica
             bfConfig.setName(filterName);
             bfConfig.setUseRememberMe(false);
             saveFilter(bfConfig);
-        }
+        }*/
         filterName =GeoServerSecurityFilterChain.FORM_LOGIN_FILTER;
         filter = loadFilter(filterName);
         if (filter==null) {
@@ -1765,7 +1791,7 @@ public class GeoServerSecurityManager extends ProviderManager implements Applica
         rememberMeConfig.setClassName(GeoServerTokenBasedRememberMeServices.class.getName());
         config.setRememberMeService(rememberMeConfig);
 
-        config.setFilterChain(GeoServerSecurityFilterChain.getInitialChain());
+        config.setFilterChain(GeoServerSecurityFilterChain.createInitialChain());
         saveSecurityConfig(config);
 
         //TODO: just call initializeFrom
@@ -2418,7 +2444,7 @@ public class GeoServerSecurityManager extends ProviderManager implements Applica
         }
     }
 
-    class FilterHelper extends HelperBase<GeoServerSecurityFilter, SecurityNamedServiceConfig>{
+    class FilterHelper extends HelperBase<GeoServerSecurityFilter, SecurityFilterConfig>{
         /**
          * Loads the filter for the named config from persistence.
          */

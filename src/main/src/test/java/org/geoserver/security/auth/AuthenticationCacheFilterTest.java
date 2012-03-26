@@ -118,7 +118,7 @@ public class AuthenticationCacheFilterTest extends AbstractAuthenticationProvide
         config.setName(testFilterName);
         
         getSecurityManager().saveFilter(config);
-        prepareFiterChain(pattern,
+        prepareFilterChain(pattern,
             GeoServerSecurityFilterChain.SECURITY_CONTEXT_NO_ASC_FILTER,    
             testFilterName,
             GeoServerSecurityFilterChain.DYNAMIC_EXCEPTION_TRANSLATION_FILTER,
@@ -256,7 +256,7 @@ public class AuthenticationCacheFilterTest extends AbstractAuthenticationProvide
         config.setRoleServiceName("rs1");        
         getSecurityManager().saveFilter(config);
         
-        prepareFiterChain(pattern,
+        prepareFilterChain(pattern,
             GeoServerSecurityFilterChain.SECURITY_CONTEXT_NO_ASC_FILTER,    
             testFilterName3,
             GeoServerSecurityFilterChain.DYNAMIC_EXCEPTION_TRANSLATION_FILTER,
@@ -369,7 +369,7 @@ public class AuthenticationCacheFilterTest extends AbstractAuthenticationProvide
         config.setRolesHeaderAttribute("roles");;
         getSecurityManager().saveFilter(config);
         
-        prepareFiterChain(pattern,
+        prepareFilterChain(pattern,
             GeoServerSecurityFilterChain.SECURITY_CONTEXT_NO_ASC_FILTER,    
             testFilterName4,
             GeoServerSecurityFilterChain.DYNAMIC_EXCEPTION_TRANSLATION_FILTER,
@@ -389,7 +389,7 @@ public class AuthenticationCacheFilterTest extends AbstractAuthenticationProvide
         
         
         for (RoleSource rs : RoleSource.values()) {            
-            if (RoleSource.HEADER.equals(rs))
+            if (RoleSource.Header.equals(rs))
                 continue;
             
             config.setRoleSource(rs);
@@ -398,7 +398,7 @@ public class AuthenticationCacheFilterTest extends AbstractAuthenticationProvide
             response= new MockHttpServletResponse();
             chain = new MockFilterChain();            
             request.setHeader("principal", testUserName);
-            if (rs==RoleSource.HEADER) {
+            if (rs==RoleSource.Header) {
                 request.setHeader("roles", derivedRole+";"+rootRole);
             }
             getProxy().doFilter(request, response, chain);            
@@ -414,7 +414,7 @@ public class AuthenticationCacheFilterTest extends AbstractAuthenticationProvide
 
         // unknown user
         for (RoleSource rs : RoleSource.values()) {
-            if (RoleSource.HEADER.equals(rs))
+            if (RoleSource.Header.equals(rs))
                 continue;
                         
             config.setRoleSource(rs);
@@ -436,7 +436,7 @@ public class AuthenticationCacheFilterTest extends AbstractAuthenticationProvide
 
         // test disabled user, should not work since cache is active 
         
-        config.setRoleSource(RoleSource.UGService);
+        config.setRoleSource(RoleSource.UserGroupService);
         // saving a filter empties the cache
         getSecurityManager().saveFilter(config);
         updateUser("ug1", testUserName, false);
@@ -472,7 +472,7 @@ public class AuthenticationCacheFilterTest extends AbstractAuthenticationProvide
         config.setUserGroupServiceName("ug1");
         
         getSecurityManager().saveFilter(config);
-        prepareFiterChain(pattern,
+        prepareFilterChain(pattern,
                 GeoServerSecurityFilterChain.SECURITY_CONTEXT_NO_ASC_FILTER,    
                 testFilterName2,
                 GeoServerSecurityFilterChain.DYNAMIC_EXCEPTION_TRANSLATION_FILTER,
@@ -637,7 +637,7 @@ public class AuthenticationCacheFilterTest extends AbstractAuthenticationProvide
         config.setName(testFilterName5);
         
         getSecurityManager().saveFilter(config);
-        prepareFiterChain(pattern,
+        prepareFilterChain(pattern,
             GeoServerSecurityFilterChain.SECURITY_CONTEXT_NO_ASC_FILTER,    
             testFilterName5,
             GeoServerSecurityFilterChain.REMEMBER_ME_FILTER,
@@ -756,7 +756,7 @@ public class AuthenticationCacheFilterTest extends AbstractAuthenticationProvide
         config.setUserGroupServiceName("ug1");
         getSecurityManager().saveFilter(config);
         
-        prepareFiterChain(pattern,
+        prepareFilterChain(pattern,
             GeoServerSecurityFilterChain.SECURITY_CONTEXT_NO_ASC_FILTER,    
             testFilterName8,
             GeoServerSecurityFilterChain.DYNAMIC_EXCEPTION_TRANSLATION_FILTER,
@@ -817,7 +817,7 @@ public class AuthenticationCacheFilterTest extends AbstractAuthenticationProvide
 
         // test disabled user, should not work because of active cache
         updateUser("ug1", testUserName, false);
-        config.setRoleSource(org.geoserver.security.config.X509CertificateAuthenticationFilterConfig.RoleSource.UGService);
+        config.setRoleSource(org.geoserver.security.config.X509CertificateAuthenticationFilterConfig.RoleSource.UserGroupService);
         // saving the filter clears the cache
         getSecurityManager().saveFilter(config);
                 
@@ -859,7 +859,7 @@ public class AuthenticationCacheFilterTest extends AbstractAuthenticationProvide
         config.setUserGroupServiceName("ug1");
         
         getSecurityManager().saveFilter(config);
-        prepareFiterChain(pattern,
+        prepareFilterChain(pattern,
                 GeoServerSecurityFilterChain.SECURITY_CONTEXT_NO_ASC_FILTER,
                 testFilterName,
                 testFilterName2,

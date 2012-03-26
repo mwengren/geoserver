@@ -91,14 +91,62 @@
         <property name="descriptionKey" value="PasswordPolicyPanel.description"/>
     </bean>
     
-    <!-- auth provider panel infos -->
+    <!-- auth scheme panel infos -->
+    <bean id="anonymousAuthPanelInfo" class="org.geoserver.security.web.auth.AnonymousAuthFilterPanelInfo">
+        <property name="id" value="security.anonymousAuthFilter" />
+        <property name="shortTitleKey" value="AnonymousAuthFilterPanel.short"/>
+        <property name="titleKey" value="AnonymousAuthFilterPanel.title"/>
+        <property name="descriptionKey" value="AnonymousAuthFilterPanel.description"/>
+    </bean>
+    <bean id="rememberMeAuthPanelInfo" class="org.geoserver.security.web.auth.RememberMeAuthFilterPanelInfo">
+        <property name="id" value="security.rememberMeAuthFilter" />
+        <property name="shortTitleKey" value="RememberMeAuthFilterPanel.short"/>
+        <property name="titleKey" value="RememberMedAuthFilterPanel.title"/>
+        <property name="descriptionKey" value="RememberMeAuthFilterPanel.description"/>
+    </bean>
+    <bean id="formAuthPanelInfo" class="org.geoserver.security.web.auth.FormAuthFilterPanelInfo">
+        <property name="id" value="security.formAuthFilter" />
+        <property name="shortTitleKey" value="FormAuthFilterPanel.short"/>
+        <property name="titleKey" value="FormAuthFilterPanel.title"/>
+        <property name="descriptionKey" value="FormAuthFilterPanel.description"/>
+    </bean>
     <bean id="usernamePasswordAuthPanelInfo" class="org.geoserver.security.web.auth.UsernamePasswordAuthProviderPanelInfo">
         <property name="id" value="security.usernamePasswordAuthProvider" />
         <property name="shortTitleKey" value="UsernamePasswordAuthProviderPanel.short"/>
         <property name="titleKey" value="UsernamePasswordAuthProviderPanel.title"/>
         <property name="descriptionKey" value="UsernamePasswordAuthProviderPanel.description"/>
     </bean>
-
+    <bean id="j2eeAuthPanelInfo" class="org.geoserver.security.web.auth.J2eeAuthFilterPanelInfo">
+        <property name="id" value="security.j2eeAuthFilter" />
+        <property name="shortTitleKey" value="J2eeAuthFilterPanel.short"/>
+        <property name="titleKey" value="J2eeAuthFilterPanel.title"/>
+        <property name="descriptionKey" value="J2eeAuthFilterPanel.description"/>
+    </bean>
+    <bean id="x509AuthPanelInfo" class="org.geoserver.security.web.auth.X509AuthFilterPanelInfo">
+        <property name="id" value="security.x509AuthFilter" />
+        <property name="shortTitleKey" value="X509AuthFilterPanel.short"/>
+        <property name="titleKey" value="X509AuthFilterPanel.title"/>
+        <property name="descriptionKey" value="X509AuthFilterPanel.description"/>
+    </bean>
+    <bean id="headerAuthPanelInfo" class="org.geoserver.security.web.auth.HeaderAuthFilterPanelInfo">
+        <property name="id" value="security.headerAuthFilter" />
+        <property name="shortTitleKey" value="HeaderAuthFilterPanel.short"/>
+        <property name="titleKey" value="HeaderAuthFilterPanel.title"/>
+        <property name="descriptionKey" value="HeaderAuthFilterPanel.description"/>
+    </bean>
+    <bean id="basicAuthPanelInfo" class="org.geoserver.security.web.auth.BasicAuthFilterPanelInfo">
+        <property name="id" value="security.basicAuthFilter" />
+        <property name="shortTitleKey" value="BasicAuthFilterPanel.short"/>
+        <property name="titleKey" value="BasicAuthFilterPanel.title"/>
+        <property name="descriptionKey" value="BasicAuthFilterPanel.description"/>
+    </bean>
+    <bean id="digestAuthPanelInfo" class="org.geoserver.security.web.auth.DigestAuthFilterPanelInfo">
+        <property name="id" value="security.digestAuthFilter" />
+        <property name="shortTitleKey" value="DigestAuthFilterPanel.short"/>
+        <property name="titleKey" value="DigestAuthFilterPanel.title"/>
+        <property name="descriptionKey" value="DigestAuthFilterPanel.description"/>
+    </bean>
+    
     <!-- user group service panel infos -->
     <bean id="xmlUserGroupServicePanelInfo" class="org.geoserver.security.web.usergroup.XMLUserGroupServicePanelInfo">
         <property name="id" value="security.xmlUserGroupService" />

@@ -6,24 +6,25 @@
 package org.geoserver.security.config;
 
 import org.geoserver.security.GeoServerSecurityManager;
+import org.geoserver.security.filter.GeoServerX509CertificateAuthenticationFilter;
 
 /**
- * Configuration for pre authentication using a x509 certificate
- * {@link #getRoleSource()} determines how to calculate the roles
- * 
- * 1) {@link RoleSource#UGService}
- * Roles are calculated using the named user group service
- * {@link #getUserGroupServiceName()}
- * 
- * 2) {@link RoleSource#RoleService}
- * Roles are calculated using the named role service
- * {@link #getRoleServiceName()}. If no role service is given, the 
- * default is {@link GeoServerSecurityManager#getActiveRoleService()}
- * 
+ * {@link GeoServerX509CertificateAuthenticationFilter} configuration object.
+ * <p>
+ * {@link #getRoleSource()} determines how to calculate the roles:
+ * <ol>
+ *   <li>{@link RoleSource#UserGroupService} - Roles are calculated using the named user group service 
+ *      {@link #getUserGroupServiceName()}</li>
+ *   <li>{@link RoleSource#RoleService} - Roles are calculated using the named role service
+ *      {@link #getRoleServiceName()}. If no role service is given, the default is 
+ *      {@link GeoServerSecurityManager#getActiveRoleService()}</li>
+ * </ol>
+ * </p>
  * @author christian
  *
  */
-public class X509CertificateAuthenticationFilterConfig extends NamedFilterConfig {
+public class X509CertificateAuthenticationFilterConfig extends SecurityFilterConfig 
+    implements SecurityAuthFilterConfig {
 
     private RoleSource roleSource;
     private String userGroupServiceName;
@@ -31,7 +32,7 @@ public class X509CertificateAuthenticationFilterConfig extends NamedFilterConfig
 
     
     public static enum  RoleSource{
-        UGService,RoleService;
+        UserGroupService, RoleService;
     } ;
     
     private static final long serialVersionUID = 1L;

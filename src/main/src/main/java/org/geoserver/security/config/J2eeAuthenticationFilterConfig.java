@@ -5,23 +5,22 @@
 package org.geoserver.security.config;
 
 import org.geoserver.security.GeoServerSecurityManager;
+import org.geoserver.security.filter.GeoServerJ2eeAuthenticationFilter;
 
 /**
- * Configuration for a J2EE  authentication scenario
- * 
- * {@link #roleServiceName} is optional, 
- * default is {@link GeoServerSecurityManager#getActiveRoleService()} 
- * 
- * 
+ * {@link GeoServerJ2eeAuthenticationFilter} configuration object.
+ * <p>
+ * {@link #roleServiceName} is optional, default is {@link GeoServerSecurityManager#getActiveRoleService()} 
+ * </p>
  * @author christian
  *
  */
-public class J2eeAuthenticationFilterConfig extends NamedFilterConfig {
+public class J2eeAuthenticationFilterConfig extends SecurityFilterConfig 
+    implements SecurityAuthFilterConfig {
 
     private static final long serialVersionUID = 1L;
-    
-    private String roleServiceName;
 
+    private String roleServiceName;
 
     public String getRoleServiceName() {
         return roleServiceName;
@@ -30,11 +29,9 @@ public class J2eeAuthenticationFilterConfig extends NamedFilterConfig {
     public void setRoleServiceName(String roleServiceName) {
         this.roleServiceName = roleServiceName;
     }
-    
+
     @Override
     public  boolean providesAuthenticationEntryPoint() {
         return true;
     }
-
-
 }

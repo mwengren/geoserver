@@ -20,7 +20,7 @@ import org.geoserver.security.config.ExceptionTranslationFilterConfig;
 import org.geoserver.security.config.GeoServerRoleFilterConfig;
 import org.geoserver.security.config.J2eeAuthenticationFilterConfig;
 import org.geoserver.security.config.LogoutFilterConfig;
-import org.geoserver.security.config.NamedFilterConfig;
+import org.geoserver.security.config.SecurityFilterConfig;
 import org.geoserver.security.config.RememberMeAuthenticationFilterConfig;
 import org.geoserver.security.config.RequestHeaderAuthenticationFilterConfig;
 import org.geoserver.security.config.SecurityContextPersistenceFilterConfig;
@@ -189,7 +189,7 @@ public class FilterConfigValidator extends SecurityConfigValidator {
                 equals(X509CertificateAuthenticationFilterConfig.RoleSource.RoleService))
                 checkExistingRoleService(config.getRoleServiceName());
         if (config.getRoleSource().
-                equals(X509CertificateAuthenticationFilterConfig.RoleSource.UGService))
+                equals(X509CertificateAuthenticationFilterConfig.RoleSource.UserGroupService))
                 checkExistingUGService(config.getUserGroupServiceName());
 
     }
@@ -216,11 +216,11 @@ public class FilterConfigValidator extends SecurityConfigValidator {
             checkExistingRoleService(config.getRoleServiceName());
 
         if (config.getRoleSource().
-                equals(RequestHeaderAuthenticationFilterConfig.RoleSource.UGService))
+                equals(RequestHeaderAuthenticationFilterConfig.RoleSource.UserGroupService))
                 checkExistingUGService(config.getUserGroupServiceName());
         
         if (config.getRoleSource().
-                equals(RequestHeaderAuthenticationFilterConfig.RoleSource.HEADER)) {
+                equals(RequestHeaderAuthenticationFilterConfig.RoleSource.Header)) {
             if (isNotEmpty(config.getRolesHeaderAttribute())==false)
                 throw createFilterException(FilterConfigException.ROLES_HEADER_ATTRIBUTE_NEEDED);
             if (isNotEmpty(config.getRoleConverterName())) {
@@ -259,8 +259,8 @@ public class FilterConfigValidator extends SecurityConfigValidator {
                             config.getAuthenticationFilterName());
                 
                 boolean valid=false;
-                if (filterConfig instanceof NamedFilterConfig) {
-                    if (((NamedFilterConfig) filterConfig).providesAuthenticationEntryPoint())
+                if (filterConfig instanceof SecurityFilterConfig) {
+                    if (((SecurityFilterConfig) filterConfig).providesAuthenticationEntryPoint())
                         valid=true;
                 }
                 if (!valid) {

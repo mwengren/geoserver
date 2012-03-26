@@ -66,7 +66,7 @@ public class AuthenticationFilterTest extends AbstractAuthenticationProviderTest
         config.setName(testFilterName);
         
         getSecurityManager().saveFilter(config);
-        prepareFiterChain(pattern,
+        prepareFilterChain(pattern,
             GeoServerSecurityFilterChain.SECURITY_CONTEXT_ASC_FILTER,    
             testFilterName,
             GeoServerSecurityFilterChain.DYNAMIC_EXCEPTION_TRANSLATION_FILTER,
@@ -228,7 +228,7 @@ public class AuthenticationFilterTest extends AbstractAuthenticationProviderTest
         config.setRoleServiceName("rs1");        
         getSecurityManager().saveFilter(config);
         
-        prepareFiterChain(pattern,
+        prepareFilterChain(pattern,
             GeoServerSecurityFilterChain.SECURITY_CONTEXT_ASC_FILTER,    
             testFilterName3,
             GeoServerSecurityFilterChain.DYNAMIC_EXCEPTION_TRANSLATION_FILTER,
@@ -356,7 +356,7 @@ public class AuthenticationFilterTest extends AbstractAuthenticationProviderTest
         config.setRolesHeaderAttribute("roles");;
         getSecurityManager().saveFilter(config);
         
-        prepareFiterChain(pattern,
+        prepareFilterChain(pattern,
             GeoServerSecurityFilterChain.SECURITY_CONTEXT_ASC_FILTER,    
             testFilterName4,
             GeoServerSecurityFilterChain.DYNAMIC_EXCEPTION_TRANSLATION_FILTER,
@@ -385,7 +385,7 @@ public class AuthenticationFilterTest extends AbstractAuthenticationProviderTest
             response= new MockHttpServletResponse();
             chain = new MockFilterChain();            
             request.setHeader("principal", testUserName);
-            if (rs==RoleSource.HEADER) {
+            if (rs==RoleSource.Header) {
                 request.setHeader("roles", derivedRole+";"+rootRole);
             }
             getProxy().doFilter(request, response, chain);            
@@ -426,7 +426,7 @@ public class AuthenticationFilterTest extends AbstractAuthenticationProviderTest
 
         // test disabled user
         updateUser("ug1", testUserName, false);
-        config.setRoleSource(RoleSource.UGService);
+        config.setRoleSource(RoleSource.UserGroupService);
         getSecurityManager().saveFilter(config);
         request= createRequest("/foo/bar");
         request.setHeader("principal", testUserName);
@@ -461,7 +461,7 @@ public class AuthenticationFilterTest extends AbstractAuthenticationProviderTest
         config.setUserGroupServiceName("ug1");
         
         getSecurityManager().saveFilter(config);
-        prepareFiterChain(pattern,
+        prepareFilterChain(pattern,
                 GeoServerSecurityFilterChain.SECURITY_CONTEXT_ASC_FILTER,    
                 testFilterName2,
                 GeoServerSecurityFilterChain.DYNAMIC_EXCEPTION_TRANSLATION_FILTER,
@@ -623,7 +623,7 @@ public class AuthenticationFilterTest extends AbstractAuthenticationProviderTest
         config.setName(testFilterName5);
         
         getSecurityManager().saveFilter(config);
-        prepareFiterChain(pattern,
+        prepareFilterChain(pattern,
             GeoServerSecurityFilterChain.SECURITY_CONTEXT_ASC_FILTER,    
             testFilterName5,
             GeoServerSecurityFilterChain.REMEMBER_ME_FILTER,
@@ -758,17 +758,17 @@ public class AuthenticationFilterTest extends AbstractAuthenticationProviderTest
         loConfig.setName(testFilterName9);
         getSecurityManager().saveFilter(loConfig);
         
-        prepareFiterChain(pattern,
+        prepareFilterChain(pattern,
             GeoServerSecurityFilterChain.SECURITY_CONTEXT_ASC_FILTER,
             GeoServerSecurityFilterChain.GUI_EXCEPTION_TRANSLATION_FILTER,
             GeoServerSecurityFilterChain.FILTER_SECURITY_INTERCEPTOR);
 
         
-        prepareFiterChain("/j_spring_security_foo_check",
+        prepareFilterChain("/j_spring_security_foo_check",
                 GeoServerSecurityFilterChain.SECURITY_CONTEXT_ASC_FILTER,    
                 testFilterName6);
 
-        prepareFiterChain("/j_spring_security_foo_logout",
+        prepareFilterChain("/j_spring_security_foo_logout",
                 GeoServerSecurityFilterChain.SECURITY_CONTEXT_ASC_FILTER,    
                 testFilterName9);
         
@@ -953,17 +953,17 @@ public class AuthenticationFilterTest extends AbstractAuthenticationProviderTest
         loConfig.setName(testFilterName9);
         getSecurityManager().saveFilter(loConfig);
         
-        prepareFiterChain(pattern,
+        prepareFilterChain(pattern,
             GeoServerSecurityFilterChain.SECURITY_CONTEXT_ASC_FILTER,
             GeoServerSecurityFilterChain.REMEMBER_ME_FILTER,
             GeoServerSecurityFilterChain.GUI_EXCEPTION_TRANSLATION_FILTER,
             GeoServerSecurityFilterChain.FILTER_SECURITY_INTERCEPTOR);
         
-        prepareFiterChain("/j_spring_security_foo_logout",
+        prepareFilterChain("/j_spring_security_foo_logout",
                 GeoServerSecurityFilterChain.SECURITY_CONTEXT_ASC_FILTER,            
                 testFilterName9);
         
-        prepareFiterChain("/j_spring_security_foo_check",
+        prepareFilterChain("/j_spring_security_foo_check",
                 GeoServerSecurityFilterChain.SECURITY_CONTEXT_ASC_FILTER,    
                 testFilterName7);
 
@@ -1086,7 +1086,7 @@ public class AuthenticationFilterTest extends AbstractAuthenticationProviderTest
         config.setUserGroupServiceName("ug1");
         getSecurityManager().saveFilter(config);
         
-        prepareFiterChain(pattern,
+        prepareFilterChain(pattern,
             GeoServerSecurityFilterChain.SECURITY_CONTEXT_ASC_FILTER,    
             testFilterName8,
             GeoServerSecurityFilterChain.DYNAMIC_EXCEPTION_TRANSLATION_FILTER,
@@ -1156,7 +1156,7 @@ public class AuthenticationFilterTest extends AbstractAuthenticationProviderTest
 
         // test disabled user
         updateUser("ug1", testUserName, false);
-        config.setRoleSource(org.geoserver.security.config.X509CertificateAuthenticationFilterConfig.RoleSource.UGService);
+        config.setRoleSource(org.geoserver.security.config.X509CertificateAuthenticationFilterConfig.RoleSource.UserGroupService);
         getSecurityManager().saveFilter(config);
         request= createRequest("/foo/bar");
         response= new MockHttpServletResponse();
@@ -1197,7 +1197,7 @@ public class AuthenticationFilterTest extends AbstractAuthenticationProviderTest
         config.setUserGroupServiceName("ug1");
         
         getSecurityManager().saveFilter(config);
-        prepareFiterChain(pattern,
+        prepareFilterChain(pattern,
                 GeoServerSecurityFilterChain.SECURITY_CONTEXT_ASC_FILTER,
                 testFilterName,
                 testFilterName2,

@@ -6,6 +6,7 @@ package org.geoserver.security.web.auth;
 
 import org.geoserver.security.GeoServerAuthenticationProvider;
 import org.geoserver.security.config.SecurityAuthProviderConfig;
+import org.geoserver.security.filter.GeoServerSecurityFilter;
 import org.geoserver.security.validation.SecurityConfigException;
 import org.geoserver.security.validation.SecurityConfigValidator;
 import org.geoserver.security.web.SecurityNamedServicesPanel;
@@ -35,6 +36,7 @@ public class AuthenticationProvidersPanel extends SecurityNamedServicesPanel<Sec
 
     @Override
     protected void removeConfig(SecurityAuthProviderConfig config) throws Exception {
+
         getSecurityManager().removeAuthenticationProvider(config);
     }
 

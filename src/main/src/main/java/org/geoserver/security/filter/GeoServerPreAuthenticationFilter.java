@@ -2,8 +2,6 @@
  * This code is licensed under the GPL 2.0 license, availible at the root
  * application directory.
  */
-
-
 package org.geoserver.security.filter;
 
 import java.io.IOException;
@@ -18,7 +16,6 @@ import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.geoserver.security.auth.AuthenticationCacheImpl;
 import org.geoserver.security.config.SecurityNamedServiceConfig;
 import org.geoserver.security.impl.GeoServerRole;
 import org.geoserver.security.impl.GeoServerUser;
@@ -36,8 +33,8 @@ import org.springframework.security.web.authentication.preauth.PreAuthenticatedA
  * @author christian
  *
  */
-public abstract class GeoServerAbstractPreAuthenticationFilter extends GeoServerSecurityFilter 
-    implements AuthenticationCachingFilter {
+public abstract class GeoServerPreAuthenticationFilter extends GeoServerSecurityFilter 
+    implements AuthenticationCachingFilter, GeoServerAuthenticationFilter {
 
     
     private AuthenticationDetailsSource authenticationDetailsSource = new WebAuthenticationDetailsSource();

@@ -4,15 +4,15 @@
  */
 package org.geoserver.security.config;
 
+import org.geoserver.security.filter.GeoServerUserNamePasswordAuthenticationFilter;
 
 /**
- * Configuration for username/password authentication
- * 
- * 
- * @author mcr
+ * {@link GeoServerUserNamePasswordAuthenticationFilter} configuration object.
  *
+ * @author mcr
  */
-public class UsernamePasswordAuthenticationFilterConfig extends NamedFilterConfig {
+public class UsernamePasswordAuthenticationFilterConfig extends SecurityFilterConfig 
+    implements SecurityAuthFilterConfig {
 
     public final static String DEFAULT_PASSWORD_PARAM="password";
     public final static String DEFAULT_USERNAME_PARAM="username";

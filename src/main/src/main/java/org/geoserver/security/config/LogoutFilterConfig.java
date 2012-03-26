@@ -4,17 +4,15 @@
  */
 package org.geoserver.security.config;
 
+import org.geoserver.security.filter.GeoServerLogoutFilter;
 
 /**
- * Configuration for logout 
- * 
+ * {@link GeoServerLogoutFilter} configuration object.
  * 
  * @author mcr
- *
  */
-public class LogoutFilterConfig extends NamedFilterConfig {
+public class LogoutFilterConfig extends SecurityFilterConfig {
 
     private static final long serialVersionUID = 1L;
-    
 
 }

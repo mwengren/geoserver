@@ -168,7 +168,6 @@ public abstract class AbstractAuthenticationProviderTest extends AbstractSecurit
         return config;
     }
 
-            
     public void checkForAuthenticatedRole(Authentication auth) {
         assertTrue(auth.getAuthorities().contains(GeoServerRole.AUTHENTICATED_ROLE));
     }
@@ -178,10 +177,10 @@ public abstract class AbstractAuthenticationProviderTest extends AbstractSecurit
        config.getAuthProviderNames().clear();
        for (String n : authProviderNames)
            config.getAuthProviderNames().add(n);
-       getSecurityManager().saveSecurityConfig(config);        
+       getSecurityManager().saveSecurityConfig(config);
     }
 
-    protected void prepareFiterChain(String pattern, String... filterNames) throws Exception{
+    protected void prepareFilterChain(String pattern, String... filterNames) throws Exception{
         SecurityManagerConfig config = getSecurityManager().getSecurityConfig();
         if (config.getFilterChain().getAntPatterns().contains(pattern)) {
             config.getFilterChain().getAntPatterns().remove(pattern);
@@ -195,7 +194,6 @@ public abstract class AbstractAuthenticationProviderTest extends AbstractSecurit
        
        config.getFilterChain().getFilterMap().put(pattern,filters);
        getSecurityManager().saveSecurityConfig(config);
-                           
     }
     
     protected void updateUser(String ugService, String userName,boolean enabled) throws Exception {

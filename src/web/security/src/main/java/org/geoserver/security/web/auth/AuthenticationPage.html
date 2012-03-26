@@ -7,13 +7,34 @@
 <body>
 <wicket:extend>
   <form wicket:id="form">
-    <ul>
-     <li>
-       <fieldset class="noTitle">
+    <ul style="padding-top: 1em;">
+     <!--li>
+       <fieldset>
+        <legend><span><wicket:message key="anonymousAuth"></wicket:message></span></legend>
         <ul>
-          <input id="anonymous" wicket:id="anonymousAuth" type="checkbox" class="field checkbox"></input>
-          <label for="anonymous" class="choice"><wicket:message key="anonymousAuth"></wicket:message></label>
+          <li>
+            <input id="anonymous" wicket:id="anonymousAuth" type="checkbox" class="field checkbox"></input>
+            <label for="anonymous" class="choice"><wicket:message key="enabled"></wicket:message></label>
+          </li>
         </ul>
+       </fieldset>
+     </li-->
+     <li>
+       <fieldset>
+        <legend>
+          <span><wicket:message key="authFilters"></wicket:message></span>
+          <a href="#" wicket:id="authFiltersHelp" class="help-link"></a>
+        </legend>
+        <div wicket:id="authFilters"></div>
+      </fieldset>
+     </li>
+     <li>
+       <fieldset>
+         <legend>
+          <span><wicket:message key="filterChain"></wicket:message></span>
+          <a href="#" wicket:id="filterChainHelp" class="help-link"></a>
+         </legend>
+         <div wicket:id="filterChain"></div>
        </fieldset>
      </li>
      <li>
@@ -28,10 +49,10 @@
      <li>
        <fieldset>
          <legend>
-          <span><wicket:message key="authChain"></wicket:message></span>
-          <a href="#" wicket:id="authChainHelp" class="help-link"></a>
+          <span><wicket:message key="providerChain"></wicket:message></span>
+          <a href="#" wicket:id="providerChainHelp" class="help-link"></a>
          </legend>
-         <div wicket:id="authChain"></div>
+         <div wicket:id="providerChain"></div>
       </fieldset>
      </li>
     </ul>

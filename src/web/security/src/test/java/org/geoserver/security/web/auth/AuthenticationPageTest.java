@@ -5,42 +5,35 @@ import java.util.List;
 import org.apache.wicket.extensions.markup.html.form.palette.component.Recorder;
 import org.apache.wicket.util.tester.FormTester;
 import org.geoserver.security.GeoServerAuthenticationProvider;
+import org.geoserver.security.GeoServerSecurityFilterChain;
+import org.geoserver.security.GeoServerSecurityFilterChain.FilterChain;
 import org.geoserver.security.auth.UsernamePasswordAuthenticationProvider;
 import org.geoserver.security.config.SecurityManagerConfig;
 import org.geoserver.security.web.AbstractSecurityWicketTestSupport;
-import org.geoserver.security.web.SecuritySettingsPage;
-import org.springframework.security.authentication.AnonymousAuthenticationProvider;
+
+import static org.geoserver.security.GeoServerSecurityFilterChain.*;
 
 public class AuthenticationPageTest extends AbstractSecurityWicketTestSupport {
 
     AuthenticationPage page;
 
-    public void test() throws Exception {
+    public void testSetProvider() throws Exception {
         initializeForXML();
         createUserPasswordAuthProvider("default2", "default");
         activateRORoleService();
         
         tester.startPage(page = new AuthenticationPage());
+        tester.assertComponent("form:providerChain:authProviderNames:recorder", Recorder.class);
 
-        SecurityManagerConfig config = getSecurityManager().getSecurityConfig();
-        tester.assertModelValue("form:anonymousAuth", config.isAnonymousAuth());
-        tester.assertComponent("form:authChain:authProviderNames:recorder", Recorder.class);
-
-        List<String> selected = (List<String>) (page.get("form:authChain:authProviderNames")).getDefaultModelObject();
+        List<String> selected = 
+            (List<String>) (page.get("form:providerChain:authProviderNames")).getDefaultModelObject();
         assertEquals(1, selected.size());
         assertTrue(selected.contains("default"));
-        // not needed anymore
-        //assertTrue(hasAuthProviderImpl(AnonymousAuthenticationProvider.class));
 
         FormTester form = tester.newFormTester("form");
-        form.setValue("anonymousAuth", false);
-        form.setValue("authChain:authProviderNames:recorder", "default2");
+        form.setValue("providerChain:authProviderNames:recorder", "default2");
         form.submit("save");
         tester.assertNoErrorMessage();
-
-        // not needed anymore
-        //assertEquals(false,
-        //    hasAuthProviderImpl(AnonymousAuthenticationProvider.class));
 
         boolean authProvFound = false;
         for (GeoServerAuthenticationProvider prov : getSecurityManager()
@@ -56,7 +49,6 @@ public class AuthenticationPageTest extends AbstractSecurityWicketTestSupport {
             }
         }
         assertTrue(authProvFound);
-
     }
     
 //    protected void assignAuthProvider(String providerName) throws Exception {
@@ -72,6 +64,35 @@ public class AuthenticationPageTest extends AbstractSecurityWicketTestSupport {
                 return true;
         }
         return false;
+    }
+
+    public void testSetFilter() throws Exception {
+        initializeForXML();
+        activateRORoleService();
+
+        tester.startPage(page = new AuthenticationPage());
+        tester.assertModelValue("form:filterChain:requestType", FilterChain.WEB); 
+        tester.assertComponent("form:filterChain:authFilterChain:recorder", Recorder.class);
+
+        List<String> selected = 
+            (List<String>) (page.get("form:filterChain:authFilterChain")).getDefaultModelObject();
+        assertEquals(2, selected.size());
+        assertTrue(selected.contains(ANONYMOUS_FILTER));
+        assertTrue(selected.contains(REMEMBER_ME_FILTER));
+
+        GeoServerSecurityFilterChain filterChain = 
+                getSecurityManager().getSecurityConfig().getFilterChain();
+        assertTrue(filterChain.getFilterMap().get(WEB_CHAIN).contains(ANONYMOUS_FILTER));
+        assertTrue(filterChain.getFilterMap().get(WEB_CHAIN).contains(REMEMBER_ME_FILTER));
+        assertFalse(filterChain.getFilterMap().get(WEB_CHAIN).contains(BASIC_AUTH_FILTER));
+        
+        FormTester form = tester.newFormTester("form");
+        form.setValue("filterChain:authFilterChain:recorder", BASIC_AUTH_FILTER);
+        form.submit("save");
+        tester.assertNoErrorMessage();
+
+        filterChain = getSecurityManager().getSecurityConfig().getFilterChain();
+        assertTrue(filterChain.getFilterMap().get(WEB_CHAIN).contains(BASIC_AUTH_FILTER));
     }
 }
 

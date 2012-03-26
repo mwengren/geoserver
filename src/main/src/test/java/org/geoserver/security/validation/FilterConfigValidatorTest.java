@@ -171,7 +171,7 @@ public class FilterConfigValidatorTest extends GeoServerSecurityTestSupport {
         assertTrue(failed);
 
         
-        config.setRoleSource(X509CertificateAuthenticationFilterConfig.RoleSource.UGService);
+        config.setRoleSource(X509CertificateAuthenticationFilterConfig.RoleSource.UserGroupService);
         failed = false;                                        
         try {
             getSecurityManager().saveFilter(config);
@@ -377,7 +377,7 @@ public class FilterConfigValidatorTest extends GeoServerSecurityTestSupport {
         assertTrue(failed);
 
         
-        config.setRoleSource(RequestHeaderAuthenticationFilterConfig.RoleSource.UGService);
+        config.setRoleSource(RequestHeaderAuthenticationFilterConfig.RoleSource.UserGroupService);
         failed = false;                                        
         try {
             getSecurityManager().saveFilter(config);
@@ -423,7 +423,7 @@ public class FilterConfigValidatorTest extends GeoServerSecurityTestSupport {
         config.setRoleServiceName(XMLRoleService.DEFAULT_NAME);
         getSecurityManager().saveFilter(config);
         
-        config.setRoleSource(RequestHeaderAuthenticationFilterConfig.RoleSource.HEADER);
+        config.setRoleSource(RequestHeaderAuthenticationFilterConfig.RoleSource.Header);
         failed = false;                                        
         try {
             getSecurityManager().saveFilter(config);

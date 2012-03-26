@@ -36,7 +36,7 @@ import org.springframework.security.web.authentication.www.BasicAuthenticationFi
  *
  */
 public class GeoServerBasicAuthenticationFilter extends GeoServerCompositeFilter 
-        implements AuthenticationCachingFilter {
+    implements AuthenticationCachingFilter, GeoServerAuthenticationFilter {
     private BasicAuthenticationEntryPoint aep;
     private MessageDigest digest;
     @Override

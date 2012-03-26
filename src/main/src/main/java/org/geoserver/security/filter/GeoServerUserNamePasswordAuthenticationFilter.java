@@ -30,7 +30,8 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
  * @author christian
  * 
  */
-public class GeoServerUserNamePasswordAuthenticationFilter extends GeoServerCompositeFilter {
+public class GeoServerUserNamePasswordAuthenticationFilter extends GeoServerCompositeFilter
+    implements GeoServerAuthenticationFilter {
 
     public static final String URL_FOR_LOGIN = "/j_spring_security_check";
     public static final String URL_LOGIN_SUCCCESS = "/";

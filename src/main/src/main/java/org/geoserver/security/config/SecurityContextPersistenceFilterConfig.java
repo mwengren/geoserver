@@ -22,7 +22,7 @@ import org.springframework.security.core.Authentication;
  * @author mcr
  *
  */
-public class SecurityContextPersistenceFilterConfig extends NamedFilterConfig {
+public class SecurityContextPersistenceFilterConfig extends SecurityFilterConfig {
 
     private static final long serialVersionUID = 1L;
     private boolean allowSessionCreation;

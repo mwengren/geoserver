@@ -17,13 +17,10 @@ import javax.servlet.http.HttpServletRequest;
 
 import org.geoserver.security.GeoServerSecurityManager;
 import org.geoserver.security.HttpDigestUserDetailsServiceWrapper;
-import org.geoserver.security.auth.AuthenticationCacheImpl;
 import org.geoserver.security.config.DigestAuthenticationFilterConfig;
 import org.geoserver.security.config.SecurityNamedServiceConfig;
 import org.geoserver.security.impl.DigestAuthUtils;
 import org.geoserver.security.impl.GeoServerUser;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.authentication.www.DigestAuthenticationEntryPoint;
 import org.springframework.security.web.authentication.www.DigestAuthenticationFilter;
@@ -36,7 +33,7 @@ import org.springframework.util.StringUtils;
  *
  */
 public class GeoServerDigestAuthenticationFilter extends GeoServerCompositeFilter
-    implements AuthenticationCachingFilter{
+    implements AuthenticationCachingFilter, GeoServerAuthenticationFilter {
     
     private DigestAuthenticationEntryPoint aep;
     @Override

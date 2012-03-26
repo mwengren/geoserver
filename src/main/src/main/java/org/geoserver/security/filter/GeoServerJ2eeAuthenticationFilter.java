@@ -23,7 +23,7 @@ import org.geoserver.security.impl.RoleCalculator;
  * @author mcr
  *
  */
-public class GeoServerJ2eeAuthenticationFilter extends GeoServerAbstractPreAuthenticationFilter {
+public class GeoServerJ2eeAuthenticationFilter extends GeoServerPreAuthenticationFilter {
     
     private  String roleServiceName;
     

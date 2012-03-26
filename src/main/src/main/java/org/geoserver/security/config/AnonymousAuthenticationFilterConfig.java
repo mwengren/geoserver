@@ -4,17 +4,15 @@
  */
 package org.geoserver.security.config;
 
-
+import org.geoserver.security.filter.GeoServerAnonymousAuthenticationFilter;
 
 /**
- * Configuration for anonymous authentication
+ * {@link GeoServerAnonymousAuthenticationFilter} configuration object.
  *
  * @author mcr
- *
  */
-public class AnonymousAuthenticationFilterConfig extends NamedFilterConfig {
+public class AnonymousAuthenticationFilterConfig extends SecurityFilterConfig 
+    implements SecurityAuthFilterConfig {
 
     private static final long serialVersionUID = 1L;
-    
-        
 }

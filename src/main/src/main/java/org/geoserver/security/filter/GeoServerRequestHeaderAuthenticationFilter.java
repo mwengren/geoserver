@@ -33,7 +33,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
  * @author mcr
  *
  */
-public class GeoServerRequestHeaderAuthenticationFilter extends GeoServerAbstractPreAuthenticationFilter {
+public class GeoServerRequestHeaderAuthenticationFilter extends GeoServerPreAuthenticationFilter {
     
     private RoleSource roleSource;
     private String principalHeaderAttribute;
@@ -108,7 +108,7 @@ public class GeoServerRequestHeaderAuthenticationFilter extends GeoServerAbstrac
         roleServiceName=authConfig.getRoleServiceName();     
         
         // TODO, Justin, is this ok ?
-        if (RoleSource.HEADER.equals(roleSource)) {
+        if (RoleSource.Header.equals(roleSource)) {
             String converterName = authConfig.getRoleConverterName();        
             if (converterName==null || converterName.length()==0)
                 setConverter(GeoServerExtensions.bean(GeoServerRoleConverter.class));
@@ -125,7 +125,7 @@ public class GeoServerRequestHeaderAuthenticationFilter extends GeoServerAbstrac
             principal=null;
         
         try {
-            if (principal!=null && RoleSource.UGService.equals(getRoleSource())) {
+            if (principal!=null && RoleSource.UserGroupService.equals(getRoleSource())) {
                 GeoServerUserGroupService service = getSecurityManager().loadUserGroupService(getUserGroupServiceName());
                 GeoServerUser u = service.getUserByUsername(principal);
                 if (u!=null && u.isEnabled()==false)
@@ -142,9 +142,9 @@ public class GeoServerRequestHeaderAuthenticationFilter extends GeoServerAbstrac
 
         if (RoleSource.RoleService.equals(getRoleSource())) 
             return getRolesFromRoleService(request, principal);
-        if (RoleSource.UGService.equals(getRoleSource())) 
+        if (RoleSource.UserGroupService.equals(getRoleSource())) 
             return getRolesFromUserGroupService(request, principal);
-        if (RoleSource.HEADER.equals(getRoleSource())) 
+        if (RoleSource.Header.equals(getRoleSource())) 
             return getRolesFromHttpAttribute(request, principal);
         
         throw new RuntimeException("Never should reach this point");
@@ -234,7 +234,7 @@ public class GeoServerRequestHeaderAuthenticationFilter extends GeoServerAbstrac
     public String getCacheKey(HttpServletRequest request) {
         
         // caching does not make sense if everything is in the header
-        if (RoleSource.HEADER.equals(getRoleSource())) 
+        if (RoleSource.Header.equals(getRoleSource())) 
             return null;        
         return super.getCacheKey(request);
     }
