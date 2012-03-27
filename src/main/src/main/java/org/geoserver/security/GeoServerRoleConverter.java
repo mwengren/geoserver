@@ -32,7 +32,7 @@ public interface GeoServerRoleConverter {
      * @param roles
      * @return
      */
-    public abstract String convertRolesToString(Collection<GrantedAuthority> roles);
+    public abstract String convertRolesToString(Collection<? extends GrantedAuthority> roles);
 
     /**
      * creates a collection of roles from a string
@@ -43,7 +43,7 @@ public interface GeoServerRoleConverter {
      * @param userName
      * @return
      */
-    public abstract Collection<GrantedAuthority> convertRolesFromString(String rolesString,
+    public abstract Collection<GeoServerRole> convertRolesFromString(String rolesString,
             String userName);
 
     /**

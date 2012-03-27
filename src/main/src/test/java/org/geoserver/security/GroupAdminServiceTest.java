@@ -1,6 +1,7 @@
 package org.geoserver.security;
 
 import java.io.IOException;
+import java.util.Collections;
 
 import org.geoserver.security.impl.AbstractSecurityServiceTest;
 import org.geoserver.security.impl.GeoServerRole;
@@ -97,7 +98,7 @@ public class GroupAdminServiceTest extends AbstractSecurityServiceTest {
 
     void setAuth() {
         Authentication auth = new UsernamePasswordAuthenticationToken(
-            bob, bob.getPassword(), new GrantedAuthority[]{GeoServerRole.GROUP_ADMIN_ROLE});
+            bob, bob.getPassword(), Collections.singletonList(GeoServerRole.GROUP_ADMIN_ROLE));
         SecurityContextHolder.getContext().setAuthentication(auth);
     }
 

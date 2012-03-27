@@ -134,11 +134,13 @@ public abstract class AbstractGeoserverPasswordEncoder implements GeoServerPassw
     @Override
     public boolean isPasswordValid(String encPass, String rawPass, Object salt)
             throws DataAccessException {
+        if (encPass==null) return false;
         return getStringEncoder().isPasswordValid(stripPrefix(encPass), rawPass, salt);
     }
 
     @Override
     public boolean isPasswordValid(String encPass, char[] rawPass, Object salt) {
+        if (encPass==null) return false;
         return getCharEncoder().isPasswordValid(stripPrefix(encPass), rawPass, salt);
     }
 

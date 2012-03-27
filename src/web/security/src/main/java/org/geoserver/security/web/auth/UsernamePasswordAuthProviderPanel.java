@@ -5,7 +5,7 @@
 package org.geoserver.security.web.auth;
 
 import org.apache.wicket.model.IModel;
-import org.geoserver.security.UsernamePasswordAuthenticationProvider;
+import org.geoserver.security.auth.UsernamePasswordAuthenticationProvider;
 import org.geoserver.security.config.UsernamePasswordAuthenticationProviderConfig;
 import org.geoserver.security.web.usergroup.UserGroupServiceChoice;
 

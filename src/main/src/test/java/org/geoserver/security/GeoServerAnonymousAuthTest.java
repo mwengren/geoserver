@@ -72,11 +72,11 @@ public class GeoServerAnonymousAuthTest extends GeoServerSecurityTestSupport {
         chain.doFilter(request, response);
     }
 
-    public void testAuthProviderWithEnabled() throws Exception {
-        GeoServerSecurityManager secMgr = getSecurityManager();
-        secMgr.authenticate(new AnonymousAuthenticationToken("geoserver", "anonymousUser",
-            (List) Arrays.asList(new GrantedAuthorityImpl("ROLE_ANONYMOUS"))));
-    }
+//    public void testAuthProviderWithEnabled() throws Exception {
+//        GeoServerSecurityManager secMgr = getSecurityManager();
+//        secMgr.authenticate(new AnonymousAuthenticationToken("geoserver", "anonymousUser",
+//            (List) Arrays.asList(new GrantedAuthorityImpl("ROLE_ANONYMOUS"))));
+//    }
 
     public void testAuthProviderWithDisabledEnabled() throws Exception {
         disableAnonymousAuth();

@@ -51,7 +51,7 @@ public class JDBCConnectAuthProviderTest extends AbstractAuthenticationProviderT
         assertNull(auth.getCredentials());
         assertEquals("details", auth.getDetails());
         assertEquals(1,auth.getAuthorities().size());
-        assertTrue(auth.getAuthorities().contains(GeoServerRole.AUTHENTICATED_ROLE));
+        checkForAuthenticatedRole(auth);
         
         token = new UsernamePasswordAuthenticationToken("abc","def");
         boolean fail = false;
@@ -94,7 +94,7 @@ public class JDBCConnectAuthProviderTest extends AbstractAuthenticationProviderT
         assertNull(auth.getCredentials());
         assertEquals("details", auth.getDetails());
         assertEquals(2,auth.getAuthorities().size());
-        assertTrue(auth.getAuthorities().contains(GeoServerRole.AUTHENTICATED_ROLE));
+        checkForAuthenticatedRole(auth);
         assertTrue(auth.getAuthorities().contains(GeoServerRole.ADMIN_ROLE));
         
         
@@ -146,7 +146,7 @@ public class JDBCConnectAuthProviderTest extends AbstractAuthenticationProviderT
         assertNull(auth.getCredentials());
         assertEquals("details", auth.getDetails());
         assertEquals(2,auth.getAuthorities().size());
-        assertTrue(auth.getAuthorities().contains(GeoServerRole.AUTHENTICATED_ROLE));
+        checkForAuthenticatedRole(auth);
         assertTrue(auth.getAuthorities().contains(GeoServerRole.ADMIN_ROLE));
                 
         

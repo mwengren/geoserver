@@ -4,6 +4,7 @@ import static org.geoserver.data.test.MockData.*;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -226,7 +227,7 @@ public class ResourceAccessManagerWCSTest extends AbstractGetCoverageTest {
         // override as this is not a test going through the servlet filters
         GrantedAuthority ga = new GeoServerRole("MOCKROLE");
         UsernamePasswordAuthenticationToken user = new UsernamePasswordAuthenticationToken(
-                username, null, new GrantedAuthority[] { ga });
+                username, null, Arrays.asList(new GrantedAuthority[] { ga }));
         SecurityContextHolder.getContext().setAuthentication(user);
     }
 }

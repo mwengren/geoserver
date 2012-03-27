@@ -10,7 +10,6 @@ import javax.servlet.http.HttpSession;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.web.PortResolverImpl;
-import org.springframework.security.web.WebAttributes;
 import org.springframework.security.web.savedrequest.DefaultSavedRequest;
 import org.springframework.security.web.savedrequest.SavedRequest;
 import org.apache.wicket.protocol.http.WebRequest;
@@ -25,6 +24,7 @@ import org.apache.wicket.protocol.http.WebRequest;
 public class GeoServerSecuredPage extends GeoServerBasePage {
 
     public static final ComponentAuthorizer DEFAULT_AUTHORIZER = new DefaultPageAuthorizer();
+    public static final String SAVED_REQUEST="SPRING_SECURITY_SAVED_REQUEST_KEY";
 
     public GeoServerSecuredPage() {
         super();
@@ -36,7 +36,8 @@ public class GeoServerSecuredPage extends GeoServerBasePage {
             SavedRequest savedRequest = new DefaultSavedRequest(httpRequest, new PortResolverImpl());
             
             HttpSession session = httpRequest.getSession();
-            session.setAttribute(WebAttributes.SAVED_REQUEST, savedRequest);
+            // TODO, Justin, WebAttributes.SAVED_REQUEST has disappeared in spring security framework
+            session.setAttribute(SAVED_REQUEST, savedRequest);
             
             
             // then redirect to the login page
