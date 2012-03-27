@@ -65,9 +65,7 @@ public class GeoServerUserNamePasswordAuthenticationFilter extends GeoServerComp
             throw new IOException(e2);
         }
 
-        // TODO, Justin, is this correct
-        RememberMeServices rms = (RememberMeServices) GeoServerExtensions
-                .bean("rememberMeServices");
+        RememberMeServices rms = securityManager.getRememberMeService(); 
 
         // add login filter
         UsernamePasswordAuthenticationFilter filter = new UsernamePasswordAuthenticationFilter();

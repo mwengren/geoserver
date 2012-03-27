@@ -32,9 +32,7 @@ public class GeoServerRememberMeAuthenticationFilter extends GeoServerCompositeF
         RememberMeAuthenticationFilter filter = new RememberMeAuthenticationFilter();
         filter.setAuthenticationManager(getSecurityManager());
 
-        // TODO, Justin, is this correct
-        filter.setRememberMeServices((RememberMeServices)
-                   GeoServerExtensions.bean("rememberMeServices"));
+        filter.setRememberMeServices(securityManager.getRememberMeService());
         filter.afterPropertiesSet();
         getNestedFilters().add(filter);        
     }

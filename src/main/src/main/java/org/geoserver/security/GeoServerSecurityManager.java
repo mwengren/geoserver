@@ -16,6 +16,7 @@ import java.net.URL;
 import java.rmi.server.UID;
 import java.security.InvalidKeyException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -128,8 +129,10 @@ import org.springframework.security.authentication.RememberMeAuthenticationProvi
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.memory.UserAttribute;
 import org.springframework.security.core.userdetails.memory.UserAttributeEditor;
+import org.springframework.security.web.authentication.RememberMeServices;
 import org.springframework.security.web.context.SecurityContextPersistenceFilter;
 
 import com.thoughtworks.xstream.converters.MarshallingContext;
@@ -226,6 +229,9 @@ public class GeoServerSecurityManager extends ProviderManager implements Applica
 
     /** authentication cache */
     volatile AuthenticationCache authCache;
+
+    /** rememmber me service */
+    volatile RememberMeServices rememberMeService;
 
     public static final String REALM="GeoServer Realm";
     
@@ -459,6 +465,21 @@ public class GeoServerSecurityManager extends ProviderManager implements Applica
     AuthenticationCache lookupAuthenticationCache() {
         AuthenticationCache authCache = GeoServerExtensions.bean(AuthenticationCache.class);
         return authCache != null ? authCache : new AuthenticationCacheImpl();
+    }
+
+    public RememberMeServices getRememberMeService() {
+        if (rememberMeService == null) {
+            synchronized (this) {
+                if (rememberMeService == null) {
+                    rememberMeService = lookupRememberMeService();
+                }
+            }
+        }
+        return rememberMeService;
+    }
+
+    RememberMeServices lookupRememberMeService() {
+        return (RememberMeServices) GeoServerExtensions.bean("rememberMeServices");
     }
 
     /**

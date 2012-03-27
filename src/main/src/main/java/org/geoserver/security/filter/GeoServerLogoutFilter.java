@@ -8,7 +8,6 @@ import java.io.IOException;
 
 import javax.servlet.ServletException;
 
-import org.geoserver.platform.GeoServerExtensions;
 import org.geoserver.security.config.SecurityNamedServiceConfig;
 import org.springframework.security.web.authentication.RememberMeServices;
 import org.springframework.security.web.authentication.logout.LogoutFilter;
@@ -31,11 +30,8 @@ public class GeoServerLogoutFilter extends GeoServerCompositeFilter {
     @Override
     public void initializeFromConfig(SecurityNamedServiceConfig config) throws IOException {
         super.initializeFromConfig(config);
-        
-        
-        // TODO, Justin, is this correct
-        RememberMeServices rms = (RememberMeServices) GeoServerExtensions
-                .bean("rememberMeServices");
+
+        RememberMeServices rms = securityManager.getRememberMeService(); 
 
         // add logout filter
         LogoutFilter logoutFilter = new LogoutFilter(URL_AFTER_LOGOUT, (LogoutHandler) rms,

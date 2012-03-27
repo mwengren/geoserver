@@ -63,10 +63,8 @@ public class GeoServerBasicAuthenticationFilter extends GeoServerCompositeFilter
         
         BasicAuthenticationFilter filter = new BasicAuthenticationFilter(getSecurityManager(),aep); 
 
-        // TODO, Justin, is this correct
-        if (authConfig.isUseRememberMe()) {             
-            filter.setRememberMeServices((RememberMeServices)
-                    GeoServerExtensions.bean("rememberMeServices"));
+        if (authConfig.isUseRememberMe()) {
+            filter.setRememberMeServices(securityManager.getRememberMeService());
             GeoServerWebAuthenticationDetailsSource s = new GeoServerWebAuthenticationDetailsSource();
             filter.setAuthenticationDetailsSource(s);
         }
