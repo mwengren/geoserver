@@ -6,6 +6,7 @@ package org.geoserver.security.web.auth;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 import org.apache.wicket.WicketRuntimeException;
@@ -24,8 +25,16 @@ import org.geoserver.web.GeoServerApplication;
 public class AuthenticationChainPalette extends Palette<String> {
 
     public AuthenticationChainPalette(String id) {
-        super(id, new AvailableAuthProviderNamesModel(), 
-            new ChoiceRenderer() {
+        this(id, new AvailableAuthProviderNamesModel());
+    }
+
+    public AuthenticationChainPalette(String id, IModel<List<String>> model) {
+        this(id, null, model);
+    }
+    
+    public AuthenticationChainPalette(String id, IModel<List<String>> model, 
+        IModel<List<String>> choicesModel) {
+        super(id, model, choicesModel, new ChoiceRenderer() {
             @Override
             public String getIdValue(Object object, int index) {
                 return (String) getDisplayValue(object);

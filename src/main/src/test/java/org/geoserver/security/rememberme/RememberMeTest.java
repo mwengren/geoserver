@@ -12,9 +12,6 @@ import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.Cookie;
 
-import org.geoserver.security.FilterChainEntry;
-import org.geoserver.security.FilterChainEntry.Position;
-import org.geoserver.security.GeoServerSecurityFilter;
 import org.geoserver.security.GeoServerSecurityFilterChain;
 import org.geoserver.security.GeoServerSecurityFilterChainProxy;
 import org.geoserver.security.GeoServerSecurityManager;
@@ -22,6 +19,7 @@ import org.geoserver.security.GeoServerSecurityProvider;
 import org.geoserver.security.config.BaseSecurityNamedServiceConfig;
 import org.geoserver.security.config.SecurityManagerConfig;
 import org.geoserver.security.config.SecurityNamedServiceConfig;
+import org.geoserver.security.filter.GeoServerSecurityFilter;
 import org.geoserver.test.GeoServerTestSupport;
 import org.springframework.security.authentication.RememberMeAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -45,9 +43,11 @@ public class RememberMeTest extends GeoServerTestSupport {
         secMgr.saveFilter(filterCfg);
 
         SecurityManagerConfig cfg = secMgr.getSecurityConfig();
-        cfg.getFilterChain().put("/web/**", Arrays.asList(
-            new FilterChainEntry(filterCfg.getName(), Position.AFTER, 
-                GeoServerSecurityFilterChain.REMEMBER_ME_FILTER)));
+        cfg.getFilterChain().insertAfter("/web/**", filterCfg.getName(), GeoServerSecurityFilterChain.REMEMBER_ME_FILTER);
+        
+//        cfg.getFilterChain().put("/web/**", Arrays.asList(
+//            new FilterChainEntry(filterCfg.getName(), Position.AFTER, 
+//                GeoServerSecurityFilterChain.REMEMBER_ME_FILTER)));
         
         secMgr.saveSecurityConfig(cfg);
     }
@@ -119,6 +119,8 @@ public class RememberMeTest extends GeoServerTestSupport {
     }
 
     public void testRememberMeOtherUserGroupService() throws Exception {
+        // TODO Justin, this should work now
+        
         //need to implement this test, at the moment we don't have a way to mock up new users 
         // in a memory user group service... 
         /*

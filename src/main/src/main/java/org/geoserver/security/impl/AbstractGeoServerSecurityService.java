@@ -10,6 +10,7 @@ import java.util.logging.Logger;
 import org.geoserver.security.GeoServerSecurityManager;
 import org.geoserver.security.GeoServerSecurityService;
 import org.geoserver.security.config.SecurityNamedServiceConfig;
+import org.springframework.security.web.AuthenticationEntryPoint;
 
 /**
  * Common base class for user group and role services.
@@ -52,6 +53,8 @@ public abstract class AbstractGeoServerSecurityService implements GeoServerSecur
     
     @Override
     public void initializeFromConfig(SecurityNamedServiceConfig config) throws IOException {
+        if (config!=null)
+            this.name=config.getName();
     }
 
     @Override
@@ -59,4 +62,13 @@ public abstract class AbstractGeoServerSecurityService implements GeoServerSecur
         return false;
     }
 
+    /**
+     * Authentication filters with an {@link AuthenticationEntryPoint} must
+     * return their entry point 
+     * 
+     * @return
+     */
+    public AuthenticationEntryPoint getAuthenticationEntryPoint() {
+        return null;
+    }
 }

@@ -4,8 +4,18 @@
  */
 package org.geoserver.security.ldap;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.servlet.http.HttpServletRequest;
+
 import org.geoserver.security.DelegatingAuthenticationProvider;
+import org.geoserver.security.impl.GeoServerRole;
 import org.springframework.security.authentication.AuthenticationProvider;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.ldap.authentication.LdapAuthenticationProvider;
 
 /**
@@ -21,5 +31,29 @@ public class LDAPAuthenticationProvider extends
     public LDAPAuthenticationProvider(AuthenticationProvider authProvider) {
         super(authProvider);
     }
+
+    
+    /** TODO, Justin
+     *  Added the GeoServerRole.AUTHENTICATED_ROLE system role 
+     */
+    @Override
+    public Authentication authenticate(Authentication authentication, HttpServletRequest request)
+            throws AuthenticationException {
+        
+        UsernamePasswordAuthenticationToken  auth = 
+                (UsernamePasswordAuthenticationToken) super.authenticate(authentication);
+        
+        if (auth.getAuthorities().contains(GeoServerRole.AUTHENTICATED_ROLE)==false) {
+            List<GrantedAuthority> roles= new ArrayList<GrantedAuthority>();
+            roles.addAll(auth.getAuthorities());
+            roles.add(GeoServerRole.AUTHENTICATED_ROLE);
+            UsernamePasswordAuthenticationToken newAuth = new UsernamePasswordAuthenticationToken(
+                    auth.getPrincipal(), auth.getCredentials(),roles);
+            newAuth.setDetails(auth.getDetails());
+            return newAuth;
+        }
+        return auth;
+    }
+
 
 }

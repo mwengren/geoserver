@@ -2,19 +2,26 @@
  * This code is licensed under the GPL 2.0 license, available at the root
  * application directory.
  */
-package org.geoserver.security;
+package org.geoserver.security.auth;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
 
-import org.geoserver.platform.GeoServerExtensions;
+import org.geoserver.security.GeoServerAuthenticationProvider;
+import org.geoserver.security.GeoServerUserGroupService;
 import org.geoserver.security.config.SecurityNamedServiceConfig;
 import org.geoserver.security.config.UsernamePasswordAuthenticationProviderConfig;
+import org.geoserver.security.filter.GeoServerWebAuthenticationDetails;
+import org.geoserver.security.impl.GeoServerRole;
 import org.geoserver.security.password.GeoServerPasswordEncoder;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.GrantedAuthority;
 
 /**
  * Authentication provider that delegates to a {@link GeoServerUserGroupService}.
@@ -25,7 +32,8 @@ public class UsernamePasswordAuthenticationProvider extends GeoServerAuthenticat
 
     /** auth provider to delegate to */
     DaoAuthenticationProvider authProvider;
-
+    String userGroupServiceName;
+    
     @Override
     public void initializeFromConfig(SecurityNamedServiceConfig config) throws IOException {
         UsernamePasswordAuthenticationProviderConfig upAuthConfig = 
@@ -37,7 +45,8 @@ public class UsernamePasswordAuthenticationProvider extends GeoServerAuthenticat
             throw new IllegalArgumentException("Unable to load user group service " 
                 + upAuthConfig.getUserGroupServiceName());
         }
-
+        userGroupServiceName = upAuthConfig.getUserGroupServiceName();
+        
         //create delegate auth provider
         authProvider = new DaoAuthenticationProvider();
         authProvider.setUserDetailsService(ugService);
@@ -63,20 +72,22 @@ public class UsernamePasswordAuthenticationProvider extends GeoServerAuthenticat
     @Override
     public Authentication authenticate(Authentication authentication, HttpServletRequest request)
             throws AuthenticationException {
-        return authProvider.authenticate(authentication);
+        UsernamePasswordAuthenticationToken  auth = 
+                (UsernamePasswordAuthenticationToken) authProvider.authenticate(authentication);
+
+        if (auth.getDetails() instanceof GeoServerWebAuthenticationDetails) {
+            ((GeoServerWebAuthenticationDetails) auth.getDetails()).setUserGroupServiceName(userGroupServiceName);
+        }
+        if (auth.getAuthorities().contains(GeoServerRole.AUTHENTICATED_ROLE)==false) {
+            List<GrantedAuthority> roles= new ArrayList<GrantedAuthority>();
+            roles.addAll(auth.getAuthorities());
+            roles.add(GeoServerRole.AUTHENTICATED_ROLE);
+            UsernamePasswordAuthenticationToken newAuth = new UsernamePasswordAuthenticationToken(
+                    auth.getPrincipal(), auth.getCredentials(),roles);
+            newAuth.setDetails(auth.getDetails());
+            return newAuth;
+        }
+        return auth;
     }
 
-//    static class SecurityProvider extends GeoServerSecurityProvider {
-//        
-//        @Override
-//        public Class<? extends GeoServerAuthenticationProvider> getAuthenticationProviderClass() {
-//            return UsernamePasswordAuthenticationProvider.class;
-//        }
-//
-//        @Override
-//        public GeoServerAuthenticationProvider createAuthenticationProvider(
-//                SecurityNamedServiceConfig config) {
-//            return new UsernamePasswordAuthenticationProvider();
-//        }
-//    }
 }

@@ -12,10 +12,10 @@ import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.geoserver.security.FilterChainEntry.Position;
 import org.geoserver.security.config.BaseSecurityNamedServiceConfig;
 import org.geoserver.security.config.SecurityManagerConfig;
 import org.geoserver.security.config.SecurityNamedServiceConfig;
+import org.geoserver.security.filter.GeoServerSecurityFilter;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 
@@ -23,6 +23,10 @@ import com.mockrunner.mock.web.MockHttpServletResponse;
 
 public class GeoServerCustomFilterTest extends GeoServerSecurityTestSupport {
 
+    enum Pos {
+     FIRST,LAST,BEFORE,AFTER;   
+    };
+    
     @Override
     protected String[] getSpringContextLocations() {
         List<String> list = new ArrayList<String>(Arrays.asList(super.getSpringContextLocations()));
@@ -36,7 +40,7 @@ public class GeoServerCustomFilterTest extends GeoServerSecurityTestSupport {
         assertNull(response.getHeader("foo"));
     }
 
-    void setupFilterEntry(Position pos, String relativeTo, boolean assertSecurityContext) 
+    void setupFilterEntry(Pos pos, String relativeTo, boolean assertSecurityContext) 
         throws Exception {
         
         GeoServerSecurityManager secMgr = getSecurityManager();
@@ -50,14 +54,21 @@ public class GeoServerCustomFilterTest extends GeoServerSecurityTestSupport {
         SecurityManagerConfig mgrConfig = secMgr.getSecurityConfig();
         mgrConfig.setConfigPasswordEncrypterName(getPlainTextPasswordEncoder().getName());
 
-        List<FilterChainEntry> filterEntries = new ArrayList<FilterChainEntry>();
-        filterEntries.add(new FilterChainEntry("custom", pos, relativeTo));
-        mgrConfig.getFilterChain().put("/**", filterEntries);
+
+        if (pos==Pos.FIRST)
+            mgrConfig.getFilterChain().insertFirst("/**",  "custom");
+        if (pos==Pos.LAST)
+            mgrConfig.getFilterChain().insertLast("/**",  "custom");
+        if (pos==Pos.BEFORE)
+            mgrConfig.getFilterChain().insertBefore("/**",  "custom",relativeTo);
+        if (pos==Pos.AFTER)
+            mgrConfig.getFilterChain().insertAfter("/**",  "custom",relativeTo);
+        
         secMgr.saveSecurityConfig(mgrConfig);
     }
 
     public void testFirst() throws Exception {
-        setupFilterEntry(Position.FIRST, null, false);
+        setupFilterEntry(Pos.FIRST, null, false);
 
         HttpServletRequest request = createRequest("/foo");
         MockHttpServletResponse response = dispatch(request);
@@ -65,7 +76,7 @@ public class GeoServerCustomFilterTest extends GeoServerSecurityTestSupport {
     }
 
     public void testLast() throws Exception {
-        setupFilterEntry(Position.LAST, null, true);
+        setupFilterEntry(Pos.LAST, null, true);
 
         HttpServletRequest request = createRequest("/foo");
         MockHttpServletResponse response = dispatch(request);
@@ -73,7 +84,7 @@ public class GeoServerCustomFilterTest extends GeoServerSecurityTestSupport {
     }
 
     public void testBefore() throws Exception {
-        setupFilterEntry(Position.BEFORE, 
+        setupFilterEntry(Pos.BEFORE, 
             GeoServerSecurityFilterChain.ANONYMOUS_FILTER, false);
 
         HttpServletRequest request = createRequest("/foo");
@@ -82,7 +93,7 @@ public class GeoServerCustomFilterTest extends GeoServerSecurityTestSupport {
     }
 
     public void testAfter() throws Exception {
-        setupFilterEntry(Position.AFTER, 
+        setupFilterEntry(Pos.AFTER, 
             GeoServerSecurityFilterChain.ANONYMOUS_FILTER, true);
 
         HttpServletRequest request = createRequest("/foo");

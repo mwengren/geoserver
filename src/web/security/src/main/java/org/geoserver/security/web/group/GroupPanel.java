@@ -131,7 +131,9 @@ public class GroupPanel extends Panel {
         removalWithRoles.setEnabled(false);
         removalWithRoles.setVisibilityAllowed(canCreateStore&& 
                 GeoServerApplication.get().getSecurityManager().getActiveRoleService().canCreateStore());
-        
+
+        //enable header only for full admin
+        h.setEnabled(getService().getSecurityManager().checkAuthenticationForAdminRole());
     }
 
 

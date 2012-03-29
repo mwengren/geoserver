@@ -7,7 +7,6 @@ package org.geoserver.security.impl;
 import java.util.Properties;
 
 import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.GrantedAuthorityImpl;
 
 /**
  * Extends {@link GrantedAuthority} and represents an 
@@ -23,7 +22,7 @@ import org.springframework.security.core.authority.GrantedAuthorityImpl;
  * @author christian
  *
  */
-public class GeoServerRole extends GrantedAuthorityImpl implements Comparable<GeoServerRole>{
+public class GeoServerRole  implements GrantedAuthority,  Comparable<GeoServerRole>{
 
     /**
      * Pre-defined role assigned to adminstrator.
@@ -59,11 +58,11 @@ public class GeoServerRole extends GrantedAuthorityImpl implements Comparable<Ge
 
     protected String userName;
     protected Properties properties;
+    protected String role;
 
 
     public GeoServerRole(String role) {
-        super(role);
-        
+        this.role=role;        
     }
 
     public String getUserName() {
@@ -109,19 +108,29 @@ public class GeoServerRole extends GrantedAuthorityImpl implements Comparable<Ge
     }
 
     public boolean equals(Object obj) {
+        if (obj == null) return false;
         
         if (obj instanceof String && getUserName()==null) {
-            return super.equals(obj);
+            return equalsWithoutUserName(obj);
         }
 
         if (obj instanceof GrantedAuthority && getUserName()==null) {
-            return super.equals(obj);
+            if (obj instanceof GeoServerRole ==false)
+                equalsWithoutUserName(obj);
         }
 
         if (obj instanceof GeoServerRole) {
             return compareTo((GeoServerRole) obj)==0;
         }
         return false;
+    }
+    
+    
+    public boolean equalsWithoutUserName(Object obj) {
+        if (obj instanceof String) {
+            return obj.equals(this.role);
+        }
+        return this.role.equals(((GrantedAuthority) obj).getAuthority());
     }
 
     public int hashCode() {
@@ -134,11 +143,16 @@ public class GeoServerRole extends GrantedAuthorityImpl implements Comparable<Ge
 
     public String toString() {
         if (getUserName()!=null) {
-            StringBuffer buff = new StringBuffer(super.toString());
+            StringBuffer buff = new StringBuffer(role);
             buff.append(" for user ").append(getUserName());
             return buff.toString();
         } else
-          return super.toString();
+          return role;
+    }
+
+    @Override
+    public String getAuthority() {
+        return role;
     }
 
 }

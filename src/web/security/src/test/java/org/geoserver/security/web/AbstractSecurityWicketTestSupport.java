@@ -30,7 +30,7 @@ import org.geoserver.security.GeoServerRoleService;
 import org.geoserver.security.GeoServerRoleStore;
 import org.geoserver.security.GeoServerUserGroupService;
 import org.geoserver.security.GeoServerUserGroupStore;
-import org.geoserver.security.UsernamePasswordAuthenticationProvider;
+import org.geoserver.security.auth.UsernamePasswordAuthenticationProvider;
 import org.geoserver.security.config.SecurityManagerConfig;
 import org.geoserver.security.config.SecurityNamedServiceConfig;
 import org.geoserver.security.config.UsernamePasswordAuthenticationProviderConfig;
@@ -322,6 +322,7 @@ public class AbstractSecurityWicketTestSupport extends GeoServerWicketTestSuppor
           tester.assertRenderedPage(page.getPageClass());
 
           SecurityNamedServicesPanel panel = (SecurityNamedServicesPanel) page.get("panel:panel:" +panelName);
+          
           
 //          AjaxTabbedPanel tabbedPanel=  (AjaxTabbedPanel) page.get(AbstractSecurityPage.TabbedPanelId);
 //          String linkId = tabbedPanel.getId()+":tabs-container:tabs:"+tabIndex+":link";        

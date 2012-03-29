@@ -38,11 +38,20 @@
       <scope>test</scope>
       <version>5.1.17</version>
     </dependency>
-    <dependency>
-      <groupId>simple-jndi</groupId>
-      <artifactId>simple-jndi</artifactId>
-      <version>0.11.4.1</version>
-      <scope>test</scope>
-    </dependency>
   </dependencies>
+  <profiles>
+    <profile>
+      <!-- placing this in a profile since it interfers with running from the
+           development environemtn with the startup of the jdbc datastores -->
+      <id>jndi</id>
+      <dependencies>
+        <dependency>
+          <groupId>simple-jndi</groupId>
+          <artifactId>simple-jndi</artifactId>
+          <version>0.11.4.1</version>
+          <scope>test</scope>
+        </dependency>
+      </dependencies>
+    </profile>
+  </profiles>
 </project>

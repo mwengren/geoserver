@@ -10,6 +10,7 @@ import java.util.regex.Pattern;
 
 import org.geoserver.security.GeoServerSecurityManager;
 import org.geoserver.security.GeoServerUserGroupService;
+import org.geoserver.security.impl.UserDetailsWrapper;
 import org.springframework.dao.DataAccessException;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -26,7 +27,23 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
  *
  */
 public class RememberMeUserDetailsService implements UserDetailsService {
-
+        
+    public static class RememberMeUserDetails extends UserDetailsWrapper {
+        
+        private static final long serialVersionUID = 1L;
+        private String userGroupServiceName;
+        
+        public RememberMeUserDetails (UserDetails details, String userGroupServiceName) {
+            super(details);
+            this.userGroupServiceName=userGroupServiceName;
+        }
+        @Override
+        public String getUsername() {
+            return super.getUsername().replace("@", "\\@")+"@"+userGroupServiceName;
+            
+        }
+    }
+    
     /** pattern used to parse username@userGroupServiceName token */
     static Pattern TOKEN_PATTERN = Pattern.compile("(.*[^\\\\])@(.*)"); 
             
@@ -49,7 +66,7 @@ public class RememberMeUserDetailsService implements UserDetailsService {
 
         try {
             GeoServerUserGroupService ugService = securityManager.loadUserGroupService(service);
-            return ugService.loadUserByUsername(user);
+            return new RememberMeUserDetails(ugService.loadUserByUsername(user),service);
         } catch (IOException e) {
             throw new DataAccessException("Error loading user group service " + service, e) {};
         }

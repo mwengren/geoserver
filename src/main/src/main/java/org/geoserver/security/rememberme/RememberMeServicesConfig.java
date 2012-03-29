@@ -13,9 +13,10 @@ import org.geoserver.security.config.BaseSecurityNamedServiceConfig;
  */
 public class RememberMeServicesConfig extends BaseSecurityNamedServiceConfig {
 
+    private static final long serialVersionUID = 1L;
+
     public static final String DEFAULT_KEY = "geoserver";
 
-    String userGroupService;
     String key = DEFAULT_KEY;
 
     public RememberMeServicesConfig() {
@@ -23,16 +24,7 @@ public class RememberMeServicesConfig extends BaseSecurityNamedServiceConfig {
 
     public RememberMeServicesConfig(RememberMeServicesConfig other) {
         super(other);
-        setUserGroupService(other.getUserGroupService());
         setKey(other.getKey());
-    }
-
-    public void setUserGroupService(String userGroupService) {
-        this.userGroupService = userGroupService;
-    }
-
-    public String getUserGroupService() {
-        return userGroupService;
     }
 
     public String getKey() {

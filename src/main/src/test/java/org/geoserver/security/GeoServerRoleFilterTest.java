@@ -1,7 +1,8 @@
 package org.geoserver.security;
 
 import org.geoserver.platform.GeoServerExtensions;
-import org.geoserver.security.config.SecurityManagerConfig;
+import org.geoserver.security.config.GeoServerRoleFilterConfig;
+import org.geoserver.security.filter.GeoServerRoleFilter;
 import org.geoserver.security.impl.GeoServerRole;
 
 import com.mockrunner.mock.web.MockFilterChain;
@@ -10,12 +11,23 @@ import com.mockrunner.mock.web.MockHttpServletResponse;
 
 public class GeoServerRoleFilterTest extends GeoServerSecurityTestSupport {
 
+    
     public void testFilterChainWithEnabled() throws Exception {
-        enableRoleFilter(true);
+        
+        GeoServerSecurityManager secMgr = getSecurityManager();
+        GeoServerRoleFilterConfig config = new GeoServerRoleFilterConfig();
+        config.setName("roleConverter");
+        config.setClassName(GeoServerRoleFilter.class.getName());
+        config.setRoleConverterName("roleConverter");
+        config.setHttpResponseHeaderAttrForIncludedRoles("ROLES");
+        secMgr.saveFilter(config);
+
+        
         MockHttpServletRequest request = createRequest("/foo");
         
         MockHttpServletResponse response = new MockHttpServletResponse();
         MockFilterChain chain = new MockFilterChain();
+        chain.addFilter(getSecurityManager().loadFilter("roleConverter"));
         
         GeoServerSecurityFilterChainProxy filterChainProxy = 
             GeoServerExtensions.bean(GeoServerSecurityFilterChainProxy.class);
@@ -24,7 +36,6 @@ public class GeoServerRoleFilterTest extends GeoServerSecurityTestSupport {
     }
 
     public void testFilterChainWithDisabled() throws Exception {
-        enableRoleFilter(false);
 
         MockHttpServletRequest request = createRequest("/foo");
         
@@ -39,13 +50,5 @@ public class GeoServerRoleFilterTest extends GeoServerSecurityTestSupport {
     }
 
 
-    void enableRoleFilter(boolean enabled) throws Exception {
-        GeoServerSecurityManager secMgr = getSecurityManager();
-        SecurityManagerConfig cfg = secMgr.getSecurityConfig();
-        cfg.setIncludingRolesInResponse(enabled);
-        cfg.setHttpResponseHeaderAttrForIncludedRoles(
-                enabled ? "ROLES" : null);
-        secMgr.saveSecurityConfig(cfg);
-    }
 
 }

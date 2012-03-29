@@ -5,18 +5,51 @@
 
 package org.geoserver.security.validation;
 
-import static org.geoserver.security.validation.SecurityConfigException.*;
-
+import static org.geoserver.security.validation.SecurityConfigException.AUTH_FILTER_ALREADY_EXISTS_$1;
+import static org.geoserver.security.validation.SecurityConfigException.AUTH_FILTER_NOT_FOUND_$1;
+import static org.geoserver.security.validation.SecurityConfigException.AUTH_PROVIDER_ALREADY_EXISTS_$1;
+import static org.geoserver.security.validation.SecurityConfigException.AUTH_PROVIDER_NOT_FOUND_$1;
+import static org.geoserver.security.validation.SecurityConfigException.CLASSNAME_REQUIRED;
+import static org.geoserver.security.validation.SecurityConfigException.PASSWD_POLICY_ALREADY_EXISTS_$1;
+import static org.geoserver.security.validation.SecurityConfigException.PASSWD_POLICY_NOT_FOUND_$1;
+import static org.geoserver.security.validation.SecurityConfigException.ROLE_SERVICE_ALREADY_EXISTS_$1;
+import static org.geoserver.security.validation.SecurityConfigException.ROLE_SERVICE_NOT_FOUND_$1;
+import static org.geoserver.security.validation.SecurityConfigException.SEC_ERR_01;
+import static org.geoserver.security.validation.SecurityConfigException.SEC_ERR_02;
+import static org.geoserver.security.validation.SecurityConfigException.SEC_ERR_03;
+import static org.geoserver.security.validation.SecurityConfigException.SEC_ERR_04;
+import static org.geoserver.security.validation.SecurityConfigException.SEC_ERR_05;
+import static org.geoserver.security.validation.SecurityConfigException.SEC_ERR_06;
+import static org.geoserver.security.validation.SecurityConfigException.SEC_ERR_07;
+import static org.geoserver.security.validation.SecurityConfigException.SEC_ERR_20;
+import static org.geoserver.security.validation.SecurityConfigException.SEC_ERR_21;
+import static org.geoserver.security.validation.SecurityConfigException.SEC_ERR_22;
+import static org.geoserver.security.validation.SecurityConfigException.SEC_ERR_24b;
+import static org.geoserver.security.validation.SecurityConfigException.SEC_ERR_24d;
+import static org.geoserver.security.validation.SecurityConfigException.SEC_ERR_25;
+import static org.geoserver.security.validation.SecurityConfigException.SEC_ERR_30;
+import static org.geoserver.security.validation.SecurityConfigException.SEC_ERR_31;
+import static org.geoserver.security.validation.SecurityConfigException.SEC_ERR_32;
+import static org.geoserver.security.validation.SecurityConfigException.SEC_ERR_33;
+import static org.geoserver.security.validation.SecurityConfigException.SEC_ERR_34;
+import static org.geoserver.security.validation.SecurityConfigException.SEC_ERR_35;
+import static org.geoserver.security.validation.SecurityConfigException.SEC_ERR_40;
+import static org.geoserver.security.validation.SecurityConfigException.SEC_ERR_41;
+import static org.geoserver.security.validation.SecurityConfigException.SEC_ERR_42;
+import static org.geoserver.security.validation.SecurityConfigException.USERGROUP_SERVICE_ALREADY_EXISTS_$1;
+import static org.geoserver.security.validation.SecurityConfigException.USERGROUP_SERVICE_NOT_FOUND_$1;
 
 import java.io.IOException;
+import java.util.List;
+import java.util.Set;
 import java.util.SortedSet;
 
 import org.geoserver.platform.GeoServerExtensions;
 import org.geoserver.security.GeoServerAuthenticationProvider;
+import org.geoserver.security.GeoServerRoleService;
+import org.geoserver.security.GeoServerSecurityFilterChain;
 import org.geoserver.security.GeoServerSecurityManager;
 import org.geoserver.security.GeoServerSecurityProvider;
-import org.geoserver.security.GeoServerAuthenticationProcessingFilter;
-import org.geoserver.security.GeoServerRoleService;
 import org.geoserver.security.GeoServerUserGroupService;
 import org.geoserver.security.MasterPasswordProvider;
 import org.geoserver.security.config.PasswordPolicyConfig;
@@ -25,11 +58,13 @@ import org.geoserver.security.config.SecurityManagerConfig;
 import org.geoserver.security.config.SecurityNamedServiceConfig;
 import org.geoserver.security.config.SecurityRoleServiceConfig;
 import org.geoserver.security.config.SecurityUserGroupServiceConfig;
+import org.geoserver.security.filter.GeoServerSecurityFilter;
 import org.geoserver.security.password.GeoServerPasswordEncoder;
 import org.geoserver.security.password.MasterPasswordProviderConfig;
 import org.geoserver.security.password.PasswordValidator;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.security.authentication.AuthenticationProvider;
+import org.springframework.util.StringUtils;
 
 
 public class SecurityConfigValidator extends AbstractSecurityValidator{
@@ -45,8 +80,12 @@ public class SecurityConfigValidator extends AbstractSecurityValidator{
      * @param className
      * @return
      */
-    static public SecurityConfigValidator getConfigurationValiator(Class <?> serviceClass, String className) {
+    static public SecurityConfigValidator getConfigurationValiator(Class <?> serviceClass, String className) 
+            throws SecurityConfigException {
         GeoServerSecurityProvider prov = GeoServerSecurityProvider.getProvider(serviceClass, className);
+        if (className == null)
+            throw new SecurityConfigException(CLASSNAME_REQUIRED,new Object[]{});
+        
         //TODO: remove the call to extensions, have teh security manager be passed in
         return prov.createConfigurationValidator(GeoServerExtensions.bean(GeoServerSecurityManager.class));
     }
@@ -63,11 +102,6 @@ public class SecurityConfigValidator extends AbstractSecurityValidator{
         String encrypterName =config.getConfigPasswordEncrypterName();
         if (isNotEmpty(encrypterName)==false) {
             throw createSecurityException(SEC_ERR_07);
-        }
-
-        if (config.isIncludingRolesInResponse()) {
-            if (isNotEmpty(config.getHttpResponseHeaderAttrForIncludedRoles())==false)
-                throw createSecurityException(HEADER_ATTRIBUTE_NAME_REQUIRED);
         }
         
         GeoServerPasswordEncoder encoder = null;
@@ -112,6 +146,16 @@ public class SecurityConfigValidator extends AbstractSecurityValidator{
             if (authProviders.contains(authProvName)==false)
                 throw createSecurityException(SEC_ERR_03, authProvName);
         }
+        
+        // check the filter chain
+        GeoServerSecurityFilterChain chain = config.getFilterChain();
+        Set<String> keys = chain.getFilterMap().keySet();
+        if (keys.size()!=chain.getAntPatterns().size())
+            throw createSecurityException(SecurityConfigException.FILTER_CHAIN_CONFIG_ERROR);
+        for (String pattern : chain.getAntPatterns()) {
+            if (keys.contains(pattern)==false)
+                throw createSecurityException(SecurityConfigException.FILTER_CHAIN_CONFIG_ERROR);
+        }        
     }
     
     protected void checkExtensionPont(Class<?> extensionPoint, String className) throws SecurityConfigException{
@@ -146,7 +190,7 @@ public class SecurityConfigValidator extends AbstractSecurityValidator{
                 return manager.listAuthenticationProviders();
             if (extensionPoint==AuthenticationProvider.class)
                 return manager.listAuthenticationProviders();
-            if (extensionPoint==GeoServerAuthenticationProcessingFilter.class)
+            if (extensionPoint==GeoServerSecurityFilter.class)
                 return manager.listFilters();
             if (extensionPoint==PasswordValidator.class)
                 return manager.listPasswordValidators();
@@ -204,7 +248,7 @@ public class SecurityConfigValidator extends AbstractSecurityValidator{
     }
 
     public void validateAddFilter(SecurityNamedServiceConfig config) throws SecurityConfigException{
-        validateAddNamedService(GeoServerAuthenticationProcessingFilter.class, config);        
+        validateAddNamedService(GeoServerSecurityFilter.class, config);        
     }
 
     public void validateAddMasterPasswordProvider(MasterPasswordProviderConfig config) throws SecurityConfigException {
@@ -233,7 +277,7 @@ public class SecurityConfigValidator extends AbstractSecurityValidator{
     }
 
     public void validateModifiedFilter(SecurityNamedServiceConfig config,SecurityNamedServiceConfig oldConfig) throws SecurityConfigException{
-        validateModifiedNamedService(GeoServerAuthenticationProcessingFilter.class, config);        
+        validateModifiedNamedService(GeoServerSecurityFilter.class, config);        
     }
 
     public void validateModifiedMasterPasswordProvider(MasterPasswordProviderConfig config, 
@@ -294,7 +338,15 @@ public class SecurityConfigValidator extends AbstractSecurityValidator{
     }
 
     public void validateRemoveFilter(SecurityNamedServiceConfig config) throws SecurityConfigException{
-        validateRemoveNamedService(GeoServerAuthenticationProcessingFilter.class, config);        
+        validateRemoveNamedService(GeoServerSecurityFilter.class, config);
+        
+        List<String> patterns = manager.getSecurityConfig().getFilterChain().
+            patternsContainingFilter(config.getClassName());
+        if (patterns.isEmpty()==false) {
+            throw createSecurityException(SecurityConfigException.FILTER_STILL_USED, 
+                    config.getName(), 
+                    StringUtils.arrayToCommaDelimitedString(patterns.toArray()));
+        }        
     }
 
     public void validateRemoveMasterPasswordProvider(MasterPasswordProviderConfig config) 
@@ -370,7 +422,7 @@ public class SecurityConfigValidator extends AbstractSecurityValidator{
             return ROLE_SERVICE_ALREADY_EXISTS_$1;
         if (GeoServerUserGroupService.class==extPoint)
             return USERGROUP_SERVICE_ALREADY_EXISTS_$1;
-        if (GeoServerAuthenticationProcessingFilter.class==extPoint)
+        if (GeoServerSecurityFilter.class==extPoint)
             return AUTH_FILTER_ALREADY_EXISTS_$1;
         throw new RuntimeException("Unkonw extension point: "+extPoint.getName());
     }
@@ -384,7 +436,7 @@ public class SecurityConfigValidator extends AbstractSecurityValidator{
             return ROLE_SERVICE_NOT_FOUND_$1;
         if (GeoServerUserGroupService.class==extPoint)
             return USERGROUP_SERVICE_NOT_FOUND_$1;
-        if (GeoServerAuthenticationProcessingFilter.class==extPoint)
+        if (GeoServerSecurityFilter.class==extPoint)
             return AUTH_FILTER_NOT_FOUND_$1;
         throw new RuntimeException("Unkonw extension point: "+extPoint.getName());
     }

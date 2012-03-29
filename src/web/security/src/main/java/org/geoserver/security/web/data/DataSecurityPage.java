@@ -28,6 +28,7 @@ import org.geoserver.security.web.AbstractSecurityPage;
 import org.geoserver.web.GeoServerHomePage;
 import org.geoserver.web.wicket.GeoServerDataProvider.Property;
 import org.geoserver.web.wicket.GeoServerTablePanel;
+import org.geoserver.web.wicket.HelpLink;
 import org.geoserver.web.wicket.ParamResourceModel;
 import org.geoserver.web.wicket.SimpleAjaxLink;
 
@@ -75,17 +76,8 @@ public class DataSecurityPage extends AbstractSecurityPage {
 
         Form form = new Form("catalogModeForm", new CompoundPropertyModel(new CatalogModeModel(DataAccessRuleDAO.get().getMode())));
         add(form);
-        form.add(new AjaxLink("catalogModeHelp") {
-            @Override
-            public void onClick(AjaxRequestTarget target) {
-                dialog.showInfo(target, 
-                    new StringResourceModel("catalogModeHelp.title",getPage(), null),
-                    new StringResourceModel("catalogModeHelp.message",getPage(), null),
-                    new StringResourceModel("catalogModeHelp.hide",getPage(), null),
-                    new StringResourceModel("catalogModeHelp.mixed",getPage(), null),
-                    new StringResourceModel("catalogModeHelp.challenge",getPage(), null));
-            }
-        });
+        form.add(new HelpLink("catalogModeHelp").setDialog(dialog));
+
         catalogModeChoice 
             = new RadioChoice("catalogMode", CATALOG_MODES, new CatalogModeRenderer());
         catalogModeChoice.setSuffix(" ");

@@ -52,38 +52,14 @@ public class UserPanel extends Panel {
         
         this.serviceName=serviceName;
         UserListProvider provider = new UserListProvider(this.serviceName);
-        add(users = new GeoServerTablePanel<GeoServerUser>("table", provider, true) {
-
-            @SuppressWarnings("rawtypes")
-            @Override
-            protected Component getComponentForProperty(String id, IModel itemModel,
-                    Property<GeoServerUser> property) {
-                if (property == UserListProvider.USERNAME) {
-                    return editUserLink(id, itemModel, property);
-                } else if (property == UserListProvider.ENABLED) {
-                    if((Boolean) property.getModel(itemModel).getObject())
-                        return new Icon(id, CatalogIconFactory.ENABLED_ICON);
-                    else
-                        return new Label(id, "");
-                } else if (property == UserListProvider.HASATTRIBUTES) {
-                    if((Boolean) property.getModel(itemModel).getObject())
-                        return new Icon(id, CatalogIconFactory.ENABLED_ICON);
-                    else
-                        return new Label(id, "");                    
-                }                
-                throw new RuntimeException("Uknown property " + property);
-            }
-            
+        add(users = new UserTablePanel("table", serviceName, provider, true) {
             @Override
             protected void onSelectionUpdate(AjaxRequestTarget target) {
-                removal.setEnabled(users.getSelection().size() > 0);               
+                removal.setEnabled(users.getSelection().size() > 0);
                 target.addComponent(removal);
-                removalWithRoles.setEnabled(users.getSelection().size() > 0);               
+                removalWithRoles.setEnabled(users.getSelection().size() > 0);
                 target.addComponent(removalWithRoles);
-
-                
             }
-
         });
         users.setOutputMarkupId(true);
         add(dialog = new GeoServerDialog("dialog"));
@@ -145,29 +121,6 @@ public class UserPanel extends Panel {
                 GeoServerApplication.get().getSecurityManager().
                     getActiveRoleService().canCreateStore());
         
-    }
-
-//    AjaxLink addUserLink() {
-//        return new AjaxLink("addUser", new Model()) {
-//
-//            @Override
-//            public void onClick(AjaxRequestTarget target) {
-//                setResponsePage(new NewUserPage());
-//            }
-//
-//        };
-//    }
-
-    Component editUserLink(String id, IModel itemModel, Property<GeoServerUser> property) {
-        return new SimpleAjaxLink(id, itemModel, property.getModel(itemModel)) {
-
-            @Override
-            protected void onClick(AjaxRequestTarget target) {
-                setResponsePage(new EditUserPage(serviceName,(GeoServerUser) getDefaultModelObject())
-                    .setReturnPage(getPage()));
-            }
-
-        };
     }
 
 }

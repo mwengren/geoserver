@@ -7,6 +7,7 @@ package org.geoserver.security.impl;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Properties;
 import java.util.Set;
 import java.util.TreeSet;
@@ -28,7 +29,8 @@ public class GeoServerUser implements UserDetails, CredentialsContainer, Compara
     public static final String AdminName="admin";
     public static final String AdminPasword="geoserver";
     public static final boolean AdminEnabled=true;
-
+    final public static String ROOT_USERNAME="root";
+    final public static String ANONYMOUS_USERNAME="anonymous";
     /**
      * Create the geoserver default administrator
      */
@@ -38,6 +40,28 @@ public class GeoServerUser implements UserDetails, CredentialsContainer, Compara
         admin.setEnabled(AdminEnabled);
         return admin;
     }
+    
+    public static GeoServerUser createRoot() {
+        GeoServerUser root = new GeoServerUser(GeoServerUser.ROOT_USERNAME);
+        root.setPassword(null);
+        root.setEnabled(true);
+        Set<GrantedAuthority> roles = new HashSet<GrantedAuthority>();
+        roles.add(GeoServerRole.ADMIN_ROLE);
+        root.setAuthorities(roles);
+        return root;
+    }
+    
+    public static GeoServerUser createAnonymous() {
+        GeoServerUser anon = new GeoServerUser(GeoServerUser.ANONYMOUS_USERNAME);
+        anon.setPassword(null);
+        anon.setEnabled(true);
+        Set<GrantedAuthority> roles = new HashSet<GrantedAuthority>();
+        roles.add(GeoServerRole.ANONYMOUS_ROLE);
+        anon.setAuthorities(roles);
+        return anon;
+    }
+
+
 
     private String password;
     private String username;
@@ -47,7 +71,9 @@ public class GeoServerUser implements UserDetails, CredentialsContainer, Compara
     private boolean enabled;
     
     protected Properties properties;
-    protected Collection<GrantedAuthority> authorities; 
+    protected Collection<GrantedAuthority> authorities;
+
+     
 
     public GeoServerUser(String username) {
         this.username=username;

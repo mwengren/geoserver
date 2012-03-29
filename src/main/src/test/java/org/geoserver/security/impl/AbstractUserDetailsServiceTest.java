@@ -214,7 +214,7 @@ public abstract class AbstractUserDetailsServiceTest extends AbstractSecuritySer
             
             UserDetails details = usergroupService.loadUserByUsername(username);
             
-            Collection<GrantedAuthority> authColl = details.getAuthorities();
+            Collection<? extends GrantedAuthority> authColl = details.getAuthorities();
             
             for (GrantedAuthority auth : authColl) {
                 role = (GeoServerRole) auth;
@@ -248,7 +248,7 @@ public abstract class AbstractUserDetailsServiceTest extends AbstractSecuritySer
     protected void checkRoles(String username, Set<GeoServerRole> roles) throws IOException{
         syncbackends();
         UserDetails details = usergroupService.loadUserByUsername(username);
-        Collection<GrantedAuthority> authColl = details.getAuthorities();
+        Collection<? extends GrantedAuthority> authColl = details.getAuthorities();
         assertEquals(roles.size(), authColl.size());
         for (GeoServerRole role : roles) {
             assertTrue(authColl.contains(role));

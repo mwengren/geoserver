@@ -88,7 +88,7 @@ public class DecodingUserDetailsService implements UserDetailsService {
         GeoServerUser user = (GeoServerUser) service.loadUserByUsername(username);
         if (user==null) return null;
         if (encoder.isResponsibleForEncoding(user.getPassword()))
-            user.setPassword(encoder.decode(user.getPassword()));
+            return new UserDetailsPasswordWrapper(user, encoder.decode(user.getPassword()));
         return user;
     }
 

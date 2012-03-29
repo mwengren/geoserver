@@ -1,16 +1,42 @@
 package org.geoserver.security.validation;
 
-import static org.geoserver.security.validation.SecurityConfigException.*;
+import static org.geoserver.security.validation.SecurityConfigException.SEC_ERR_01;
+import static org.geoserver.security.validation.SecurityConfigException.SEC_ERR_02;
+import static org.geoserver.security.validation.SecurityConfigException.SEC_ERR_03;
+import static org.geoserver.security.validation.SecurityConfigException.SEC_ERR_04;
+import static org.geoserver.security.validation.SecurityConfigException.SEC_ERR_05;
+import static org.geoserver.security.validation.SecurityConfigException.SEC_ERR_06;
+import static org.geoserver.security.validation.SecurityConfigException.SEC_ERR_07;
+import static org.geoserver.security.validation.SecurityConfigException.SEC_ERR_20;
+import static org.geoserver.security.validation.SecurityConfigException.SEC_ERR_21;
+import static org.geoserver.security.validation.SecurityConfigException.SEC_ERR_22;
+import static org.geoserver.security.validation.SecurityConfigException.SEC_ERR_23a;
+import static org.geoserver.security.validation.SecurityConfigException.SEC_ERR_23b;
+import static org.geoserver.security.validation.SecurityConfigException.SEC_ERR_23c;
+import static org.geoserver.security.validation.SecurityConfigException.SEC_ERR_23d;
+import static org.geoserver.security.validation.SecurityConfigException.SEC_ERR_24a;
+import static org.geoserver.security.validation.SecurityConfigException.SEC_ERR_24b;
+import static org.geoserver.security.validation.SecurityConfigException.SEC_ERR_24c;
+import static org.geoserver.security.validation.SecurityConfigException.SEC_ERR_24d;
+import static org.geoserver.security.validation.SecurityConfigException.SEC_ERR_25;
+import static org.geoserver.security.validation.SecurityConfigException.SEC_ERR_30;
+import static org.geoserver.security.validation.SecurityConfigException.SEC_ERR_31;
+import static org.geoserver.security.validation.SecurityConfigException.SEC_ERR_32;
+import static org.geoserver.security.validation.SecurityConfigException.SEC_ERR_33;
+import static org.geoserver.security.validation.SecurityConfigException.SEC_ERR_34;
+import static org.geoserver.security.validation.SecurityConfigException.SEC_ERR_35;
+import static org.geoserver.security.validation.SecurityConfigException.SEC_ERR_40;
+import static org.geoserver.security.validation.SecurityConfigException.SEC_ERR_41;
+import static org.geoserver.security.validation.SecurityConfigException.SEC_ERR_42;
 
 import java.io.IOException;
 import java.util.logging.Logger;
 
-import org.geoserver.security.GeoServerAuthenticationProcessingFilter;
 import org.geoserver.security.GeoServerAuthenticationProvider;
 import org.geoserver.security.GeoServerRoleService;
 import org.geoserver.security.GeoServerSecurityTestSupport;
 import org.geoserver.security.GeoServerUserGroupService;
-import org.geoserver.security.UsernamePasswordAuthenticationProvider;
+import org.geoserver.security.auth.UsernamePasswordAuthenticationProvider;
 import org.geoserver.security.config.BaseSecurityNamedServiceConfig;
 import org.geoserver.security.config.PasswordPolicyConfig;
 import org.geoserver.security.config.SecurityAuthProviderConfig;
@@ -21,10 +47,10 @@ import org.geoserver.security.config.SecurityUserGroupServiceConfig;
 import org.geoserver.security.config.UsernamePasswordAuthenticationProviderConfig;
 import org.geoserver.security.config.impl.MemoryRoleServiceConfigImpl;
 import org.geoserver.security.config.impl.MemoryUserGroupServiceConfigImpl;
+import org.geoserver.security.filter.GeoServerSecurityFilter;
 import org.geoserver.security.impl.GeoServerRole;
 import org.geoserver.security.impl.MemoryRoleService;
 import org.geoserver.security.impl.MemoryUserGroupService;
-import org.geoserver.security.password.AbstractGeoserverPasswordEncoder;
 import org.geoserver.security.password.PasswordValidator;
 import org.geoserver.security.xml.XMLRoleService;
 import org.geoserver.security.xml.XMLUserGroupService;
@@ -119,19 +145,7 @@ public class SecurityConfigValidatorTest extends GeoServerSecurityTestSupport {
         }
         assertTrue(failed);
         config.getAuthProviderNames().remove("XX");
-        
-        failed = false;
-        config.setIncludingRolesInResponse(true);
-        config.setHttpResponseHeaderAttrForIncludedRoles("");
-        try {
-            getSecurityManager().saveSecurityConfig(config);
-        } catch (SecurityConfigException ex){
-            assertEquals(HEADER_ATTRIBUTE_NAME_REQUIRED,ex.getId());
-            LOGGER.info(ex.getMessage());
-            failed=true;
-        }
-        assertTrue(failed);
-        
+                
     }
     
     public void testNamedServices() {
@@ -142,7 +156,7 @@ public class SecurityConfigValidatorTest extends GeoServerSecurityTestSupport {
                 GeoServerRoleService.class,
                 PasswordValidator.class,
                 GeoServerAuthenticationProvider.class,
-                GeoServerAuthenticationProcessingFilter.class                
+                GeoServerSecurityFilter.class                
         };
         
         for (Class<?> ep : extensionPoints) {
