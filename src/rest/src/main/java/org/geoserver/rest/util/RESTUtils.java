@@ -204,11 +204,24 @@ public class RESTUtils {
         ZIP_MIME_TYPES.add( "multipart/x-zip" );
         ZIP_MIME_TYPES.add( "application/x-zip-compressed" );
     }
+    
+    static Set<String> GZIP_MIME_TYPES = new HashSet();
+    static {
+        GZIP_MIME_TYPES.add( "application/x-gzip" );
+    }
+    
     /**
      * Determines if the specified media type represents a zip stream.
      */
     public static boolean isZipMediaType( MediaType mediaType ) {
         return ZIP_MIME_TYPES.contains( mediaType.toString() );
+    }
+    
+    /**
+     * Determines if the specified media type represents a zip stream.
+     */
+    public static boolean isGZipMediaType( MediaType mediaType ) {
+        return GZIP_MIME_TYPES.contains( mediaType.toString() );
     }
     
     /**
@@ -232,6 +245,27 @@ public class RESTUtils {
         IOUtils.inflate(archive, outputDirectory, null);
         IOUtils.deleteFile(zipFile);
     }
+    
+    
+    /**
+     * Un-Gzip a file to a specified directory.  Deletes the original file.  
+     * 
+     * @param gZipFile the {@link File} that shh
+     * @param outputDirectory
+     * @throws IOException
+     */
+    public static void unGzipFile( File gZipFile, File outputDirectory ) throws IOException {
+        if ( outputDirectory == null ) {
+            outputDirectory = gZipFile.getParentFile();
+        }
+        if ( outputDirectory != null && !outputDirectory.exists() ) {
+            outputDirectory.mkdir();
+        }
+        IOUtils.inflateGzipTar(gZipFile, outputDirectory, null);
+        IOUtils.deleteFile(gZipFile);
+    }
+    
+    
     
     /**
      * Unzip a zipped dataset.

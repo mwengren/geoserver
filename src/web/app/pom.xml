@@ -242,7 +242,11 @@
               <maxIdleTime>10000</maxIdleTime>
             </connector>
           </connectors>
-          <contextPath>geoserver</contextPath>
+          <jettyConfig>../../../../jetty.xml</jettyConfig>
+          <jettyEnvXml>../../../../jetty-env.xml</jettyEnvXml>
+          <stopPort>8082</stopPort>
+          <stopKey>stop</stopKey>
+          
           <!-- uncomment following to set a GEOSERVER_DATA_DIR -->
           <!--
             <systemProperties> <systemProperty> <name>GEOSERVER_DATA_DIR</name>
@@ -256,7 +260,7 @@
         <artifactId>maven-war-plugin</artifactId>
         <configuration>
           <warName>geoserver</warName>
-          <webappDirectory>${project.build.directory}/geoserver</webappDirectory>
+          <webappDirectory>${project..directory}/geoserver</webappDirectory>
         </configuration>
         <executions>
           <execution>

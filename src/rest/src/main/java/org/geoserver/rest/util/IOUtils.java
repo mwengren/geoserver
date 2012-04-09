@@ -29,15 +29,22 @@ import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.zip.GZIPInputStream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
 import javax.xml.transform.stream.StreamSource;
 
+import org.apache.commons.compress.archivers.ArchiveException;
+import org.apache.commons.compress.archivers.ArchiveStreamFactory;
+import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
+import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
 import org.apache.commons.io.FilenameUtils;
 import org.geotools.data.DataUtilities;
 
@@ -761,6 +768,85 @@ public class IOUtils extends org.apache.commons.io.IOUtils {
 	   
 	}
 	
+	/**
+	 * Inflate the uploaded {@link File} (GZIP format expected) within original directory
+	 * 
+	 * @param archive the {@link File} uploaded
+	 * @param outputDirectory the directory within GeoServer config where the file will be inflated
+	 * @param fileName 
+	 * @throws IOException 
+	 */
+	public static void inflateGzipTar(File archive, File outputDirectory, String fileName) throws IOException {
+	    
+	    //check: 
+	    archive = unGzip(archive, outputDirectory);
+	    
+	    
+	    final List<File> untaredFiles = new LinkedList<File>();
+	    
+	    final InputStream is = new FileInputStream(archive);
+            try {
+                final TarArchiveInputStream tarInputStream = (TarArchiveInputStream) new ArchiveStreamFactory().createArchiveInputStream("tar", is);
+                TarArchiveEntry entry = null;
+                while ((entry = (TarArchiveEntry)tarInputStream.getNextEntry()) != null) {
+                    
+                    final File outputFile = new File(outputDirectory, entry.getName());
+                    if (!entry.isDirectory()){
+                        final String name = entry.getName();
+                        final String ext = FilenameUtils.getExtension(name);
+                        final File outFile = new File(outputDirectory, fileName!=null?new StringBuilder(fileName).append(".").append(ext).toString():name);
+                        final OutputStream out = new BufferedOutputStream(new FileOutputStream(outFile));
+                        IOUtils.copy(tarInputStream, out);
+                        out.close();
+                        
+                        untaredFiles.add(outputFile);
+                    } else {
+                        //if the entry is a directory attempt to make it
+                        new File(outputDirectory, entry.getName()).mkdirs();
+                    }
+                
+                }
+                
+                tarInputStream.close();  
+                /*
+                StringBuilder debug = new StringBuilder();
+                for (File f : untaredFiles) {
+                    debug.append(f.getName());
+                }
+                LOGGER.log(Level.INFO, debug.toString());
+                */
+                
+            } catch (ArchiveException e) {
+                LOGGER.log(Level.FINER, e.getMessage(), e);
+            }
+            
+	    
+	}
+	/**
+	 * Uncompresses a GZip formatted file to non-compressed state.  The resulting file is presumed
+	 *     to be a Tar archive
+	 * 
+	 * @param inputFile the {@link File} to un-GZip
+	 * @param outputDir the directory within which the file will be un-GZipped
+	 * @return the resulting uncompressed.  Presumed to be a TAR archive
+	 * @throws FileNotFoundException
+	 * @throws IOException
+	 */
+	private static File unGzip(final File inputFile, final File outputDir) throws FileNotFoundException, IOException {
+	    String ext = FilenameUtils.getExtension(inputFile.getAbsolutePath());
+	    String name = FilenameUtils.getBaseName(inputFile.getAbsolutePath());
+	    //rename in case of '.tar' extension
+	    if (ext.equalsIgnoreCase("tar")) {
+	        inputFile.renameTo(new File(outputDir,name + ".tar.gz"));
+	    }
+	    
+	    final File outputFile = new File(outputDir,name + ".tar");
+	    final GZIPInputStream in = new GZIPInputStream(new FileInputStream(inputFile));
+	    final FileOutputStream out = new FileOutputStream(outputFile);
+	    IOUtils.copyStream(in, out, true, true);
+	    return outputFile;
+	  
+	}
 
 	/**
 	 * Singleton

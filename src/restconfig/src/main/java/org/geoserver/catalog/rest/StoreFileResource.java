@@ -10,6 +10,8 @@ import java.util.Iterator;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.activation.FileDataSource;
+
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.geoserver.catalog.Catalog;
@@ -129,18 +131,25 @@ public abstract class StoreFileResource extends Resource {
         catch (Throwable t) {
             throw new RestletException( "Error while storing uploaded file:", Status.SERVER_ERROR_INTERNAL, t );
         }
+      
         
-        //handle the case that the uploaded file was a zip file, if so unzip it
-        if (mediaType!=null && RESTUtils.isZipMediaType( mediaType ) ) {
-            //rename to .zip if need be
-            if ( !uploadedFile.getName().endsWith( ".zip") ) {
-                File newUploadedFile = new File( uploadedFile.getParentFile(), FilenameUtils.getBaseName(uploadedFile.getAbsolutePath()) + ".zip" );
-                uploadedFile.renameTo( newUploadedFile );
-                uploadedFile = newUploadedFile;
-            }
+        
+        //handle uploaded file for zip and gzip file types:
+        if (mediaType!=null) {
             //unzip the file 
             try {
-                RESTUtils.unzipFile(uploadedFile, directory );
+                if (RESTUtils.isZipMediaType( mediaType )) {
+                    //rename to .zip if need be
+                    if ( !uploadedFile.getName().endsWith( ".zip") ) {
+                        File newUploadedFile = new File( uploadedFile.getParentFile(), FilenameUtils.getBaseName(uploadedFile.getAbsolutePath()) + ".zip" );
+                        uploadedFile.renameTo( newUploadedFile );
+                        uploadedFile = newUploadedFile;
+                    }
+                    RESTUtils.unzipFile(uploadedFile, directory );
+                } else if (RESTUtils.isGZipMediaType( mediaType ) ) {
+                    
+                    RESTUtils.unGzipFile(uploadedFile, directory );
+                }
                 
                 //look for the "primary" file
                 //TODO: do a better check
@@ -159,7 +168,6 @@ public abstract class StoreFileResource extends Resource {
                 throw new RestletException( "Error occured unzipping file", Status.SERVER_ERROR_INTERNAL, e );
             }
         }
-        
         return uploadedFile;
     }
 
